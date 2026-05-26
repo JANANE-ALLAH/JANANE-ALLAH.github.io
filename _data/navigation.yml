@@ -1,0 +1,20 @@
+# Navigation principale — Mohamed JANANE ALLAH
+main:
+  - title: "Accueil"
+    url: /
+  - title: "À propos"
+    url: /about/
+  - title: "Expérience"
+    url: /experience/
+  - title: "Publications"
+    url: /publications/
+  - title: "Recherche"
+    url: /research/
+  - title: "Enseignement"
+    url: /teaching/
+  - title: "Projets"
+    url: /projects/
+  - title: "Blog"
+    url: /blog/
+  - title: "Contact"
+    url: /contact/
