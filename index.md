@@ -45,14 +45,14 @@ redirect_from:
 
 ## Qui suis-je ?
 
-Je suis **enseignant-chercheur en modélisation et simulation numérique en mécanique** à la [Faculté des Sciences et Techniques de Mohammedia (FSTM)](https://fstm.ac.ma), Université Hassan II de Casablanca. Titulaire d'un **Doctorat en Génie Mécanique** (Mention *Très Honorable avec Félicitations*, ENSAM Casablanca, 2024), mes travaux de recherche portent sur l'analyse dynamique linéaire et non linéaire des structures composites hybrides, les matériaux à gradients fonctionnels (FGM) poreux, et l'intelligence artificielle appliquée aux problèmes mécaniques complexes.
+Je suis **enseignant-chercheur en modélisation et simulation numérique en mécanique** à la [Faculté des Sciences et Techniques de Mohammedia (FSTM)](https://fstm.ac.ma), Université Hassan II de Casablanca. Titulaire d'un **Doctorat en Génie Mécanique** (Mention *Très Honorable*, [ENSAM Casablanca](https://www.ensam-casa.ma/), 2024), mes travaux de recherche portent sur l'analyse dynamique linéaire et non linéaire des structures composites hybrides, les matériaux à gradients fonctionnels (FGM) poreux, et l'intelligence artificielle appliquée aux problèmes mécaniques complexes.
 
-J'interviens également comme **enseignant vacataire** à l'ENSAM Casablanca (cycles ingénieur et licences professionnelles) et comme **formateur certifié** en simulation numérique, éléments finis et IA appliquée à l'ingénierie.
+J'interviens également comme **enseignant vacataire** à l'ENSAM Casablanca (cycles ingénieur et licences professionnelles) et comme **formateur certifié** en mécatronique d'automobile et IA appliquée à l'ingénierie.
 
 <div class="affil-row">
   <div class="affil-pill">🏛️ FSTM · Université Hassan II</div>
   <div class="affil-pill">⚙️ ENSAM Casablanca</div>
-  <div class="affil-pill">🔬 Projet MY MDO · TechTransfer</div>
+  <div class="affil-pill">🔬 Projet MY MDO · UM6P</div>
   <div class="affil-pill">🌍 Collaboration Maroc–Turquie</div>
 </div>
 
@@ -64,7 +64,7 @@ J'interviens également comme **enseignant vacataire** à l'ENSAM Casablanca (cy
   <div class="exp-card">
     <div class="exp-icon">⚙️</div>
     <h3>Simulation Numérique</h3>
-    <p>MEF, MDF, MAN · Abaqus · MATLAB · Python · Structures composites hybrides · Analyse statique et dynamique.</p>
+    <p>MEF (IGA) , MDF, MAN · Abaqus · MATLAB · Python · Structures composites hybrides .dynamique.</p>
   </div>
   <div class="exp-card">
     <div class="exp-icon">🧱</div>
