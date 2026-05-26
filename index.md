@@ -13,10 +13,11 @@ redirect_from:
     <div class="hero-tag">🎓 Enseignant-Chercheur · FSTM · Université Hassan II, Casablanca</div>
     <h1>Mohamed <span class="name-accent">JANANE ALLAH</span>, PhD</h1>
     <p class="hero-subtitle">
-    <strong>Expertise : Modélisation, simulation numérique en mécanique et thermique, optimisation — Dynamique non linéaire — vibration</strong>
+    <strong>Expertise :Modélisation et simulation numérique en mécanique et thermique<strong>
+              <strong>Optimisation en biomécanique<strong> – <strong>Dynamique non linéaire (vibrations et résonance)</strong>
     </p>
     <p class="hero-quote">
-      <em>"Bridging computational mechanics and artificial intelligence to advance structural engineering."</em>
+      <em>"Combining high-fidelity numerical simulation and biomechanical optimization to capture vibrational couplings and resonance."</em>
     </p>
     <div class="hero-badges">
       <a href="https://orcid.org/0000-0001-5852-9212" target="_blank" class="badge-link orcid">
