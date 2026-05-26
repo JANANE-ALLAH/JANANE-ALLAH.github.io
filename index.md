@@ -1,7 +1,7 @@
 ---
 permalink: /
 title: ""
-excerpt: "Enseignant-Chercheur en Modélisation Mécanique des Structures et Intelligence Artificielle — FSTM, Université Hassan II"
+excerpt: "Enseignant-Chercheur en Modélisation et simulation numérique en Mécanique — FSTM, Université Hassan II"
 author_profile: true
 redirect_from:
   - /about/
@@ -13,7 +13,7 @@ redirect_from:
     <div class="hero-tag">🎓 Enseignant-Chercheur · FSTM · Université Hassan II, Casablanca</div>
     <h1>Mohamed <span class="name-accent">JANANE ALLAH</span>, PhD</h1>
     <p class="hero-subtitle">
-      Expert en <strong>Modélisation Numérique des Structures</strong> · <strong>Matériaux Composites FGM</strong> · <strong>Intelligence Artificielle Appliquée</strong>
+    <strong>Expertise : Modélisation, simulation numérique en mécanique et thermique, optimisation — Dynamique non linéaire — vibration</strong>
     </p>
     <p class="hero-quote">
       <em>"Bridging computational mechanics and artificial intelligence to advance structural engineering."</em>
