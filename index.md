@@ -13,9 +13,9 @@ redirect_from:
     <div class="hero-tag">🎓 Enseignant-Chercheur · FSTM · Université Hassan II, Casablanca</div>
     <h1>Mohamed <span class="name-accent">JANANE ALLAH</span>, PhD</h1>
     <p class="hero-subtitle">
-    <strong>Expertise :Modélisation et simulation numérique en mécanique et thermique<strong>
-              <strong>Optimisation en biomécanique<strong> – <strong>Dynamique non linéaire (vibrations et résonance)</strong>
-    </p>
+   Expertise  <strong> :Modélisation et simulation numérique en mécanique et thermique<strong>-
+              <strong>Optimisation <strong> – <strong>Dynamique non linéaire (vibrations et résonance)</strong>
+    
     <p class="hero-quote">
       <em>"Combining high-fidelity numerical simulation and biomechanical optimization to capture vibrational couplings and resonance."</em>
     </p>
@@ -46,9 +46,9 @@ redirect_from:
 
 ## Qui suis-je ?
 
-Je suis **enseignant-chercheur en modélisation et simulation numérique en mécanique** à la [Faculté des Sciences et Techniques de Mohammedia (FSTM)](https://fstm.ac.ma), Université Hassan II de Casablanca. Titulaire d'un **Doctorat en Génie Mécanique** (Mention *Très Honorable*, [ENSAM Casablanca](https://www.ensam-casa.ma/), 2024), mes travaux de recherche portent sur l'analyse dynamique linéaire et non linéaire des structures composites hybrides, les matériaux à gradients fonctionnels (FGM) poreux, et l'intelligence artificielle appliquée aux problèmes mécaniques complexes.
+Je suis enseignant-chercheur en modélisation et simulation numérique en mécanique à la [Faculté des Sciences et Techniques de Mohammedia (FSTM)](https://fstm.ac.ma), Université Hassan II de Casablanca. Titulaire d'un Doctorat en Génie Mécanique (Mention Très Honorable, [ENSAM Casablanca](https://www.ensam-casa.ma/), 2024), mes travaux de recherche portent sur l'analyse dynamique linéaire et non linéaire des structures composites hybrides, les matériaux à gradients fonctionnels (FGM) poreux, et l'intelligence artificielle appliquée aux problèmes mécaniques complexes.
 
-J'interviens également comme **enseignant vacataire** à l'ENSAM Casablanca (cycles ingénieur et licences professionnelles) et comme **formateur certifié** en mécatronique d'automobile et IA appliquée à l'ingénierie.
+J'interviens également comme enseignant vacataire à l'ENSAM Casablanca (cycles ingénieur et licences professionnelles) et comme formateur certifié en mécatronique d'automobile et IA appliquée à l'ingénierie.
 
 <div class="affil-row">
   <div class="affil-pill">🏛️ FSTM · Université Hassan II</div>
