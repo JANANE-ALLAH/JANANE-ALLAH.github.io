@@ -63,33 +63,33 @@ J'interviens également comme **enseignant vacataire** à l'[ENSAM Casablanca](h
 <div class="expertise-grid">
   <div class="exp-card">
     <div class="exp-icon">⚙️</div>
-    <h3>Simulation Numérique</h3>
-    <p>MEF (IGA), MDF, MAN · Abaqus · MATLAB · Python · Structures composites hybrides · Dynamique.</p>
+    <h3>Modélisation Numérique</h3>
+    <p>MEF · MEF-IGA (Isogeométrique) · MDF (Différences Finies) · MLS (Sans maillage) · MAN (Asymptotique Numérique) · Newton-Raphson · HSDT (théorie d'ordre élevé).</p>
   </div>
   <div class="exp-card">
-    <div class="exp-icon">🧱</div>
-    <h3>Matériaux FGM</h3>
-    <p>Matériaux à gradients fonctionnels poreux · Viscoélasticité · TSDT · Absorption d'énergie · Biomédicale.</p>
+    <div class="exp-icon">💻</div>
+    <h3>Simulation & Logiciels</h3>
+    <p>MATLAB · Python · Abaqus · OpenFOAM · DAFoam · Calcul scientifique haute performance.</p>
   </div>
   <div class="exp-card">
     <div class="exp-icon">🤖</div>
     <h3>IA & Machine Learning</h3>
-    <p>LSTM · ANN · Deep Learning · Surrogate models · Optimisation structurale · Clustering · Python / MATLAB.</p>
+    <p>LSTM (Long Short-Term Memory) · ANN (Réseaux de neurones) · KNN · MCDA · Surrogate models · Python / MATLAB.</p>
   </div>
   <div class="exp-card">
     <div class="exp-icon">🚗</div>
-    <h3>Ingénierie Automobile</h3>
-    <p>Systèmes ADAS · Véhicules électriques · Multiplexage CAN · Hydraulique · Diagnostic ECU · Vector CANoe.</p>
+    <h3>Ingénierie Automobile & Engins</h3>
+    <p>Systèmes ADAS · Véhicules électriques · Multiplexage CAN · Hydraulique (engins) · Diagnostic ECU · SANY / DOOSAN / Caterpillar.</p>
   </div>
   <div class="exp-card">
     <div class="exp-icon">📐</div>
-    <h3>Optimisation Structurale</h3>
-    <p>Optimisation topologique · Dimensionnement · MDO · Méthodes métaheuristiques · Algorithmes évolutionnaires.</p>
+    <h3>Optimisation</h3>
+    <p>Optimisation en biomédecale · Optimisation en aérostructure · Optimisation en structure automobile · Méthodes métaheuristiques · MDO.</p>
   </div>
   <div class="exp-card">
     <div class="exp-icon">🏗️</div>
     <h3>Mécanique Computationnelle</h3>
-    <p>Calcul scientifique · Analyse modale · Dynamique non linéaire · Non-linéarités géométriques et matérielles.</p>
+    <p>Dynamique non linéaire · Non-linéarités géométriques et matérielles · Vibro-acoustique · Résonance.</p>
   </div>
 </div>
 
