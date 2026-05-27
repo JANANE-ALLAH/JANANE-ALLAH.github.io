@@ -140,14 +140,14 @@ J'interviens également comme **enseignant vacataire** à l'[ENSAM Casablanca](h
 
   <div class="pub-item">
     <div class="pub-left">
-      <span class="pub-year">2022</span>
+      <span class="pub-year">2023</span>
       <span class="pub-q q1">Q1</span>
     </div>
     <div class="pub-right">
       <h4>Free vibration analysis of FGM plates using an optimization methodology combining artificial neural networks and third order shear deformation theory</h4>
-      <p class="pub-venue">Steel and Composite Structures · Techno-Press · pp. 633–643</p>
+      <p class="pub-venue">Steel and Composite Structures · Techno-Press · Vol. 49, No. 6, pp. 633–643</p>
       <p class="pub-auth"><strong>M. Janane Allah</strong>, S. Hassouna, R. Aitbelale, et al.</p>
-      <a href="https://scholar.google.com/citations?view_op=view_citation&hl=fr&user=lNF8AUoAAAAJ&citation_for_view=lNF8AUoAAAAJ:u-x6o8ySG0sC" target="_blank" class="pub-read">Scholar →</a>
+      <a href="https://doi.org/10.12989/scs.2023.49.6.633" target="_blank" class="pub-read">DOI →</a>
     </div>
   </div>
 
