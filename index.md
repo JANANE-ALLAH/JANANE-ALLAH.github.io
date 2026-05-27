@@ -15,7 +15,7 @@ redirect_from:
     <p class="hero-subtitle">
    Expertise  <strong> :Modélisation et simulation numérique en mécanique et thermique<strong>-
               <strong>Optimisation <strong> – <strong>Dynamique non linéaire (vibrations et résonance)</strong>
-    
+     </p>
     <p class="hero-quote">
       <em>"Combining high-fidelity numerical simulation and biomechanical optimization to capture vibrational couplings and resonance."</em>
     </p>
