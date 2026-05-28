@@ -103,7 +103,7 @@ toc_icon: "chalkboard-teacher"
 
 ## 🎯 Formation Continue
 
-**Organisme :** Formateur Certifié · MSN- IPTAE et autres organismes
+**Organisme :** Formateur Certifié · IPTAE et autres organismes
 
 ---
 
@@ -113,7 +113,7 @@ toc_icon: "chalkboard-teacher"
 |---|--------|-------------|
 | 1 | Modélisation et Simulation Numérique | Introduction aux méthodes numériques appliquées à l'ingénierie |
 | 2 | Python pour l'ingénierie | Programmation scientifique, calcul numérique, visualisation |
-| 3 | MATLAB pour l'ingénierie | Simulation, Modélisation, MEF, Methode adjoint |
+| 3 | MATLAB pour l'ingénierie | Simulation, traitement de signal, MEF |
 | 4 | OpenFOAM & DAFoam | Simulation CFD open source, optimisation aérodynamique |
 
 ---
