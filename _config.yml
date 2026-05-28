@@ -55,6 +55,8 @@ highlighter       : rouge
 lsi               : false
 safe              : false
 incremental       : false
+include:
+  - _pages
 
 kramdown:
   input           : GFM
