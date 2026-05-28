@@ -28,7 +28,7 @@ toc_icon: "chalkboard-teacher"
 
 | # | Intitulé | Filière / Niveau |
 |---|----------|-----------------|
-| 1 | Méthodes Numériques | GP (Génie Physique) |
+| 1 | Méthodes Numériques | GP (Génie des Procédés) |
 | 2 | Méthodes Numériques | ING (Cycle Ingénieur) |
 | 3 | Résistance des Matériaux (RDM) | — |
 | 4 | Méthodes Numériques | M1 (Master 1) |
