@@ -13,7 +13,7 @@ author_profile: true
 
 | # | Intitulé | Filière |
 |---|----------|---------|
-| 1 | Méthodes Numériques | GP (Génie physique) |
+| 1 | Méthodes Numériques | GP (Génie des Procédés) |
 | 2 | Méthodes Numériques | ING (Cycle Ingénieur) |
 | 3 | Résistance des Matériaux (RDM) | — |
 | 4 | Méthodes Numériques | M1 (Master 1) |
@@ -24,15 +24,13 @@ author_profile: true
 
 ### TP — Travaux Pratiques
 
-*Contenu à compléter — données en cours d'exploitation.*
-
-### Examens & contrôles
-
+| # | Intitulé | Fichier |
+|---|----------|---------|
+| TP1 | Manuel de TP – Module Électricité | [📥 Télécharger](/Manuel%20de%20TP%20%E2%80%93%20Module%20%C3%89lectricit%C3%A9.pdf) |
 
 ### Encadrement
 
 *Contenu à compléter — données en cours d'exploitation.*
-
 
 ---
 
