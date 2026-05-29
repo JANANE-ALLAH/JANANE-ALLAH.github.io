@@ -13,7 +13,7 @@ author_profile: true
 
 | # | Intitulé | Filière |
 |---|----------|---------|
-| 1 | Méthodes Numériques | GP (Génie des Procédés) |
+| 1 | Méthodes Numériques | GP (Génie physique) |
 | 2 | Méthodes Numériques | ING (Cycle Ingénieur) |
 | 3 | Résistance des Matériaux (RDM) | — |
 | 4 | Méthodes Numériques | M1 (Master 1) |
@@ -26,9 +26,13 @@ author_profile: true
 
 *Contenu à compléter — données en cours d'exploitation.*
 
+### Examens & contrôles
+
+
 ### Encadrement
 
 *Contenu à compléter — données en cours d'exploitation.*
+
 
 ---
 
