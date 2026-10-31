@@ -20,8 +20,8 @@ toc_label: "Sections"
     </a>
   </div>
   <div class="pub-counters">
-    <div class="pub-c"><strong>5</strong><span>Articles publiés</span></div>
-    <div class="pub-c"><strong>4</strong><span>Revues Q1</span></div>
+    <div class="pub-c"><strong>6</strong><span>Articles publiés</span></div>
+    <div class="pub-c"><strong>5</strong><span>Revues Q1</span></div>
     <div class="pub-c"><strong>1</strong><span>Chapitre livre</span></div>
     <div class="pub-c"><strong>2</strong><span>En soumission</span></div>
     <div class="pub-c"><strong>8</strong><span>Conférences</span></div>
@@ -31,6 +31,47 @@ toc_label: "Sections"
 ---
 
 ## Articles de Revues Internationales
+
+### 2026
+
+<div class="pub-full" id="j8">
+  <div class="pub-ribbon q1">Q1</div>
+  <div class="pub-content">
+    <div class="pub-top-row">
+      <span class="pub-ref">[J8]</span>
+      <span class="pub-venue-full">Engineering Analysis with Boundary Elements · Elsevier</span>
+      <span class="pub-year-pill">2026</span>
+    </div>
+    <h3>A 3D extension of weak–strong formulation using a hybrid FE-meshless method for nonlinear structural analysis</h3>
+    <p class="pub-auth-full">Redouane El Kadmiri, Youssef Belaasilia, <strong>Mohamed JANANE ALLAH</strong>, Abdelaziz Timesli</p>
+    <div class="pub-abstract-box">
+      <strong>Abstract :</strong> Cet article présente un cadre numérique hybride pour la résolution de problèmes de structures non linéaires tridimensionnels. L'approche combine formulations faible et forte dans un schéma de développement d'ordre élevé qui intègre une technique de continuation et une approximation hybride couplant la méthode sans maillage en forme forte à la méthode des éléments finis. Ce couplage atténue les limites habituelles des méthodes sans maillage en forme forte (mise en œuvre près des frontières, stabilité et précision avec des conditions de Neumann), tandis que la formulation sans maillage lève les difficultés de connectivité des éléments et d'intégration numérique sur de grands domaines. Des simulations 3D évaluent la fiabilité et l'efficacité de l'algorithme, par comparaison avec la solution éléments finis classique en forme faible.
+    </div>
+    <div class="pub-kw-row">
+      <span>MEF</span><span>Moindres carrés pondérés</span><span>Forme faible–forte</span><span>Couplage FE–sans maillage 3D</span><span>Algorithme d'ordre élevé</span>
+    </div>
+    <div class="pub-links-row">
+      <a href="https://doi.org/10.1016/j.enganabound.2026.107110" class="pub-btn">🔗 Article (DOI)</a>
+    </div>
+    <details class="bibtex-block">
+      <summary>📋 BibTeX</summary>
+      <pre><code>@article{elkadmiri2026hybrid3d,
+  title={A 3D extension of weak--strong formulation using a hybrid FE-meshless
+         method for nonlinear structural analysis},
+  author={El Kadmiri, Redouane and Belaasilia, Youssef and JANANE ALLAH, Mohamed
+          and Timesli, Abdelaziz},
+  journal={Engineering Analysis with Boundary Elements},
+  publisher={Elsevier},
+  volume={194},
+  number={Part A},
+  pages={107110},
+  year={2026},
+  doi={10.1016/j.enganabound.2026.107110},
+  note={Q1}
+}</code></pre>
+    </details>
+  </div>
+</div>
 
 ### 2024
 
