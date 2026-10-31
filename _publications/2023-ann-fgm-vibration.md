@@ -5,15 +5,13 @@ permalink: /publications/2023-ann-fgm-vibration
 excerpt: 'Méthodologie ANN + TSDT pour l''analyse des vibrations libres des plaques FGM. Réduction du coût de calcul avec haute précision.'
 date: 2023-01-01
 venue: 'Steel and Composite Structures (Q1) · Techno-Press'
-paperurl: 'https://scienceon.kisti.re.kr/srch/selectPORSrchArticle.do?cn=JAKO202305063033172'
-citation: 'JANANE ALLAH, M., Hassouna, S., Aitbelale, R., Timesli, A. (2023). &quot;Free vibration analysis of FGM plates using an optimization methodology combining artificial neural networks and third order shear deformation theory.&quot; <i>Steel and Composite Structures</i>, 49 (6), 633–643. Techno-Press. Q1.'
+paperurl: 'https://scholar.google.com/citations?user=lNF8AUoAAAAJ&hl=fr'
+citation: 'JANANE ALLAH, M., et al. (2023). &quot;Free vibration analysis of FGM plates using an optimization methodology combining artificial neural networks and third order shear deformation theory.&quot; <i>Steel and Composite Structures</i>. Techno-Press. Q1.'
 ---
 
 **Journal:** Steel and Composite Structures · Techno-Press · **Quartile: Q1**
 
-**Authors:** Mohamed JANANE ALLAH, Saad Hassouna, Rachid Aitbelale, Abdelaziz Timesli
-
-[ScienceON (KISTI)](https://scienceon.kisti.re.kr/srch/selectPORSrchArticle.do?cn=JAKO202305063033172) · [DOI](https://doi.org/10.12989/scs.2023.49.6.633)
+**Authors:** M. JANANE ALLAH, et al.
 
 ## Abstract
 
