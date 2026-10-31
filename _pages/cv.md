@@ -39,12 +39,13 @@ author_profile: true
 
 ## Publications (Sélection)
 
-1. **[J1]** JANANE ALLAH M., et al. "LSTM-based neural network architecture for predicting the nonlinear dynamic behavior of functional gradient viscoelastic porous plates." *Materials Today Communications* (Q1). 2024.
-2. **[J2]** JANANE ALLAH M., et al. "Free vibration analysis of FGM plates using ANN and TSDT." *Steel and Composite Structures* (Q1). 2023.
-3. **[J3]** JANANE ALLAH M., et al. "Nonlinear dynamic analysis of viscoelastic FGM with porosity distributions." *Materials Today Communications* (Q1). 2023.
-4. **[J4]** JANANE ALLAH M., et al. "Nonlinear dynamic analysis of porous FGM based on TSDT." *Steel and Composite Structures* (Q1). 2022.
-5. **[C1]** Hassouna S., JANANE ALLAH M., et al. "Crashworthiness Applications of Composite Sandwich Structures." *CRC Press*. 2022.
-6. **[J5]** JANANE ALLAH M., et al. "TSDT theory for free vibration of FGM plates." *Mathematical Modeling and Computing* (Q3). 2021.
+1. **[J8]** El Kadmiri R., Belaasilia Y., JANANE ALLAH M., Timesli A. "A 3D extension of weak–strong formulation using a hybrid FE-meshless method for nonlinear structural analysis." *Engineering Analysis with Boundary Elements* (Q1). 2026.
+2. **[J1]** JANANE ALLAH M., et al. "LSTM-based neural network architecture for predicting the nonlinear dynamic behavior of functional gradient viscoelastic porous plates." *Materials Today Communications* (Q1). 2024.
+3. **[J2]** JANANE ALLAH M., et al. "Free vibration analysis of FGM plates using ANN and TSDT." *Steel and Composite Structures* (Q1). 2023.
+4. **[J3]** JANANE ALLAH M., et al. "Nonlinear dynamic analysis of viscoelastic FGM with porosity distributions." *Materials Today Communications* (Q1). 2023.
+5. **[J4]** JANANE ALLAH M., et al. "Nonlinear dynamic analysis of porous FGM based on TSDT." *Steel and Composite Structures* (Q1). 2022.
+6. **[C1]** Hassouna S., JANANE ALLAH M., et al. "Crashworthiness Applications of Composite Sandwich Structures." *CRC Press*. 2022.
+7. **[J5]** JANANE ALLAH M., et al. "TSDT theory for free vibration of FGM plates." *Mathematical Modeling and Computing* (Q3). 2021.
 
 ---
 
