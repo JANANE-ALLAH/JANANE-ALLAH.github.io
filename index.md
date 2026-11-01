@@ -101,7 +101,20 @@ J'interviens également comme **enseignant vacataire** à l'[ENSAM Casablanca](h
 
   <div class="pub-item featured">
     <div class="pub-left">
-      <span class="pub-year">2025</span>
+      <span class="pub-year">2026</span>
+      <span class="pub-q q1">Q1</span>
+    </div>
+    <div class="pub-right">
+      <h4>A 3D extension of weak–strong formulation using a hybrid FE-meshless method for nonlinear structural analysis</h4>
+      <p class="pub-venue">Engineering Analysis with Boundary Elements · Elsevier · Vol. 194, Part A, 107110</p>
+      <p class="pub-auth">R. El Kadmiri, Y. Belaasilia, <strong>M. Janane Allah</strong>, A. Timesli</p>
+      <a href="https://doi.org/10.1016/j.enganabound.2026.107110" target="_blank" class="pub-read">DOI →</a>
+    </div>
+  </div>
+
+  <div class="pub-item">
+    <div class="pub-left">
+      <span class="pub-year">2024</span>
       <span class="pub-q q1">Q1</span>
     </div>
     <div class="pub-right">
@@ -146,7 +159,7 @@ J'interviens également comme **enseignant vacataire** à l'[ENSAM Casablanca](h
     <div class="pub-right">
       <h4>Free vibration analysis of FGM plates using an optimization methodology combining artificial neural networks and third order shear deformation theory</h4>
       <p class="pub-venue">Steel and Composite Structures · Techno-Press · Vol. 49, No. 6, pp. 633–643</p>
-      <p class="pub-auth"><strong>M. Janane Allah</strong>, S. Hassouna, R. Aitbelale, et al.</p>
+      <p class="pub-auth"><strong>M. Janane Allah</strong>, S. Hassouna, R. Aitbelale, A. Timesli</p>
       <a href="https://doi.org/10.12989/scs.2023.49.6.633" target="_blank" class="pub-read">DOI →</a>
     </div>
   </div>
@@ -187,12 +200,12 @@ J'interviens également comme **enseignant vacataire** à l'[ENSAM Casablanca](h
 
 <div class="kpi-row">
   <div class="kpi">
-    <div class="kpi-n">6</div>
+    <div class="kpi-n">7</div>
     <div class="kpi-l">Publications</div>
-    <div class="kpi-s">5 articles · 1 chapitre livre</div>
+    <div class="kpi-s">6 articles · 1 chapitre livre</div>
   </div>
   <div class="kpi">
-    <div class="kpi-n">4</div>
+    <div class="kpi-n">5</div>
     <div class="kpi-l">Revues Q1</div>
     <div class="kpi-s">Elsevier · Techno-Press</div>
   </div>
@@ -223,6 +236,11 @@ J'interviens également comme **enseignant vacataire** à l'[ENSAM Casablanca](h
 ## Actualités
 
 <div class="news-feed">
+  <div class="news-row">
+    <span class="news-dot green"></span>
+    <span class="news-tag">2026</span>
+    <span class="news-text"><strong>📄 Publication J8</strong> : Article dans <em>Engineering Analysis with Boundary Elements</em> (Q1, Elsevier) — extension 3D d'une formulation faible-forte par couplage hybride éléments finis / méthode sans maillage pour l'analyse structurale non linéaire.</span>
+  </div>
   <div class="news-row">
     <span class="news-dot green"></span>
     <span class="news-tag">Mai 2025</span>

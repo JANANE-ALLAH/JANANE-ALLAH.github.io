@@ -13,8 +13,8 @@ toc_icon: "flask"
     Mes activités de recherche s'articulent autour de trois axes majeurs : la <strong>simulation numérique avancée des structures composites</strong>, la <strong>modélisation des matériaux à gradients fonctionnels (FGM)</strong>, et l'<strong>intelligence artificielle appliquée à la mécanique des structures</strong>. Ces axes convergent vers le développement de méthodes numériques de pointe pour l'analyse et l'optimisation des structures mécaniques à hautes performances.
   </p>
   <div class="research-metrics">
-    <span>📄 5 articles publiés</span>
-    <span>🏆 4 revues Q1</span>
+    <span>📄 6 articles publiés</span>
+    <span>🏆 5 revues Q1</span>
     <span>🌍 8 conférences internationales</span>
     <span>🤝 Collaboration Maroc–Turquie</span>
   </div>
