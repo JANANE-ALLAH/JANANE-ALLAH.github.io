@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jeux du TP4 · Paroi de four</title>
+<meta name="description" content="Cinq jeux pour manipuler le TP4 de Méthodes numériques (FSTM, UH2C) : Euler explicite, RK4, Euler implicite et Newton, ordre de convergence, convection et rayonnement, chasse aux bugs, calculés en direct par le code du TP.">
+<style>
+:root{
+  --bg:#F4F6FB; --surface:#FFFFFF; --surface-2:#EEF2F9; --ink:#15213B; --ink-2:#4B5875; --line:#DCE3EE;
+  --navy:#0B2545; --navy-2:#13315C; --blue:#0056D2; --violet:#6A4C93; --red:#C1121F; --green:#2E7D32;
+  --orange:#E67E22; --gold:#D99A00; --ok:#1E7B34; --ok-bg:#E7F5EA; --ko:#B3261E; --ko-bg:#FCEDEC;
+  --code-bg:#0F1B2D; --code-ink:#E4ECF7; --code-dim:#8FA3BF; --code-err:#FF8A80; --code-warn:#FFB74D;
+  --sol:#F3EEE2; --mur:#5C6680; --ombre:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.07);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0D1422; --surface:#151F33; --surface-2:#1C2942; --ink:#E7ECF5; --ink-2:#A7B3C9; --line:#2A3A57;
+    --blue:#6EA8FF; --violet:#B49AE0; --red:#FF6B6B; --green:#5CC47A; --orange:#F5A35C; --gold:#F2C14E;
+    --ok:#6BD48A; --ok-bg:#15301F; --ko:#FF8A80; --ko-bg:#3A1A1A; --code-bg:#0A1220; --sol:#232B3D; --mur:#8C97B2;
+    --ombre:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+a{color:var(--blue)}
+button{font:inherit;color:inherit}
+code,pre,.mono{font-family:ui-monospace,"Cascadia Mono",Consolas,"Liberation Mono",monospace}
+.enveloppe{max-width:1120px;margin:0 auto;padding:0 16px}
+[hidden]{display:none!important}
+
+/* En-tete */
+.entete{background:linear-gradient(120deg,var(--navy) 0%,var(--navy-2) 60%,#1B4F8A 100%);color:#fff;padding:18px 0 26px}
+.ariane{font-size:13px;opacity:.85}
+.ariane a{color:#fff}
+.entete h1{font-size:clamp(24px,4vw,36px);line-height:1.15;margin:10px 0 6px}
+.entete p{margin:0;max-width:760px;opacity:.92}
+.entete .ligne{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.total{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 14px;font-weight:600;white-space:nowrap}
+.total .etoile{color:#FFC93C}
+
+/* Accueil */
+.intro{display:grid;gap:14px;margin:22px 0 8px}
+.note{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:12px 14px;font-size:15px}
+.cartes{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin:16px 0 30px}
+.carte-jeu{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--ombre);overflow:hidden;display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
+.carte-jeu:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(16,24,40,.14)}
+.carte-jeu .vignette{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:54px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.carte-jeu .vignette img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.carte-jeu .num{z-index:2}
+.carte-jeu .num{position:absolute;top:10px;left:12px;background:rgba(255,255,255,.9);color:#15213B;font-weight:700;font-size:13px;border-radius:999px;padding:2px 10px}
+.carte-jeu .corps{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.carte-jeu h3{margin:0;font-size:19px}
+.carte-jeu .notion{color:var(--ink-2);font-size:14.5px;flex:1}
+.puces{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.puce{font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--ink-2)}
+.carte-jeu .pied{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.etoiles{color:var(--gold);letter-spacing:2px;font-size:18px}
+.etoiles .vide{color:var(--line)}
+
+/* Boutons */
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:600;padding:10px 16px;cursor:pointer;text-decoration:none;min-height:44px}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn.sec{background:transparent;color:var(--blue);border:1.5px solid var(--blue)}
+.btn.vert{background:var(--green)}
+.btn.petit{min-height:36px;padding:6px 12px;font-size:14px}
+:focus-visible{outline:3px solid #FFB000;outline-offset:2px}
+.choix-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.choix{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;min-height:52px;font-size:15.5px;line-height:1.35}
+.choix:hover:not(:disabled){border-color:var(--blue);background:var(--surface-2)}
+.choix.mono{font-size:16px;text-align:center}
+.choix.bon{border-color:var(--ok);background:var(--ok-bg)}
+.choix.faux{border-color:var(--ko);background:var(--ko-bg)}
+.choix:disabled{cursor:default}
+.choix-1col{grid-template-columns:1fr}
+.segment{display:inline-flex;flex-wrap:wrap;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.segment button{border:0;background:var(--surface);padding:8px 12px;cursor:pointer;font-size:14px;min-height:40px;border-right:1px solid var(--line)}
+.segment button:last-child{border-right:0}
+.segment button[aria-pressed="true"]{background:var(--blue);color:#fff;font-weight:600}
+
+/* Vue de jeu */
+.jeu-entete{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin:18px 0 12px}
+.jeu-entete h2{margin:0;font-size:clamp(20px,3vw,26px)}
+.jeu-entete .sous{color:var(--ink-2);font-size:14.5px;margin:2px 0 0}
+.retour{font-weight:600;text-decoration:none;font-size:14.5px}
+.compteurs{display:flex;gap:8px;flex-wrap:wrap}
+.compteur{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-weight:600;font-size:14px;white-space:nowrap}
+.barre{height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-bottom:14px}
+.barre>div{height:100%;background:linear-gradient(90deg,var(--blue),var(--violet));width:0;transition:width .3s}
+.panneau{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--ombre);padding:16px}
+.deux{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:880px){.deux{grid-template-columns:minmax(0,1fr)}}
+.deux>*{min-width:0}
+.question{font-size:19px;font-weight:650;margin:0 0 4px}
+.aide{color:var(--ink-2);font-size:14.5px;margin:0 0 12px}
+.retour-msg{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:15px}
+.retour-msg.ok{background:var(--ok-bg);border:1px solid var(--ok)}
+.retour-msg.ko{background:var(--ko-bg);border:1px solid var(--ko)}
+.retour-msg b.t{display:block;margin-bottom:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.formule{font-family:ui-monospace,Consolas,monospace;background:var(--surface-2);border-radius:8px;padding:2px 7px;white-space:nowrap}
+.niveau{background:linear-gradient(90deg,var(--violet),var(--blue));color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-weight:600}
+
+/* Grille SVG (jeux 1 et 2) */
+.salle svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.salle .noeud circle{fill:var(--surface);stroke:var(--ink-2);stroke-width:2;transition:fill .15s}
+.salle.cliquable .noeud{cursor:pointer}
+.salle.cliquable .noeud:hover circle{fill:#FFE3A3;stroke:var(--orange)}
+.salle .noeud text{font-size:15px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.salle .noeud.allume circle{fill:var(--orange);stroke:#9A4A00}
+.salle .noeud.allume text{fill:#fff}
+.salle .noeud.bon circle{fill:var(--green);stroke:#145A1E}
+.salle .noeud.bon text,.salle .noeud.faux text{fill:#fff}
+.salle .noeud.faux circle{fill:var(--red);stroke:#7A0B13}
+.salle .noeud.voisin circle{fill:#CFE0FF;stroke:var(--blue)}
+.salle .noeud.voisin text{fill:#0B2545}
+.salle .noeud.discret circle{opacity:.35}
+.salle .axe{font-size:12px;fill:var(--ink-2);text-anchor:middle;dominant-baseline:central}
+.salle .etiquette-mur{font-size:12.5px;font-weight:600;text-anchor:middle;dominant-baseline:central}
+
+/* Carte thermique (jeux 3 et 4) */
+.carte-cadre{position:relative;width:100%}
+.carte-cadre canvas{display:block;width:100%;cursor:crosshair}
+.bulle{position:absolute;transform:translate(-50%,calc(-100% - 12px));background:var(--navy);color:#fff;border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.35;pointer-events:none;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:2}
+.bulle b{font-size:15px}
+.echelle{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);margin:4px 0 0}
+.echelle .grad{flex:1;height:10px;border-radius:99px;background:linear-gradient(90deg,#313695,#4575b4,#74add1,#abd9e9,#e0f3f8,#fee090,#fdae61,#f46d43,#d73027,#a50026)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin-top:12px}
+.stat{background:var(--surface-2);border-radius:10px;padding:8px 10px}
+.stat .l{font-size:12px;color:var(--ink-2)}
+.stat .v{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat.ok .v{color:var(--ok)}
+.stat.ko .v{color:var(--ko)}
+.reglage{margin:0 0 12px}
+.reglage label{display:flex;justify-content:space-between;font-size:14.5px;font-weight:600;margin-bottom:2px}
+.reglage label span{font-variant-numeric:tabular-nums;color:var(--blue)}
+input[type=range]{width:100%;accent-color:var(--blue);height:28px}
+.groupe-titre{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);font-weight:700;margin:14px 0 8px}
+.etapes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.etapes button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer}
+.etapes button.fait{background:var(--green);border-color:var(--green);color:#fff}
+.etapes button.actuel{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,86,210,.2)}
+.mission h4{margin:0 0 4px;font-size:18px}
+.mission .obj{background:var(--surface-2);border-radius:10px;padding:8px 12px;margin:10px 0;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Course SOR */
+.chrono{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.graphe{position:relative;width:100%;margin-top:8px}
+.graphe canvas{display:block;width:100%}
+.legende{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.legende i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.medaille{font-size:40px;line-height:1}
+.resultat{display:flex;gap:12px;align-items:center;border-radius:12px;padding:12px 14px;background:var(--surface-2);margin-top:12px}
+
+/* Consoles MATLAB */
+.console{max-width:100%;background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.5;overflow-x:auto;margin:10px 0;white-space:pre}
+.console .cmd{color:#9CDCFE}
+.console .err{color:var(--code-err)}
+.console .warn{color:var(--code-warn)}
+.console .com{color:#6A9955}
+.console .bug{background:rgba(255,138,128,.16);outline:1px dashed rgba(255,138,128,.6);border-radius:3px}
+.console-titre{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:700;margin-top:10px}
+
+/* Fin de partie */
+.fin{text-align:center;padding:22px 10px}
+.fin .grandes{font-size:46px;color:var(--gold);letter-spacing:6px}
+.fin .grandes .vide{color:var(--line)}
+.fin h3{font-size:24px;margin:6px 0}
+.pied-page{border-top:1px solid var(--line);margin-top:30px;padding:20px 0 36px;color:var(--ink-2);font-size:14px}
+.pied-page a{font-weight:600}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:50;pointer-events:none;animation:tombe linear forwards}
+@keyframes tombe{to{transform:translateY(105vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}.carte-jeu{transition:none}}
+@media (max-width:520px){.chrono .v{font-size:14.5px}.choix-grille{grid-template-columns:1fr}.panneau{padding:13px}.chrono{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Ajouts communs aux pages TP4 et TP6 */
+.nb{text-transform:none;letter-spacing:0}
+.autres{font-size:13px;opacity:.9;margin-top:4px}
+.autres a{color:#fff;font-weight:600}
+.tableau{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums;margin-top:10px}
+.tableau th,.tableau td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:right}
+.tableau th{color:var(--ink-2);font-weight:600;font-size:12.5px}
+.tableau td:first-child,.tableau th:first-child{text-align:center}
+.tableau tr.neuf td{background:var(--surface-2)}
+.pari-choisi{display:inline-block;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-weight:600;margin-top:6px}
+.bacs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.bac{border:2px dashed var(--line);border-radius:14px;padding:12px;background:var(--surface);cursor:pointer;text-align:left;min-height:96px}
+.bac:hover:not(:disabled){border-color:var(--blue);background:var(--surface-2)}
+.bac b{display:block;font-size:15.5px;margin-bottom:4px}
+.bac span{font-size:13px;color:var(--ink-2)}
+.bac.bon{border-style:solid;border-color:var(--ok);background:var(--ok-bg)}
+.bac.faux{border-style:solid;border-color:var(--ko);background:var(--ko-bg)}
+@media (max-width:640px){.bacs{grid-template-columns:1fr}}
+.plan{position:relative;width:100%}
+.plan canvas{display:block;width:100%}
+.lecture{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-top:10px}
+</style>
+</head>
+<body>
+<header class="entete">
+  <div class="enveloppe">
+    <div class="ariane"><a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-genie-mecanique.md">Méthodes numériques pour la mécanique</a> › Module 11 · EDO › <a href="#">Jeux du TP4</a></div>
+    <div class="ligne">
+      <h1>🎮 Le TP4 en jeux : la paroi de four</h1>
+      <div class="total" id="total" aria-live="polite">★ 0 / 15</div>
+    </div>
+    <p>Une paroi à 1200 K refroidit dans un atelier à 293 K, par convection et par rayonnement : C dT/dt = −hA (T − T<sub>amb</sub>) − εA (T⁴ − T<sub>amb</sub>⁴). Cinq jeux pour manipuler Euler explicite, RK4 et Euler implicite avec Newton.</p>
+    <div class="autres">Autres jeux : <a href="../tp5/">TP5 · salle de sport</a> · <a href="../tp6/">TP6 · attracteur de Lorenz</a></div>
+  </div>
+</header>
+
+<main class="enveloppe">
+
+<section id="accueil" class="vue">
+  <div class="intro">
+    <div class="note">🧮 <b>Rien n'est recopié :</b> chaque nombre affiché est calculé en direct dans votre navigateur par le code MATLAB du TP4 (<code>modele_four</code>, <code>euler_explicite</code>, <code>rk4</code>, <code>euler_implicite</code>, <code>erreur_finale</code>) porté ligne pour ligne en JavaScript. Ce sont les mêmes nombres que MATLAB : <span id="verif-base">…</span>.</div>
+  </div>
+  <div class="cartes" id="cartes"></div>
+  <div class="note" style="border-left-color:var(--green)">💡 <b>Conseil :</b> jouez <b>après</b> avoir lu l'énoncé du TP4 et <b>avant</b> d'écrire votre code MATLAB. Chaque jeu correspond à une manipulation de l'énoncé ; à la fin, comparez avec le corrigé.</div>
+</section>
+
+<!-- JEU 1 : le pas de trop -->
+<section id="jeu-1" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🪜 Le pas de trop</h2><p class="sous">Euler explicite, T(n+1) = T(n) + h f(t(n), T(n)) : jusqu'où peut-on agrandir le pas h ?</p></div>
+    <div class="compteurs"><span class="compteur" id="j1-compte">Missions : 0 / 5</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau">
+      <div class="graphe" id="j1-courbe"><canvas aria-label="Température de la paroi en fonction du temps"></canvas></div>
+      <div class="legende"><span><i style="background:var(--blue)"></i>Euler explicite (pas h)</span><span><i style="background:var(--green)"></i>Euler implicite (pas h)</span><span><i style="background:var(--ink-2);opacity:.6"></i>référence : RK4, h = 0,1 s</span><span><i style="background:var(--red)"></i>ambiante 293 K</span></div>
+      <div class="stats" id="j1-stats"></div>
+    </div>
+    <div>
+      <div class="panneau mission" id="j1-mission"></div>
+      <div class="panneau" style="margin-top:16px">
+        <div class="reglage"><label for="j1-h">Pas de temps h <span id="j1-hv">20 s</span></label><input type="range" id="j1-h" min="1" max="400" step="1" value="20"></div>
+        <div class="actions" style="margin-top:0"><button class="btn sec petit" id="j1-moins">− 1 s</button><button class="btn sec petit" id="j1-plus">+ 1 s</button></div>
+        <div class="groupe-titre">Euler implicite (Newton à chaque pas)</div>
+        <div class="segment" id="j1-impl"><button data-v="0">Masqué</button><button data-v="1">Affiché</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 2 : Newton pas a pas -->
+<section id="jeu-2" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🎯 Newton, pas à pas</h2><p class="sous">Un pas d'Euler implicite = trouver le zéro de F(x) = x − T(n) − h f(t(n+1), x), en partant de x = T(n) = 1200 K</p></div>
+    <div class="compteurs"><span class="compteur" id="j2-compte">Missions : 0 / 4</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau">
+      <div class="graphe" id="j2-courbe"><canvas aria-label="La fonction F et les tangentes de Newton"></canvas></div>
+      <div class="legende"><span><i style="background:var(--blue)"></i>F(x)</span><span><i style="background:var(--orange)"></i>tangentes de Newton (pente F′ utilisée)</span></div>
+      <div id="j2-etat" aria-live="polite"></div>
+      <table class="tableau" id="j2-table"></table>
+    </div>
+    <div>
+      <div class="panneau mission" id="j2-mission"></div>
+      <div class="panneau" style="margin-top:16px">
+        <div class="groupe-titre" style="margin-top:0">Pas de temps <span class="nb">h</span></div>
+        <div class="segment" id="j2-h"><button data-v="5">5 s</button><button data-v="60">60 s</button><button data-v="300">300 s</button></div>
+        <div class="groupe-titre">Dérivée <span class="nb">F′(x)</span> dans Newton</div>
+        <div class="segment" id="j2-signe"><button data-v="1">1 − h·f′ (correcte)</button><button data-v="-1">1 + h·f′ (mauvais signe)</button></div>
+        <div class="actions"><button class="btn" id="j2-pas">Itération suivante ▶</button><button class="btn sec" id="j2-tout">Tout dérouler ⏩</button><button class="btn sec" id="j2-zero">↺</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 3 : le duel des schemas -->
+<section id="jeu-3" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>⚔️ Le duel des schémas</h2><p class="sous">Pariez : quand on divise h par 2, par combien l'erreur sur T(1200 s) est-elle divisée ?</p></div>
+    <div class="compteurs"><span class="compteur" id="j3-q">Manche 1 / 6</span><span class="compteur" id="j3-score">0 pt</span></div>
+  </div>
+  <div class="barre"><div id="j3-barre"></div></div>
+  <div id="j3-jeu" class="deux">
+    <div class="panneau">
+      <div class="graphe" id="j3-courbe"><canvas aria-label="Erreur en fonction du pas, échelles logarithmiques"></canvas></div>
+      <div class="legende"><span><i style="background:var(--blue)"></i>Euler explicite</span><span><i style="background:var(--green)"></i>Euler implicite</span><span><i style="background:var(--violet)"></i>RK4</span><span><i style="background:var(--red)"></i>RK4 du camarade</span></div>
+      <div id="j3-console"></div>
+    </div>
+    <div class="panneau">
+      <p class="question" id="j3-question"></p>
+      <p class="aide" id="j3-aide"></p>
+      <div id="j3-choix" class="choix-grille"></div>
+      <div id="j3-retour" aria-live="polite"></div>
+      <div class="actions"><button class="btn" id="j3-suivant" hidden>Manche suivante →</button></div>
+    </div>
+  </div>
+  <div id="j3-fin" class="panneau" hidden></div>
+</section>
+
+<!-- JEU 4 : convection contre rayonnement -->
+<section id="jeu-4" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🔥 Convection contre rayonnement</h2><p class="sous">hA (T − T<sub>amb</sub>) est linéaire, εA (T⁴ − T<sub>amb</sub>⁴) ne l'est pas : qui refroidit la paroi, et quand ?</p></div>
+    <div class="compteurs"><span class="compteur" id="j4-compte">Missions : 0 / 5</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau">
+      <div class="groupe-titre" style="margin-top:0">Les deux flux de perte (W)</div>
+      <div class="graphe" id="j4-flux"><canvas aria-label="Flux de convection et de rayonnement en fonction de la température"></canvas></div>
+      <div class="legende"><span><i style="background:var(--blue)"></i>convection hA (T − T<sub>amb</sub>)</span><span><i style="background:var(--orange)"></i>rayonnement εA (T⁴ − T<sub>amb</sub>⁴)</span></div>
+      <div class="reglage" style="margin-top:12px"><label for="j4-T">Température de la paroi <span id="j4-Tv">800 K</span></label><input type="range" id="j4-T" min="293" max="1250" step="1" value="800"></div>
+      <div class="stats" id="j4-stats"></div>
+      <div class="groupe-titre">La course : refroidissement depuis 1200 K <span class="nb">(RK4, h = 5 s)</span></div>
+      <div class="graphe" id="j4-course"><canvas aria-label="Refroidissement avec et sans rayonnement"></canvas></div>
+      <div class="legende"><span><i style="background:var(--orange)"></i>avec rayonnement</span><span><i style="background:var(--blue)"></i>convection seule</span><span><i style="background:var(--red)"></i>600 K</span></div>
+    </div>
+    <div class="panneau mission" id="j4-mission"></div>
+  </div>
+</section>
+
+<!-- JEU 5 : detective du code -->
+<section id="jeu-5" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🕵️ Détective du code</h2><p class="sous">Chaque affaire : un extrait de code, la sortie de la console. Trouvez le bug… ou prouvez qu'il n'y en a pas.</p></div>
+    <div class="compteurs"><span class="compteur" id="j5-q">Affaire 1 / 8</span><span class="compteur" id="j5-score">0 pt</span></div>
+  </div>
+  <div class="barre"><div id="j5-barre"></div></div>
+  <div id="j5-jeu" class="deux">
+    <div class="panneau"><div id="j5-dossier"></div></div>
+    <div class="panneau">
+      <p class="question" id="j5-question"></p>
+      <div id="j5-choix" class="choix-grille choix-1col"></div>
+      <div id="j5-retour" aria-live="polite"></div>
+      <div class="actions"><button class="btn" id="j5-suivant" hidden>Affaire suivante →</button></div>
+    </div>
+  </div>
+  <div id="j5-fin" class="panneau" hidden></div>
+</section>
+
+</main>
+
+<footer class="enveloppe pied-page">
+  <div>📄 <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/methodes-numeriques/Chapitre_11_EDO_Euler_Runge_Kutta/4_TP4_enonce.pdf">Énoncé du TP4</a> · ✅ <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/methodes-numeriques/Chapitre_11_EDO_Euler_Runge_Kutta/4_TP4_corrige_scripts_MATLAB.zip">Corrigé : scripts MATLAB</a> · 📚 <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-genie-mecanique.md">Retour au cours</a></div>
+  <div style="margin-top:6px">Pr. Mohamed JANANE ALLAH · Faculté des Sciences et Techniques de Mohammedia — Université Hassan II de Casablanca · Votre progression reste dans ce navigateur, rien n'est envoyé.</div>
+</footer>
+
+<noscript><p class="enveloppe">Ces jeux ont besoin de JavaScript.</p></noscript>
+<script src="noyau.js"></script>
+<script>window.CLE_JEUX = "tp4-jeux-v1";</script>
+<script>
+"use strict";
+/* ============================================================
+   Outils communs des pages de jeux (meme base que la page du TP5)
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const virgule = (v, d) => v.toFixed(d).replace(".", ",").replace("-", "−");
+const melanger = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const hasard = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const attendre = ms => new Promise(r => setTimeout(r, ms));
+function el(tag, attrs, ...enfants) {
+  const e = document.createElement(tag);
+  for (const [c, v] of Object.entries(attrs || {})) {
+    if (c === "html") e.innerHTML = v; else if (c === "texte") e.textContent = v;
+    else if (c.startsWith("on")) e.addEventListener(c.slice(2), v); else e.setAttribute(c, v);
+  }
+  enfants.forEach(x => e.append(x));
+  return e;
+}
+const css = nom => getComputedStyle(document.documentElement).getPropertyValue(nom).trim();
+
+// Affichage des nombres a la maniere de MATLAB (format short / short e)
+function expo(v) { return v.toExponential(4).replace(/e([+-])(\d)$/, "e$10$2"); }
+function champ(v, entiers, large) {
+  if (entiers) return String(v).padStart(large ? 12 : 6);
+  return (v === 0 ? "0" : v.toFixed(4)).padStart(10);
+}
+function matLigne(vals) {
+  const entiers = vals.every(v => Number.isInteger(v)), large = vals.some(v => Math.abs(v) >= 1000);
+  return vals.map(v => champ(v, entiers, large)).join("");
+}
+function matColonne(vals) {
+  const entiers = vals.every(v => Number.isInteger(v)), large = vals.some(v => Math.abs(v) >= 1000);
+  return vals.map(v => champ(v, entiers, large));
+}
+function matLigneE(vals) { return vals.map(v => expo(v).padStart(13)).join(""); }
+function echapper(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+// lignes : ">> " commande, "!" erreur, "?" avertissement, "#" ligne suspecte, "%..." commentaire en fin de ligne
+function console_(lignes) {
+  return '<pre class="console">' + lignes.map(l => {
+    if (l.startsWith(">> ")) return '<span class="cmd">' + echapper(l) + "</span>";
+    if (l.startsWith("!")) return '<span class="err">' + echapper(l.slice(1)) + "</span>";
+    if (l.startsWith("?")) return '<span class="warn">' + echapper(l.slice(1)) + "</span>";
+    if (l.startsWith("#")) return '<span class="bug">' + echapper(l.slice(1)) + "</span>";
+    return echapper(l).replace(/(%.*)$/, '<span class="com">$1</span>');
+  }).join("\n") + "</pre>";
+}
+// "ans =" a la MATLAB (format loose) : ["", nom + " =", "", ...lignes]
+const ans = (lignes, nom) => ["", (nom || "ans") + " =", ""].concat(lignes).concat([""]);
+
+// Progression (dans ce navigateur seulement) : window.CLE_JEUX = cle de stockage de la page
+let progres = {};
+try { progres = JSON.parse(localStorage.getItem(window.CLE_JEUX)) || {}; } catch (e) { progres = {}; }
+function noter(jeu, n) {
+  if (n > (progres[jeu] || 0)) { progres[jeu] = n; try { localStorage.setItem(window.CLE_JEUX, JSON.stringify(progres)); } catch (e) { /* stockage indisponible */ } }
+  majAccueil();
+}
+function etoilesHTML(n) { return '<span class="etoiles">' + "★".repeat(n) + '<span class="vide">' + "★".repeat(3 - n) + "</span></span>"; }
+function confettis() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cols = ["#0056D2", "#6A4C93", "#C1121F", "#2E7D32", "#E67E22", "#F2C14E"];
+  for (let q = 0; q < 70; q++) {
+    const c = el("div", { class: "confetti" });
+    c.style.left = Math.random() * 100 + "vw"; c.style.background = cols[q % cols.length];
+    c.style.animationDuration = 1.6 + Math.random() * 1.6 + "s"; c.style.animationDelay = Math.random() * 0.4 + "s";
+    document.body.append(c); setTimeout(() => c.remove(), 3800);
+  }
+}
+function ecranFin(zone, o) {
+  zone.innerHTML = '<div class="fin"><div class="grandes">' + "★".repeat(o.etoiles) + '<span class="vide">' + "★".repeat(3 - o.etoiles) +
+    "</span></div><h3>" + o.titre + '</h3><p class="aide" style="font-size:16px">' + o.detail + "</p>" + (o.extra || "") +
+    '<div class="actions" style="justify-content:center"><button class="btn" data-r>↻ Rejouer</button><a class="btn sec" href="#">Tous les jeux</a></div></div>';
+  $("[data-r]", zone).addEventListener("click", o.rejouer);
+  if (o.etoiles === 3) confettis();
+}
+function choixBoutons(zone, options, rappel, mono) {
+  zone.innerHTML = "";
+  options.forEach((o, q) => zone.append(el("button", { class: "choix" + (mono ? " mono" : ""), html: o.html, "data-q": q,
+    onclick: () => { $$("button", zone).forEach(b => b.disabled = true); rappel(o, q, $$("button", zone)); } })));
+}
+function marquerChoix(boutons, options, choisi) {
+  boutons.forEach((b, q) => { if (options[q].bon) b.classList.add("bon"); else if (q === choisi) b.classList.add("faux"); });
+}
+function retour(zone, ok, titre, html) {
+  zone.innerHTML = '<div class="retour-msg ' + (ok ? "ok" : "ko") + '"><b class="t">' + titre + "</b>" + (html || "") + "</div>";
+}
+function segment(zone, valeur, rappel) {
+  $$("button", zone).forEach(b => {
+    b.setAttribute("aria-pressed", b.dataset.v === String(valeur));
+    if (!b.dataset.lie) { b.dataset.lie = 1; b.addEventListener("click", () => rappel(b.dataset.v)); }
+  });
+}
+function graduations(min, max, n) {
+  const brut = (max - min) / (n || 5), p = Math.pow(10, Math.floor(Math.log10(brut))), m = brut / p;
+  const pas = (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p, r = [];
+  for (let v = Math.ceil(min / pas) * pas; v <= max + pas * 1e-9; v += pas) r.push(+v.toFixed(10));
+  return r;
+}
+
+/* Traceur de courbes : axes, grille, series, points, droites horizontales et verticales, textes */
+function tracer(cadre, o) {
+  const cv = $("canvas", cadre), W = cadre.clientWidth, H = o.hauteur || Math.max(180, Math.min(260, W * 0.55)), dpr = window.devicePixelRatio || 1;
+  if (!W) return null;
+  cv.style.height = H + "px"; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  const m = Object.assign({ l: 54, r: 12, t: 12, b: 36 }, o.marges || {}), ink = css("--ink-2"), ligne = css("--line");
+  const X = x => m.l + (x - o.x[0]) / (o.x[1] - o.x[0]) * (W - m.l - m.r);
+  const Y = y => H - m.b - (y - o.y[0]) / (o.y[1] - o.y[0]) * (H - m.t - m.b);
+  ctx.font = "11.5px system-ui,Segoe UI,Arial"; ctx.fillStyle = ink; ctx.strokeStyle = ligne; ctx.lineWidth = 1;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  (o.xt || []).forEach(([v, t]) => { ctx.beginPath(); ctx.moveTo(X(v), m.t); ctx.lineTo(X(v), H - m.b); ctx.stroke(); ctx.fillText(t, X(v), H - m.b + 5); });
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  (o.yt || []).forEach(([v, t]) => { ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(W - m.r, Y(v)); ctx.stroke(); ctx.fillText(t, m.l - 6, Y(v)); });
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; if (o.xl) ctx.fillText(o.xl, (m.l + W - m.r) / 2, H - 1);
+  if (o.yl) { ctx.save(); ctx.translate(9, (m.t + H - m.b) / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = "middle"; ctx.fillText(o.yl, 0, 0); ctx.restore(); }
+  ctx.save(); ctx.beginPath(); ctx.rect(m.l, m.t, W - m.l - m.r, H - m.t - m.b); ctx.clip();
+  (o.horiz || []).forEach(h => { ctx.strokeStyle = h.c; ctx.lineWidth = h.l || 1.5; ctx.setLineDash(h.tir || []); ctx.beginPath(); ctx.moveTo(m.l, Y(h.y)); ctx.lineTo(W - m.r, Y(h.y)); ctx.stroke(); });
+  (o.vert || []).forEach(h => { ctx.strokeStyle = h.c; ctx.lineWidth = h.l || 1.5; ctx.setLineDash(h.tir || []); ctx.beginPath(); ctx.moveTo(X(h.x), m.t); ctx.lineTo(X(h.x), H - m.b); ctx.stroke(); });
+  ctx.setLineDash([]);
+  (o.series || []).forEach(s => {
+    ctx.strokeStyle = s.c; ctx.lineWidth = s.l || 2; ctx.globalAlpha = s.a || 1; ctx.setLineDash(s.tir || []); ctx.lineJoin = "round"; ctx.beginPath();
+    let debut = true;
+    s.pts.forEach(([x, y]) => { if (!isFinite(y) || !isFinite(x)) { debut = true; return; } if (debut) ctx.moveTo(X(x), Y(y)); else ctx.lineTo(X(x), Y(y)); debut = false; });
+    ctx.stroke(); ctx.globalAlpha = 1; ctx.setLineDash([]);
+    if (s.marques) { ctx.fillStyle = s.c; s.pts.forEach(([x, y]) => { if (isFinite(y)) { ctx.beginPath(); ctx.arc(X(x), Y(y), s.marques, 0, 7); ctx.fill(); } }); }
+  });
+  (o.points || []).forEach(p => {
+    ctx.fillStyle = p.c; ctx.strokeStyle = p.c; ctx.lineWidth = 2;
+    if (p.croix) { ctx.beginPath(); ctx.moveTo(X(p.x) - 5, Y(p.y) - 5); ctx.lineTo(X(p.x) + 5, Y(p.y) + 5); ctx.moveTo(X(p.x) + 5, Y(p.y) - 5); ctx.lineTo(X(p.x) - 5, Y(p.y) + 5); ctx.stroke(); }
+    else if (p.anneau) { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r || 7, 0, 7); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r || 4.5, 0, 7); ctx.fill(); }
+  });
+  ctx.restore();
+  (o.textes || []).forEach(t => { ctx.fillStyle = t.c || ink; ctx.font = (t.gras ? "600 " : "") + "12px system-ui,Segoe UI,Arial"; ctx.textAlign = t.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t.t, X(t.x) + (t.dx || 0), Y(t.y) + (t.dy || 0)); });
+  return { X, Y, W, H, m, inverse: (px, py) => [o.x[0] + (px - m.l) / (W - m.l - m.r) * (o.x[1] - o.x[0]), o.y[0] + (H - m.b - py) / (H - m.t - m.b) * (o.y[1] - o.y[0])] };
+}
+
+/* ============================================================
+   Moteur de missions : etapes numerotees, pari facultatif, consigne suivie en direct,
+   action, bouton de validation, quiz final, message de reussite.
+   ============================================================ */
+function moteurMissions(o) {
+  const E = { m: 0, phase: "consigne", faites: new Set(), paris: {}, essais: 0 }, M = o.missions;
+  const val = f => typeof f === "function" ? f() : f;
+  function entrer(m) {
+    E.m = m; E.essais = 0;
+    E.phase = E.faites.has(m) ? "fini" : (M[m].pari && E.paris[m] === undefined) ? "pari" : "consigne";
+    if (M[m].entree) M[m].entree();
+    o.recalculer(); afficher();
+  }
+  function gagner() {
+    E.faites.add(E.m); const n = E.faites.size;
+    noter(o.jeu, o.etoiles(n)); if (o.compteur) o.compteur.textContent = "Missions : " + n + " / " + M.length;
+    if (n === M.length) confettis();
+  }
+  function verifier() {
+    const X = M[E.m], avant = E.phase;
+    if (E.phase === "consigne" && X.ok && X.ok()) { E.phase = X.quiz ? "quiz" : "fini"; if (!X.quiz) gagner(); }
+    if (E.phase === "consigne" || E.phase !== avant) afficher();
+  }
+  function afficher() {
+    const X = M[E.m], z = o.zone;
+    let h = '<div class="etapes">' + M.map((_, q) => '<button data-m="' + q + '" class="' + (E.faites.has(q) ? "fait " : "") + (q === E.m ? "actuel" : "") + '" aria-label="Mission ' + (q + 1) + '">' + (q + 1) + "</button>").join("") + "</div>";
+    h += "<h4>Mission " + (E.m + 1) + " · " + X.titre + '</h4><p style="margin:0">' + val(X.consigne) + "</p>";
+    if (X.pari && E.paris[E.m] !== undefined && E.phase !== "pari") h += '<span class="pari-choisi">Votre pronostic : ' + X.pari.o[E.paris[E.m]] + "</span>";
+    if (E.phase === "pari") {
+      h += '<p class="question" style="font-size:16.5px;margin-top:12px">🔮 ' + val(X.pari.q) + '</p><div class="choix-grille" id="mm-pari"></div>';
+    } else if (E.phase === "consigne") {
+      if (X.suivi) h += '<div class="obj">' + X.suivi() + "</div>";
+      if (X.action) h += '<div class="actions"><button class="btn" id="mm-action">' + X.action.label + "</button></div>";
+      if (X.valider) h += '<div class="actions"><button class="btn" id="mm-valider">' + val(X.valider.label) + '</button></div><div id="mm-vret"></div>';
+    } else if (E.phase === "quiz") {
+      h += '<div class="retour-msg ok"><b class="t">✔ Mission accomplie : une dernière question</b>' + (X.avantQuiz ? val(X.avantQuiz) : "") + "</div>";
+      h += '<p class="question" style="font-size:16.5px;margin-top:12px">' + val(X.quiz.q) + '</p><div class="choix-grille choix-1col" id="mm-quiz"></div><div id="mm-qret"></div>';
+    } else {
+      let bilan = "";
+      if (X.pari && E.paris[E.m] !== undefined) {
+        const bon = X.pari.bon();
+        bilan = "<br>" + (E.paris[E.m] === bon ? "🎯 Pronostic juste !" : "Pronostic : " + X.pari.o[E.paris[E.m]] + " · réponse : <b>" + X.pari.o[bon] + "</b>.");
+      }
+      h += '<div class="retour-msg ok"><b class="t">✔ Mission accomplie</b>' + (X.bravo ? val(X.bravo) : val(X.quiz.expl)) + bilan + "</div>";
+      h += '<div class="actions">' + (E.m < M.length - 1 ? '<button class="btn" id="mm-suite">Mission suivante →</button>' : '<a class="btn" href="#">🎉 Retour aux jeux</a>') + "</div>";
+    }
+    z.innerHTML = h;
+    $$(".etapes button", z).forEach(b => b.addEventListener("click", () => entrer(+b.dataset.m)));
+    const su = $("#mm-suite", z); if (su) su.addEventListener("click", () => entrer(E.m + 1));
+    const ac = $("#mm-action", z); if (ac) ac.addEventListener("click", () => { X.action.faire(); o.recalculer(); verifier(); });
+    const va = $("#mm-valider", z);
+    if (va) va.addEventListener("click", () => {
+      const [ok, msg] = X.valider.test();
+      if (ok) { E.phase = X.quiz ? "quiz" : "fini"; if (!X.quiz) gagner(); afficher(); }
+      else retour($("#mm-vret", z), false, "✘ Pas encore", msg);
+    });
+    if (E.phase === "pari") {
+      const L = X.pari.o.map((t, q) => ({ html: t, q }));
+      choixBoutons($("#mm-pari", z), L, c => { E.paris[E.m] = c.q; E.phase = "consigne"; if (X.apresPari) X.apresPari(); o.recalculer(); afficher(); verifier(); }, true);
+    }
+    if (E.phase === "quiz") {
+      const L = melanger(X.quiz.o.map(([t, b]) => ({ html: t, bon: !!b })));
+      choixBoutons($("#mm-quiz", z), L, (c, q, bs) => {
+        marquerChoix(bs, L, q);
+        if (c.bon) { E.phase = "fini"; gagner(); setTimeout(afficher, 900); }
+        else { retour($("#mm-qret", z), false, "✘ Non, réessayez", ""); setTimeout(afficher, 1100); }
+      });
+    }
+  }
+  return { E, entrer, verifier, afficher };
+}
+
+/* ============================================================
+   Moteur du detective : AFFAIRES = [{titre, code, sortie, q, o:[[texte, bon]], expl}]
+   ============================================================ */
+function moteurDetective(o) {
+  let E, A;
+  function demarrer() {
+    if (!A) A = o.dossiers();
+    E = { q: 0, bons: 0, score: 0 }; $("#" + o.p + "-jeu").hidden = false; $("#" + o.p + "-fin").hidden = true; poser();
+  }
+  function poser() {
+    const X = A[E.q];
+    $("#" + o.p + "-q").textContent = "Affaire " + (E.q + 1) + " / " + A.length; $("#" + o.p + "-score").textContent = E.score + " pt";
+    $("#" + o.p + "-barre").style.width = E.q / A.length * 100 + "%";
+    $("#" + o.p + "-dossier").innerHTML = '<h3 style="margin:0 0 6px">📁 ' + X.titre + '</h3><div class="console-titre">Extrait du code (ligne suspecte surlignée)</div>' + console_(X.code) +
+      '<div class="console-titre">Fenêtre de commandes</div>' + console_(X.sortie);
+    $("#" + o.p + "-question").textContent = X.q; $("#" + o.p + "-retour").innerHTML = ""; $("#" + o.p + "-suivant").hidden = true;
+    const L = melanger(X.o.map(([t, b]) => ({ html: t, bon: !!b })));
+    choixBoutons($("#" + o.p + "-choix"), L, (c, q, bs) => {
+      marquerChoix(bs, L, q); if (c.bon) { E.bons++; E.score += 100; }
+      retour($("#" + o.p + "-retour"), c.bon, c.bon ? "✔ Affaire résolue ! +100 pt" : "✘ Fausse piste", X.expl);
+      $("#" + o.p + "-score").textContent = E.score + " pt"; $("#" + o.p + "-suivant").hidden = false;
+      $("#" + o.p + "-suivant").textContent = E.q === A.length - 1 ? "Voir le résultat →" : "Affaire suivante →";
+    });
+  }
+  function suivant() {
+    if (E.q < A.length - 1) { E.q++; poser(); window.scrollTo({ top: $("#" + o.id).offsetTop - 10, behavior: "smooth" }); return; }
+    $("#" + o.p + "-barre").style.width = "100%"; $("#" + o.p + "-jeu").hidden = true; const z = $("#" + o.p + "-fin"); z.hidden = false;
+    const et = E.bons >= 7 ? 3 : E.bons >= 5 ? 2 : E.bons >= 3 ? 1 : 0; noter(o.id, et);
+    ecranFin(z, { etoiles: et, titre: E.bons + " / " + A.length + " affaires résolues · " + E.score + " pt", rejouer: demarrer, detail: o.morale });
+  }
+  $("#" + o.p + "-suivant").addEventListener("click", suivant);
+  return { ouvrir: demarrer };
+}
+
+/* ============================================================
+   Accueil et navigation : window.FICHES (cartes) et window.JEUX (objets { ouvrir })
+   ============================================================ */
+function majAccueil() {
+  const zone = $("#cartes"); if (!zone) return; zone.innerHTML = "";
+  FICHES.forEach((f, q) => zone.append(el("a", { class: "carte-jeu", href: "#" + f.id, html:
+    '<div class="vignette" style="background:' + f.fond + '"><img src="vignettes/' + f.id + '.jpg" alt="" loading="lazy" onerror="this.remove()"><span class="num">Jeu ' + (q + 1) + "</span>" + f.emoji + "</div>" +
+    '<div class="corps"><h3>' + f.titre + '</h3><div class="notion">' + f.notion + '</div><div class="puces">' + f.puces.map(p => '<span class="puce">' + p + "</span>").join("") +
+    '</div><div class="pied">' + etoilesHTML(progres[f.id] || 0) + '<span class="btn petit">' + ((progres[f.id] || 0) ? "Rejouer" : "Jouer") + " ▶</span></div></div>" })));
+  const tot = FICHES.reduce((s, f) => s + (progres[f.id] || 0), 0);
+  $("#total").innerHTML = '<span class="etoile">★</span> ' + tot + " / " + 3 * FICHES.length;
+}
+function routeur() {
+  const id = location.hash.slice(1), vue = JEUX[id] ? id : "accueil";
+  $$(".vue").forEach(v => v.hidden = v.id !== vue);
+  majAccueil(); if (JEUX[id]) JEUX[id].ouvrir();
+  window.scrollTo(0, 0);
+}
+function demarrerPage() { addEventListener("hashchange", routeur); routeur(); }
+/* ============================================================
+   TP4 : la paroi de four
+   ============================================================ */
+const M4 = TP4.modele(), MC4 = TP4.modele(false), PP = TP4.P;
+let REF4 = null;
+const ref4 = () => REF4 || (REF4 = TP4.rk4(M4.f, 1200, 1200, 0.1));
+const pts = s => Array.from(s.T, (v, n) => [s.t[n], v]);
+const ticks = (a, b, n) => graduations(a, b, n).map(v => [v, String(v).replace(".", ",")]);
+
+const FICHES = [
+  { id: "jeu-1", emoji: "🪜", fond: "linear-gradient(135deg,#0056D2,#3D8BFF)", titre: "Le pas de trop", notion: "Euler explicite à la loupe : précision, passage sous l'ambiante, pas critique… et l'implicite qui tient bon.", puces: ["Manip. 1 et 2", "stabilité", "≈ 5 min"] },
+  { id: "jeu-2", emoji: "🎯", fond: "linear-gradient(135deg,#6A4C93,#9B7BD0)", titre: "Newton, pas à pas", notion: "Chaque pas d'Euler implicite cache une boucle de Newton : itérez à la main, puis cassez la dérivée.", puces: ["Manip. 2", "Newton-Raphson", "≈ 4 min"] },
+  { id: "jeu-3", emoji: "⚔️", fond: "linear-gradient(135deg,#2E7D32,#58B35E)", titre: "Le duel des schémas", notion: "Pariez sur la façon dont l'erreur diminue quand h est divisé par 2 : ordre 1, ordre 4… et un RK4 tombé à l'ordre 3.", puces: ["ordre", "coût égal", "≈ 3 min"] },
+  { id: "jeu-4", emoji: "🔥", fond: "linear-gradient(135deg,#C1121F,#F46D43)", titre: "Convection contre rayonnement", notion: "Deux flux, un seul en T⁴ : trouvez où ils s'égalisent et pariez sur la course à 600 K.", puces: ["Manip. 3", "physique", "≈ 4 min"] },
+  { id: "jeu-5", emoji: "🕵️", fond: "linear-gradient(135deg,#E67E22,#F5B041)", titre: "Détective du code", notion: "Huit affaires, dont plusieurs où le résultat est juste… et le code faux.", puces: ["Manip. 1 à 3", "diagnostic", "≈ 5 min"] },
+];
+
+/* ---------- JEU 1 : le pas de trop ---------- */
+const jeu1 = (() => {
+  const E = { h: 20, impl: false, demarre: false };
+  let R, MM, hPrecis, hPhys;
+  function calculer() {
+    const r = ref4(), e = TP4.eulerExplicite(M4.f, 1200, 1200, E.h), st = TP4.stats(e.T), fin = e.t[e.N];
+    R = { e, st, fin, err: Math.abs(fin - 1200) < 1e-9 ? Math.abs(e.T[e.N] - r.T[r.N]) : NaN, xi: 1 + E.h * M4.dfdT(0, 1200),
+          im: E.impl ? TP4.eulerImplicite(M4.f, M4.dfdT, 1200, 1200, E.h) : null };
+    $("#j1-h").value = E.h; $("#j1-hv").textContent = E.h + " s";
+    segment($("#j1-impl"), E.impl ? 1 : 0, v => { E.impl = v === "1"; calculer(); });
+    const tmax = Math.max(1200, R.fin), ymin = Math.min(0, Math.floor((R.st.min - 60) / 100) * 100);
+    tracer($("#j1-courbe"), { hauteur: 300, x: [0, tmax], y: [ymin, 1250], xl: "temps t (s)", yl: "T (K)", xt: ticks(0, tmax, 6), yt: ticks(ymin, 1250, 6),
+      horiz: [{ y: 293, c: css("--red"), tir: [5, 4] }].concat(ymin < 0 ? [{ y: 0, c: css("--ink-2"), l: 1 }] : []),
+      series: [{ pts: pts(r).filter((_, n) => n % 20 === 0), c: css("--ink-2"), a: 0.5, l: 2.4 },
+               { pts: pts(R.e), c: css("--blue"), l: 2.2, marques: R.e.N <= 80 ? 3.2 : 0 }]
+        .concat(R.im ? [{ pts: pts(R.im), c: css("--green"), l: 2.2, marques: R.im.N <= 80 ? 3.2 : 0 }] : []) });
+    const sous = R.st.min < 293;
+    $("#j1-stats").innerHTML = [["Nombre de pas N", R.e.N], ["Dernier instant", virgule(R.fin, 0) + " s"],
+      ["T(" + virgule(R.fin, 0) + " s) Euler", virgule(R.e.T[R.e.N], 4) + " K"], ["Écart à la référence", isNaN(R.err) ? "—" : virgule(R.err, 4) + " K"],
+      ["T min Euler", virgule(R.st.min, 1) + " K", sous ? "ko" : ""], ["Sous l'ambiante ?", sous ? "✗ oui" : "✓ non", sous ? "ko" : "ok"],
+      ["1 + h·f′(T₀)", virgule(R.xi, 3), R.xi < -1 ? "ko" : ""]]
+      .map(([l, v, c]) => '<div class="stat ' + (c || "") + '"><div class="l">' + l + '</div><div class="v">' + v + "</div></div>").join("");
+    if (MM) MM.verifier();
+  }
+  const missions = [
+    { titre: "Le cas du TP", consigne: "Réglez le pas de l'énoncé, <b>h = 5 s</b> (240 pas), et comparez Euler explicite à la référence.",
+      ok: () => E.h === 5,
+      bravo: () => { const r = TP4.rk4(M4.f, 1200, 1200, 5).T[240];
+        return "T(1200 s) = <b>" + virgule(R.e.T[R.e.N], 4) + " K</b> avec Euler, " + virgule(r, 4) + " K avec RK4 au même pas : écart " + virgule(Math.abs(r - R.e.T[R.e.N]), 4) + " K, moins de 2 K comme le demande l'énoncé. Le pas critique d'Euler, 2/|f′(T₀)| = " + virgule(2 / Math.abs(M4.dfdT(0, 1200)), 0) + " s, est 47 fois plus grand."; } },
+    { titre: "Viser 0,5 K", pari: { q: "Pour diviser par 2 l'erreur d'Euler explicite, il faut…", o: ["diviser h par 2", "diviser h par 4", "diviser h par 16"], bon: () => 0 },
+      consigne: "Trouvez le <b>plus grand pas h</b> (qui divise 1200 s) pour lequel l'erreur d'Euler sur T(1200 s) reste <b>sous 0,5 K</b>.",
+      suivi: () => "h = " + E.h + " s · erreur : " + (isNaN(R.err) ? "1200/" + E.h + " n'est pas entier" : virgule(R.err, 4) + " K"),
+      valider: { label: () => "Je valide h = " + E.h + " s", test: () => {
+        if (isNaN(R.err)) return [false, "Avec h = " + E.h + " s, N = round(1200/h) = " + R.e.N + " pas : le calcul s'arrête à t = " + virgule(R.fin, 0) + " s. Choisissez un pas qui divise 1200."];
+        if (R.err >= 0.5) return [false, "Erreur " + virgule(R.err, 4) + " K : encore trop grande."];
+        if (E.h < hPrecis) return [false, "Erreur " + virgule(R.err, 4) + " K : c'est bon, mais un pas plus grand convient aussi."];
+        return [true]; } },
+      bravo: () => "h = " + hPrecis + " s : erreur " + virgule(R.err, 4) + " K. Euler est d'<b>ordre 1</b> : l'erreur est proportionnelle à h (" + virgule(TP4.erreurFinale("euler", 5), 4) + " K à 5 s). Pour 10 fois moins d'erreur, il faut 10 fois plus de pas." },
+    { titre: "Le plus grand pas « physique »", consigne: "Trouvez le <b>plus grand pas h</b> pour lequel la paroi ne descend <b>jamais sous l'ambiante</b> (293 K).",
+      suivi: () => "h = " + E.h + " s · T min = " + virgule(R.st.min, 2) + " K" + (R.st.min < 293 ? " ✗ sous 293 K" : " ✓"),
+      valider: { label: () => "Je valide h = " + E.h + " s", test: () => {
+        if (R.st.min < 293) return [false, "La paroi descend à " + virgule(R.st.min, 1) + " K, sous l'air ambiant : pas trop grand."];
+        if (E.h < hPhys) return [false, "Valable, mais on peut aller plus loin."];
+        return [true]; } },
+      bravo: () => "h = " + hPhys + " s. Au premier pas, Euler retire h × |f(T₀)| = h × " + virgule(Math.abs(M4.f(0, 1200)), 4) + " K à la paroi. Dès que ce pas dépasse l'écart à l'ambiante (907 K), soit pour h > 907 / " + virgule(Math.abs(M4.f(0, 1200)), 4) + " = " + virgule(907 / Math.abs(M4.f(0, 1200)), 2) + " s, la paroi « traverse » l'air ambiant." },
+    { titre: "h = 300 s", consigne: "Réglez <b>h = 300 s</b> et regardez la paroi.", ok: () => E.h === 300,
+      avantQuiz: () => "Euler donne " + Array.from(R.e.T).map(v => Math.round(v)).join(", ") + " K.",
+      quiz: { q: "La paroi tombe à 145 K, sous l'air ambiant, puis remonte vers 293 K. Pourquoi ?",
+        o: [["Le schéma : h dépasse le pas critique 2/|f′(T₀)| ≈ 235 s, le facteur d'amplification 1 + h·f′(T₀) vaut −1,55", 1], ["Le rayonnement refroidit la paroi sous l'ambiante", 0], ["Le code d'Euler contient une erreur", 0], ["RK4 ferait exactement la même chose", 0]],
+        expl: () => "C'est le <b>schéma</b> qui est en cause, pas la physique ni le code : |1 + h·f′| &gt; 1, Euler « déborde » au premier pas. RK4 au même pas reste au-dessus de l'ambiante (" + Array.from(TP4.rk4(M4.f, 1200, 1200, 300).T).map(v => Math.round(v)).join(", ") + " K)." } },
+    { titre: "L'implicite tient bon", consigne: "Toujours avec <b>h = 300 s</b>, affichez Euler implicite (Newton à chaque pas).",
+      action: { label: "Afficher Euler implicite", faire: () => { E.impl = true; } },
+      ok: () => E.h === 300 && E.impl,
+      avantQuiz: () => "Euler implicite donne " + Array.from(R.im.T).map(v => Math.round(v)).join(", ") + " K.",
+      quiz: { q: "Euler implicite reste au-dessus de l'ambiante. Pourquoi ?",
+        o: [["Il évalue la pente à l'arrivée, en T(n+1) : il est stable pour tout pas h, au prix d'une équation non linéaire par pas", 1], ["Il fait plus de calculs, donc il est forcément plus précis", 0], ["Il utilise en interne un pas plus petit", 0], ["Il ignore le terme de rayonnement", 0]],
+        expl: () => "Stable ne veut pas dire précis : à h = 300 s, l'implicite finit à " + virgule(R.im.T[R.im.N], 1) + " K au lieu de " + virgule(ref4().T[12000], 1) + " K. On le choisit quand on veut de <b>grands pas</b> sur un problème raide, en payant un Newton à chaque pas." } },
+  ];
+  return { ouvrir: () => {
+    if (!E.demarre) {
+      E.demarre = true;
+      const plus = (a, b, test) => { let r = 0; for (let h = a; h <= b; h++) if (test(h)) r = h; return r; };
+      hPrecis = plus(1, 400, h => 1200 % h === 0 && TP4.erreurFinale("euler", h) < 0.5);
+      hPhys = plus(1, 400, h => TP4.stats(TP4.eulerExplicite(M4.f, 1200, 1200, h).T).min >= 293);
+      MM = moteurMissions({ zone: $("#j1-mission"), compteur: $("#j1-compte"), jeu: "jeu-1", missions, recalculer: calculer, etoiles: n => n >= 5 ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0 });
+      const regler = h => { E.h = Math.max(1, Math.min(400, h)); calculer(); };
+      $("#j1-h").addEventListener("input", e => regler(+e.target.value));
+      $("#j1-moins").addEventListener("click", () => regler(E.h - 1));
+      $("#j1-plus").addEventListener("click", () => regler(E.h + 1));
+      addEventListener("resize", () => { if (!$("#jeu-1").hidden) calculer(); });
+      MM.entrer(0);
+    } else { calculer(); MM.afficher(); }
+  } };
+})();
+
+/* ---------- JEU 2 : Newton pas a pas ---------- */
+const jeu2 = (() => {
+  const E = { h: 5, signe: 1, vus: 0, demarre: false };
+  let R, MM, ordreX1, nitMoy = {};
+  const Fx = x => x - 1200 - E.h * M4.f(E.h, x);
+  const converge = r => Math.abs(r.etapes[r.etapes.length - 1].delta) < 1e-10;
+  const seau = r => !converge(r) ? 3 : r.nit <= 2 ? 0 : r.nit <= 4 ? 1 : 2;
+  function moyenne(signe) {
+    if (nitMoy[signe] === undefined) { const s = TP4.eulerImplicite(M4.f, M4.dfdT, 1200, 1200, 5, { signe }); nitMoy[signe] = { moy: Array.from(s.nit).reduce((a, b) => a + b) / s.N, max: Math.max(...s.nit), fin: s.T[s.N] }; }
+    return nitMoy[signe];
+  }
+  function calculer() {
+    R = TP4.newton(M4.f, M4.dfdT, 1200, 0, E.h, { signe: E.signe });
+    R.converge = Math.abs(R.etapes[R.etapes.length - 1].delta) < 1e-10;
+    R.racine = TP4.newton(M4.f, M4.dfdT, 1200, 0, E.h).x;
+    segment($("#j2-h"), E.h, v => { E.h = +v; E.vus = 0; calculer(); });
+    segment($("#j2-signe"), E.signe, v => { E.signe = +v; E.vus = 0; calculer(); });
+    dessiner(); if (MM) MM.verifier();
+  }
+  function dessiner() {
+    const vus = R.etapes.slice(0, E.vus), xs = [1200, R.racine].concat(vus.map(s => s.x + s.delta)).filter(x => Math.abs(x) < 6000);
+    let a = Math.min(...xs), b = Math.max(...xs), pad = Math.max(4, (b - a) * 0.12); a -= pad; b += pad;
+    const courbe = []; for (let q = 0; q <= 160; q++) { const x = a + (b - a) * q / 160; courbe.push([x, Fx(x)]); }
+    const Fs = courbe.map(p => p[1]).concat([0]); let ya = Math.min(...Fs), yb = Math.max(...Fs); const py = (yb - ya) * 0.1 || 1; ya -= py; yb += py;
+    const tang = vus.map(s => ({ pts: [[s.x, s.F], [s.x + s.delta, 0]], c: css("--orange"), l: 2 }));
+    const verts = vus.map(s => ({ pts: [[s.x + s.delta, 0], [s.x + s.delta, Fx(s.x + s.delta)]], c: css("--orange"), l: 1, tir: [3, 3], a: 0.7 }));
+    tracer($("#j2-courbe"), { hauteur: 290, x: [a, b], y: [ya, yb], xl: "x (K)", yl: "F(x)", xt: ticks(a, b, 6), yt: ticks(ya, yb, 5),
+      horiz: [{ y: 0, c: css("--ink-2"), l: 1 }],
+      series: [{ pts: courbe, c: css("--blue"), l: 2.4 }].concat(tang, verts),
+      points: [{ x: 1200, y: Fx(1200), c: css("--orange"), r: 5 }].concat(vus.map(s => ({ x: s.x + s.delta, y: 0, c: css("--orange"), r: 4 }))),
+      textes: [{ t: "x₀ = 1200 K", x: 1200, y: Fx(1200), dx: -6, dy: -12, align: "right", gras: true }] });
+    const ligne = (s, k) => "<tr" + (k === E.vus - 1 ? ' class="neuf"' : "") + "><td>" + k + "</td><td>" + virgule(s.x, 8) + "</td><td>" + expo(s.F) + "</td><td>" + virgule(s.dF, 4) + "</td><td>" + expo(Math.abs(s.delta)) + "</td></tr>";
+    $("#j2-table").innerHTML = "<tr><th>k</th><th>x<sub>k</sub> (K)</th><th>F(x<sub>k</sub>)</th><th>F′ utilisée</th><th>|Δx|</th></tr>" + vus.map((s, k) => ligne(s, k)).join("");
+    const fini = E.vus >= R.etapes.length;
+    $("#j2-etat").innerHTML = !E.vus ? '<p class="aide" style="margin:8px 0 0">Départ : x₀ = T(n) = 1200 K. Cliquez « Itération suivante ».</p>' :
+      fini ? (R.converge ? '<div class="retour-msg ok"><b class="t">✔ Convergé en ' + R.nit + " itérations (|Δx| &lt; 1e−10)</b>T(n+1) = " + virgule(R.x, 8) + " K</div>" :
+        '<div class="retour-msg ko"><b class="t">✘ 20 itérations sans converger</b>x = ' + virgule(R.x, 1) + " K : Newton s'est éloigné de la racine (" + virgule(R.racine, 2) + " K).</div>") : "";
+    $("#j2-pas").disabled = fini; $("#j2-tout").disabled = fini;
+  }
+  let options1;
+  const missions = [
+    { titre: "Le premier pas, à la main", pari: { q: "Avec h = 5 s, la première itération x₁ = x₀ − F(x₀)/F′(x₀) tombe en…", get o() { return options1.map(o => o[0]); }, bon: () => ordreX1 },
+      consigne: "Réglez <b>h = 5 s</b>, la dérivée correcte, et faites <b>une itération</b>.",
+      ok: () => E.h === 5 && E.signe === 1 && E.vus >= 1,
+      bravo: () => { const s = R.etapes[0]; return "x₁ = 1200 − " + virgule(s.F, 4) + " / " + virgule(s.dF, 4) + " = <b>" + virgule(s.x + s.delta, 4) + " K</b>. Remarque : 1200 − F(x₀) = " + virgule(1200 + 5 * M4.f(0, 1200), 4) + " K, c'est exactement Euler explicite ; l'implicite corrige avec la pente à l'arrivée."; } },
+    { titre: "Combien d'itérations ?", pari: { q: "Avec h = 5 s et la bonne dérivée, combien d'itérations pour que |Δx| < 1e−10 ?", o: ["1 ou 2", "3 ou 4", "de 5 à 15", "plus de 20 (pas de convergence)"], bon: () => seau(TP4.newton(M4.f, M4.dfdT, 1200, 0, 5)) },
+      consigne: "Déroulez Newton jusqu'au bout (<b>h = 5 s</b>, dérivée correcte).",
+      ok: () => E.h === 5 && E.signe === 1 && E.vus >= R.etapes.length,
+      bravo: () => "Convergé en " + R.nit + " itérations ; |Δx| = " + R.etapes.map(s => expo(Math.abs(s.delta))).join(" → ") + " : le nombre de chiffres exacts double à chaque itération (convergence <b>quadratique</b>). Sur toute la simulation : " + virgule(moyenne(1).moy, 4) + " itérations par pas en moyenne." },
+    { titre: "La dérivée de mauvais signe", pari: { q: "Même pas h = 5 s, mais avec F′ = 1 + h·f′ (mauvais signe). Combien d'itérations ?", o: ["1 ou 2", "3 ou 4", "de 5 à 15", "plus de 20 (pas de convergence)"], bon: () => seau(TP4.newton(M4.f, M4.dfdT, 1200, 0, 5, { signe: -1 })) },
+      consigne: "Passez à la dérivée de <b>mauvais signe</b> et déroulez (h = 5 s).",
+      ok: () => E.h === 5 && E.signe === -1 && E.vus >= R.etapes.length,
+      avantQuiz: () => "Sur toute la simulation : " + virgule(moyenne(-1).moy, 4) + " itérations par pas (au plus " + moyenne(-1).max + ") au lieu de " + virgule(moyenne(1).moy, 4) + ", et T(1200 s) = " + virgule(moyenne(-1).fin, 4) + " K dans les deux cas.",
+      quiz: { q: "Le résultat final ne change pas. Pourquoi ?", o: [["Newton s'arrête quand F(x) = 0 : une pente fausse ralentit la convergence, elle ne change pas la racine", 1], ["C'est une coïncidence", 0], ["La dérivée n'est jamais utilisée par Newton", 0], ["MATLAB corrige automatiquement la dérivée", 0]],
+        expl: "La racine de F est la même ; seule la vitesse change : convergence <b>linéaire</b> (|Δx| divisé par ≈ 12 à chaque itération) au lieu de quadratique. Un code qui « marche » peut donc cacher une dérivée fausse : surveillez le nombre d'itérations." } },
+    { titre: "Grand pas, mauvaise pente", pari: { q: "Et avec h = 300 s et le mauvais signe ?", o: ["converge en 4 à 6 itérations", "converge en 10 à 20 itérations", "ne converge pas"], bon: () => { const r = TP4.newton(M4.f, M4.dfdT, 1200, 0, 300, { signe: -1 }); return !converge(r) ? 2 : r.nit <= 6 ? 0 : 1; } },
+      consigne: "Réglez <b>h = 300 s</b>, la dérivée de <b>mauvais signe</b>, et déroulez.",
+      ok: () => E.h === 300 && E.signe === -1 && E.vus >= R.etapes.length,
+      quiz: { q: "Pourquoi Newton s'envole-t-il ?", o: [["Avec h = 300 s, la fausse pente 1 + h·f′ ≈ −1,55 est négative : chaque itération part du mauvais côté", 1], ["Euler implicite est instable pour les grands pas", 0], ["La tolérance 1e−10 est trop sévère", 0], ["Il faudrait 50 itérations au lieu de 20", 0]],
+        expl: () => { const b = TP4.newton(M4.f, M4.dfdT, 1200, 0, 300); return "Avec la bonne pente, F′ = 1 − h·f′ ≈ " + virgule(b.etapes[0].dF, 2) + " &gt; 0 et Newton converge en " + b.nit + " itérations vers " + virgule(b.x, 2) + " K : Euler implicite est stable pour tout h… à condition que Newton soit juste."; } } },
+  ];
+  return { ouvrir: () => {
+    if (!E.demarre) {
+      E.demarre = true;
+      const s = TP4.newton(M4.f, M4.dfdT, 1200, 0, 5).etapes[0], F0 = s.F, d0 = s.dF;
+      options1 = melanger([[virgule(1200 - F0 / d0, 2) + " K", 1], [virgule(1200 - F0, 2) + " K", 0], [virgule(1200 + F0 / d0, 2) + " K", 0], [virgule(1200 - F0 * d0, 2) + " K", 0]]);
+      ordreX1 = options1.findIndex(o => o[1]);
+      MM = moteurMissions({ zone: $("#j2-mission"), compteur: $("#j2-compte"), jeu: "jeu-2", missions, recalculer: calculer, etoiles: n => n >= 4 ? 3 : n >= 3 ? 2 : n >= 2 ? 1 : 0 });
+      $("#j2-pas").addEventListener("click", () => { E.vus = Math.min(R.etapes.length, E.vus + 1); dessiner(); MM.verifier(); });
+      $("#j2-tout").addEventListener("click", () => { E.vus = R.etapes.length; dessiner(); MM.verifier(); });
+      $("#j2-zero").addEventListener("click", () => { E.vus = 0; dessiner(); });
+      addEventListener("resize", () => { if (!$("#jeu-2").hidden) dessiner(); });
+      MM.entrer(0);
+    } else { calculer(); MM.afficher(); }
+  } };
+})();
+
+/* ---------- JEU 3 : le duel des schemas ---------- */
+const jeu3 = (() => {
+  const HS = [40, 20, 10, 5, 2.5], NOMS = { euler: "Euler explicite", rk4: "RK4", implicite: "Euler implicite", k4: "RK4 du camarade" };
+  const TOURS = [
+    { s: "euler", h: 40, q: "Euler explicite : quand h passe de 40 s à 20 s, l'erreur sur T(1200 s) est divisée par…" },
+    { s: "rk4", h: 40, q: "RK4 : quand h passe de 40 s à 20 s, l'erreur est divisée par…" },
+    { s: "implicite", h: 10, q: "Euler implicite : de 10 s à 5 s, l'erreur est divisée par…" },
+    { s: "rk4", h: 5, q: "RK4 encore : de 5 s à 2,5 s ?" },
+    { s: "k4", h: 10, q: "Un camarade a écrit k4 = f(t + h, T + h·k2) au lieu de k3. De 10 s à 5 s, son erreur est divisée par…" },
+    { cout: true, q: "À coût égal (240 évaluations de f) : qui est le plus précis ?" },
+  ];
+  const OPTS = ["≈ 2", "≈ 4", "≈ 8", "≈ 16 ou plus"], seau = r => r < 3 ? 0 : r < 6 ? 1 : r < 12 ? 2 : 3;
+  const COUL = { euler: "--blue", implicite: "--green", rk4: "--violet", k4: "--red" };
+  let E, ERR = {};
+  const err = (s, h) => { const c = s + h; if (ERR[c] === undefined) ERR[c] = s === "k4" ? TP4.erreurFinale("rk4", h, { bug: "k4" }) : TP4.erreurFinale(s, h); return ERR[c]; };
+  function demarrer() { E = { q: 0, bons: 0, score: 0, vus: [] }; $("#j3-jeu").hidden = false; $("#j3-fin").hidden = true; $("#j3-console").innerHTML = ""; poser(); }
+  function dessiner() {
+    const L = Math.log10, series = [], points = [], parS = {};
+    E.vus.forEach(([s, h]) => { (parS[s] = parS[s] || new Set()).add(h); });
+    Object.entries(parS).forEach(([s, hs]) => {
+      const p = Array.from(hs).sort((a, b) => b - a).map(h => [L(h), L(err(s, h))]);
+      series.push({ pts: p, c: css(COUL[s]), l: 2.2, marques: 4 });
+    });
+    tracer($("#j3-courbe"), { hauteur: 290, x: [L(2), L(50)], y: [-10, 1.5], xl: "pas h (s), échelle log", yl: "erreur sur T(1200 s)",
+      xt: HS.map(h => [L(h), String(h).replace(".", ",")]), yt: [1, -1, -3, -5, -7, -9].map(v => [v, "1e" + v]), series, points });
+  }
+  function poser() {
+    const T = TOURS[E.q];
+    $("#j3-q").textContent = "Manche " + (E.q + 1) + " / " + TOURS.length; $("#j3-score").textContent = E.score + " pt";
+    $("#j3-barre").style.width = E.q / TOURS.length * 100 + "%"; $("#j3-retour").innerHTML = ""; $("#j3-suivant").hidden = true;
+    $("#j3-question").textContent = T.q;
+    $("#j3-aide").innerHTML = T.cout ? "Euler explicite avec h = 5 s : 240 pas × 1 évaluation. RK4 avec h = 20 s : 60 pas × 4 évaluations (k1 à k4)." : "L'erreur est mesurée comme dans <code>erreur_finale</code> : |T(1200 s) − T<sub>réf</sub>|, référence RK4 de pas 0,1 s.";
+    dessiner();
+    const L = T.cout ? ["Euler explicite, h = 5 s", "RK4, h = 20 s", "Égalité"].map((t, q) => ({ html: t, bon: q === (err("rk4", 20) < err("euler", 5) ? 1 : 0) })) :
+      OPTS.map((t, q) => ({ html: t, bon: q === seau(err(T.s, T.h) / err(T.s, T.h / 2)) }));
+    choixBoutons($("#j3-choix"), L, (o, q, bs) => {
+      marquerChoix(bs, L, q); if (o.bon) { E.bons++; E.score += 100; }
+      let html, lignes;
+      if (T.cout) {
+        const a = err("euler", 5), b = err("rk4", 20);
+        E.vus.push(["euler", 5], ["rk4", 20]);
+        html = "Euler (h = 5 s) : erreur " + expo(a) + " K ; RK4 (h = 20 s) : " + expo(b) + " K, soit <b>" + Math.round(a / b).toLocaleString("fr-FR") + " fois</b> plus précis pour le même nombre d'évaluations de f.";
+        lignes = [">> format short e", ">> [erreur_finale('euler', 5)  erreur_finale('rk4', 20)]"].concat(ans([matLigneE([a, b])]));
+      } else {
+        const a = err(T.s, T.h), b = err(T.s, T.h / 2), r = a / b, n = T.s === "k4" ? "'rk4'" : "'" + T.s + "'";
+        E.vus.push([T.s, T.h], [T.s, T.h / 2]);
+        const sens = { euler: "Euler est d'ordre 1 : erreur ∝ h, divisée par 2.", implicite: "Euler implicite est d'ordre 1, comme l'explicite : divisée par 2.",
+          rk4: "RK4 est d'ordre 4 : 2⁴ = 16 à la limite ; aux grands pas, le rapport est encore au-dessus (26, 22, 20, 18 → 16).",
+          k4: "Rapport ≈ 8 = 2³ : avec k2 à la place de k3, le schéma tombe à l'<b>ordre 3</b>. Mesurer l'ordre détecte ce bug, alors que T(1200 s) semble correct." }[T.s];
+        html = NOMS[T.s] + " : " + expo(a) + " → " + expo(b) + " K, rapport <b>" + virgule(r, 4) + "</b>. " + sens;
+        lignes = [">> format short e", ">> e = [erreur_finale(" + n + ", " + T.h + ")  erreur_finale(" + n + ", " + String(T.h / 2) + ")]" + (T.s === "k4" ? "   % RK4 du camarade" : "")]
+          .concat(ans([matLigneE([a, b])], "e"), [">> format short", ">> e(1) / e(2)"], ans([matLigne([r])]));
+      }
+      retour($("#j3-retour"), o.bon, o.bon ? "✔ Bien vu ! +100 pt" : "✘ Raté", html);
+      $("#j3-console").innerHTML = console_(lignes);
+      dessiner(); $("#j3-score").textContent = E.score + " pt"; $("#j3-suivant").hidden = false;
+      $("#j3-suivant").textContent = E.q === TOURS.length - 1 ? "Voir le bilan →" : "Manche suivante →";
+    }, true);
+  }
+  function fin() {
+    $("#j3-barre").style.width = "100%";
+    const z = $("#j3-fin"); z.hidden = false; $("#j3-jeu").hidden = true;
+    const et = E.bons >= 6 ? 3 : E.bons >= 4 ? 2 : E.bons >= 3 ? 1 : 0; noter("jeu-3", et);
+    const pentes = ["euler", "implicite", "rk4"].map(s => {
+      const X = HS.map(Math.log), Y = HS.map(h => Math.log(err(s, h))), mx = X.reduce((a, b) => a + b) / 5, my = Y.reduce((a, b) => a + b) / 5;
+      let sxy = 0, sxx = 0; X.forEach((x, q) => { sxy += (x - mx) * (Y[q] - my); sxx += (x - mx) * (x - mx); }); return NOMS[s] + " : pente " + virgule(sxy / sxx, 2);
+    });
+    ecranFin(z, { etoiles: et, titre: E.bons + " / 6 paris gagnés · " + E.score + " pt", rejouer: demarrer,
+      detail: "Pentes des droites log-log, h de 40 s à 2,5 s : " + pentes.join(" · ") + ". L'ordre se lit sur la pente ; à coût égal, l'ordre élevé gagne.",
+      extra: '<div style="max-width:640px;margin:0 auto;text-align:left">' + console_([">> hs = [40 20 10 5 2.5];", ">> format short e"].concat(
+        ...["euler", "rk4", "implicite"].map(s => [">> e" + s[0].toUpperCase() + " = arrayfun(@(h) erreur_finale('" + s + "', h), hs)"].concat(ans([matLigneE(HS.map(h => err(s, h)))], "e" + s[0].toUpperCase()))))) + "</div>" });
+  }
+  $("#j3-suivant").addEventListener("click", () => { if (E.q < TOURS.length - 1) { E.q++; poser(); } else fin(); });
+  addEventListener("resize", () => { if (!$("#jeu-3").hidden && E) dessiner(); });
+  return { ouvrir: demarrer };
+})();
+
+/* ---------- JEU 4 : convection contre rayonnement ---------- */
+const jeu4 = (() => {
+  const E = { T: 800, course: 0, demarre: false };
+  const conv = T => PP.hA * (T - PP.Tamb), rad = T => PP.epsA * (Math.pow(T, 4) - Math.pow(PP.Tamb, 4));
+  let MM, Teq, Sr, Sc, tr, tc, anim = 0, teqTrouve = false;
+  function dessiner() {
+    $("#j4-T").value = E.T; $("#j4-Tv").textContent = E.T + " K";
+    const c = [], r = []; for (let T = 293; T <= 1250; T += 8) { c.push([T, conv(T)]); r.push([T, rad(T)]); }
+    tracer($("#j4-flux"), { hauteur: 230, x: [293, 1250], y: [0, 12500], xl: "température de la paroi T (K)", yl: "flux (W)", xt: [293, 400, 600, 800, 1000, 1200].map(v => [v, String(v)]), yt: ticks(0, 12000, 6),
+      vert: [{ x: E.T, c: css("--ink-2"), tir: [4, 3] }].concat(teqTrouve ? [{ x: Teq, c: css("--gold"), tir: [6, 4] }] : []),
+      series: [{ pts: c, c: css("--blue"), l: 2.4 }, { pts: r, c: css("--orange"), l: 2.4 }],
+      points: [{ x: E.T, y: conv(E.T), c: css("--blue"), r: 5 }, { x: E.T, y: rad(E.T), c: css("--orange"), r: 5 }] });
+    const dom = rad(E.T) > conv(E.T) ? "rayonnement" : "convection";
+    $("#j4-stats").innerHTML = [["Convection", Math.round(conv(E.T)).toLocaleString("fr-FR") + " W"], ["Rayonnement", Math.round(rad(E.T)).toLocaleString("fr-FR") + " W"],
+      ["Rayonnement / convection", E.T > 293 ? virgule(rad(E.T) / conv(E.T), 2) : "—"], ["Domine", dom]]
+      .map(([l, v]) => '<div class="stat"><div class="l">' + l + '</div><div class="v">' + v + "</div></div>").join("");
+    const n = Math.round(E.course * Sr.N), sl = (s, k) => pts(s).slice(0, k + 1);
+    tracer($("#j4-course"), { hauteur: 230, x: [0, 1200], y: [250, 1250], xl: "temps t (s)", yl: "T (K)", xt: ticks(0, 1200, 6), yt: ticks(300, 1200, 5),
+      horiz: [{ y: 600, c: css("--red"), tir: [5, 4] }, { y: 293, c: css("--ink-2"), tir: [2, 4], l: 1 }],
+      vert: E.course >= 1 ? [{ x: tr, c: css("--orange"), tir: [3, 3] }, { x: tc, c: css("--blue"), tir: [3, 3] }] : [],
+      series: E.course ? [{ pts: sl(Sr, n), c: css("--orange"), l: 2.4 }, { pts: sl(Sc, n), c: css("--blue"), l: 2.4 }] : [],
+      textes: E.course >= 1 ? [{ t: tr + " s", x: tr, y: 640, dx: -4, align: "right", c: css("--orange"), gras: true }, { t: tc + " s", x: tc, y: 640, dx: 4, c: css("--blue"), gras: true }] :
+        E.course ? [] : [{ t: "Lancez la course depuis la mission 2", x: 600, y: 900, align: "center" }] });
+  }
+  function calculer() { dessiner(); if (MM) MM.verifier(); }
+  function lancer() {
+    cancelAnimationFrame(anim); const t0 = performance.now();
+    const pas = t => { E.course = Math.max(0.002, Math.min(1, (t - t0) / 2500)); dessiner(); if (E.course < 1) anim = requestAnimationFrame(pas); else MM.verifier(); };
+    anim = requestAnimationFrame(pas);
+  }
+  const buckets = ["moins de 300 s", "entre 300 et 500 s", "entre 500 et 800 s", "plus de 800 s"], seau = t => t < 300 ? 0 : t < 500 ? 1 : t < 800 ? 2 : 3;
+  const missions = [
+    { titre: "Le point d'équilibre des flux", consigne: "Déplacez le curseur de température jusqu'au point où <b>convection et rayonnement évacuent le même flux</b>.",
+      suivi: () => "T = " + E.T + " K · convection " + Math.round(conv(E.T)).toLocaleString("fr-FR") + " W · rayonnement " + Math.round(rad(E.T)).toLocaleString("fr-FR") + " W",
+      valider: { label: () => "Je valide T = " + E.T + " K", test: () => Math.abs(E.T - Teq) <= 8 ? [true] :
+        [false, rad(E.T) > conv(E.T) ? "Le rayonnement l'emporte encore : descendez en température." : "La convection l'emporte encore : montez en température."] },
+      bravo: () => { teqTrouve = true; dessiner(); return "T = <b>" + virgule(Teq, 2) + " K</b>. Au-dessus, le rayonnement domine (à 1200 K : " + Math.round(rad(1200)).toLocaleString("fr-FR") + " W contre " + Math.round(conv(1200)).toLocaleString("fr-FR") + " W) ; en dessous, la convection (à 600 K : " + Math.round(rad(600)).toLocaleString("fr-FR") + " W contre " + Math.round(conv(600)).toLocaleString("fr-FR") + " W)."; } },
+    { titre: "La course à 600 K", pari: { q: "Avec rayonnement, combien de temps pour passer de 1200 K à 600 K ?", o: buckets, bon: () => seau(tr) },
+      consigne: "Lancez la course : la même paroi, avec et sans rayonnement (RK4, h = 5 s).",
+      action: { label: "🏁 Lancer la course", faire: lancer }, ok: () => E.course >= 1,
+      bravo: () => "Avec rayonnement : 600 K à <b>t = " + tr + " s</b> ; convection seule : <b>" + tc + " s</b>. À t = 1200 s : " + virgule(Sr.T[Sr.N], 4) + " K contre " + virgule(Sc.T[Sc.N], 4) + " K." },
+    { titre: "La constante de temps", pari: { q: "Sans rayonnement, l'EDO est linéaire : T − T_amb décroît comme e^(−t/τ). Que vaut τ = C / hA ?", o: ["62,5 s", "625 s", "1250 s", "6250 s"], bon: () => 1 },
+      consigne: "Sans rayonnement, la solution exacte est T(t) = T<sub>amb</sub> + (T₀ − T<sub>amb</sub>) e<sup>−t/τ</sup>.", ok: () => true,
+      bravo: () => "τ = 5000 / 8 = <b>625 s</b>. À t = τ, la formule donne 293 + 907·e⁻¹ = " + virgule(293 + 907 * Math.exp(-1), 4) + " K, et RK4 (h = 5 s) " + virgule(Sc.T[125], 4) + " K : l'écart est invisible à 4 décimales." },
+    { titre: "Le pas critique", pari: { q: "Euler explicite est stable si h < 2/|f′(T)|. À 1200 K, ce pas critique vaut 235 s avec rayonnement. Et sans ?", o: ["235 s aussi", "1250 s", "47 s", "il n'y en a pas"], bon: () => 1 },
+      consigne: "Le pas critique vaut 2C / (hA + 4εA T³) avec rayonnement, 2C / hA sans.", ok: () => true,
+      bravo: () => "Sans rayonnement : 2 × 5000 / 8 = <b>" + virgule(2 / Math.abs(MC4.dfdT(0, 1200)), 0) + " s</b> ; avec : " + virgule(2 / Math.abs(M4.dfdT(0, 1200)), 1) + " s à 1200 K. Le rayonnement resserre le pas critique d'un facteur 5, mais avec h = 5 s on reste 47 fois en dessous : aucune instabilité dans le TP." },
+    { titre: "Pourquoi surtout au début ?", consigne: "Dernière question de synthèse.", ok: () => true,
+      quiz: { q: "Pourquoi le rayonnement accélère-t-il surtout le début du refroidissement ?", o: [["Il varie comme T⁴ : très fort quand la paroi est chaude, il s'effondre quand elle refroidit, alors que la convection ne baisse que linéairement", 1], ["Il ne dépend pas de la température", 0], ["La convection est nulle au début", 0], ["C'est un effet du schéma numérique, pas de la physique", 0]],
+        expl: () => "À 1200 K, le rayonnement vaut " + virgule(rad(1200) / conv(1200), 2) + " fois la convection ; à 600 K, seulement " + virgule(rad(600) / conv(600), 2) + " fois. Ce que l'on observe est <b>physique</b> : le même écart existe avec tous les schémas." } },
+  ];
+  return { ouvrir: () => {
+    if (!E.demarre) {
+      E.demarre = true; Teq = TP4.egaliteFlux();
+      Sr = TP4.rk4(M4.f, 1200, 1200, 5); Sc = TP4.rk4(MC4.f, 1200, 1200, 5); tr = TP4.instantSous(Sr, 600); tc = TP4.instantSous(Sc, 600);
+      MM = moteurMissions({ zone: $("#j4-mission"), compteur: $("#j4-compte"), jeu: "jeu-4", missions, recalculer: calculer, etoiles: n => n >= 5 ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0 });
+      $("#j4-T").addEventListener("input", e => { E.T = +e.target.value; calculer(); });
+      addEventListener("resize", () => { if (!$("#jeu-4").hidden) dessiner(); });
+      MM.entrer(0);
+    } else { calculer(); MM.afficher(); }
+  } };
+})();
+
+/* ---------- JEU 5 : detective du code ---------- */
+const jeu5 = moteurDetective({ id: "jeu-5", p: "j5",
+  morale: "Les réflexes du TP4 : un résultat juste ne prouve pas un code juste (t figé, dérivée fausse), l'ordre mesuré trahit un RK4 bancal, et les kelvins, le nombre de pas et les arguments de <code>modele_four</code> se vérifient.",
+  dossiers: () => {
+    const fin = s => s.T[s.N], m20 = TP4.modele(true, { Tamb: 20 });
+    const t0 = fin(TP4.rk4(M4.f, 1200, 1200, 5, { bug: "t0" })), faux = TP4.eulerImplicite(M4.f, M4.dfdT, 1200, 1200, 5, { signe: -1 });
+    const deg = TP4.eulerImplicite(M4.f, M4.dfdT, 1200, 1200, 5, { deguise: true }), moy = a => Array.from(a).reduce((x, y) => x + y) / a.length;
+    const HS = [40, 20, 10, 5, 2.5], ek = HS.map(h => TP4.erreurFinale("rk4", h, { bug: "k4" })), Tg = TP4.eulerExplicite(M4.f, 1200, 1200, 300);
+    return [
+      { titre: "Le temps figé", code: ["for n = 1:N", "#    k1 = f(0, T(n));", "#    k2 = f(0 + h/2, T(n) + h/2*k1);", "    ...", "end"],
+        sortie: [">> [t, Tr] = rk4(f, 1200, 1200, 5);", ">> Tr(end)"].concat(ans([matLigne([t0])])),
+        q: "Le résultat est exactement celui du corrigé. Le code est-il juste ?",
+        o: [["Non : les pentes doivent être évaluées à t(n). L'erreur est invisible ici parce que f ne dépend pas de t ; elle apparaîtra dès qu'une source dépend du temps", 1], ["Oui : le résultat est identique, donc le code est juste", 0], ["Non : il fallait évaluer f à t(n+1)", 0], ["Oui : t ne sert à rien dans RK4", 0]],
+        expl: "C'est le piège signalé dans l'énoncé : sur un système <b>autonome</b>, f(0, T) = f(t(n), T). Écrivez toujours k1 = f(t(n), T(n)), k2 = f(t(n) + h/2, …) : le code restera juste le jour où le four sera chauffé par une source qui varie dans le temps." },
+      { titre: "Newton paresseux", code: ["F  = x - T(n) - h*f(t(n+1), x);", "#dF = 1 + h*dfdT(t(n+1), x);", "delta = -F/dF;"],
+        sortie: [">> [t, Ti, nit] = euler_implicite(f, dfdT, 1200, 1200, 5);", ">> Ti(end)"].concat(ans([matLigne([fin(faux)])]), [">> [max(nit)  mean(nit)]"], ans([matLigne([Math.max(...faux.nit), moy(faux.nit)])])),
+        q: "Le résultat est juste, mais Newton fait plus de 8 itérations par pas. Pourquoi ?",
+        o: [["La dérivée de F a le mauvais signe (il faut 1 − h·dfdT) : Newton converge encore, mais linéairement", 1], ["La tolérance 1e−10 est trop sévère", 0], ["Le pas h = 5 s est trop grand pour Newton", 0], ["C'est normal pour une EDO non linéaire", 0]],
+        expl: "F(x) = x − T(n) − h f(t(n+1), x) donne F′(x) = 1 − h·∂f/∂T. Avec le bon signe : 3 ou 4 itérations par pas (moyenne " + virgule(moy(TP4.eulerImplicite(M4.f, M4.dfdT, 1200, 1200, 5).nit), 4) + "). Une dérivée fausse ne change pas la racine, seulement la vitesse." },
+      { titre: "L'implicite qui n'en est pas un", code: ["#F  = x - T(n) - h*f(t(n), T(n));", "dF = 1 - h*dfdT(t(n+1), x);", "delta = -F/dF;"],
+        sortie: [">> [t, Ti, nit] = euler_implicite(f, dfdT, 1200, 1200, 5);", ">> Ti(end)"].concat(ans([matLigne([fin(deg)])]), [">> [min(nit)  max(nit)  mean(nit)]"], ans([matLigne([Math.min(...deg.nit), Math.max(...deg.nit), moy(deg.nit)])])),
+        q: "Euler « implicite » donne " + virgule(fin(deg), 4) + " K : exactement Euler explicite. Diagnostic ?",
+        o: [["La pente est évaluée en (t(n), T(n)) au lieu de (t(n+1), x) : c'est Euler explicite déguisé, et Newton tourne pour rien", 1], ["Les deux schémas donnent toujours le même résultat", 0], ["Newton n'a pas convergé", 0], ["Il manque le terme de rayonnement", 0]],
+        expl: "L'inconnue x doit apparaître dans la pente : F(x) = x − T(n) − h f(t(n+1), x). Ici F est affine en x, sa racine est T(n) + h f(t(n), T(n)) : Euler explicite. Et comme dF ne correspond pas à F, Newton fait 6 à 10 itérations." },
+      { titre: "RK4 d'ordre 3", code: ["k3 = f(t(n)+h/2, T(n)+h/2*k2);", "#k4 = f(t(n)+h, T(n)+h*k2);", "T(n+1) = T(n) + h/6*(k1 + 2*k2 + 2*k3 + k4);"],
+        sortie: [">> hs = [40 20 10 5 2.5];", ">> format short e", ">> eR = arrayfun(@(h) erreur_finale('rk4', h), hs)"].concat(ans([matLigneE(ek)], "eR"), [">> format short", ">> eR(1:end-1) ./ eR(2:end)"], ans([matLigne(ek.slice(0, -1).map((e, q) => e / ek[q + 1]))])),
+        q: "Les rapports d'erreurs tendent vers 8 au lieu de 16. Où est le bug ?",
+        o: [["k4 doit utiliser k3 : T(n) + h*k3. Avec k2, le schéma tombe à l'ordre 3", 1], ["Rien : RK4 est d'ordre 3", 0], ["Les coefficients 1, 2, 2, 1 doivent être 1, 4, 1", 0], ["erreur_finale mesure mal l'erreur", 0]],
+        expl: "Rapport 2ᵖ quand h est divisé par 2 : 8 = 2³, donc ordre 3. T(1200 s) ne bouge qu'à la 4e décimale (" + virgule(fin(TP4.rk4(M4.f, 1200, 1200, 5, { bug: "k4" })), 4) + " K) : seule la <b>mesure de l'ordre</b> trahit le bug." },
+      { titre: "La paroi sous l'ambiante", code: ["#[t, Tg] = euler_explicite(f, 1200, 1200, 300);"],
+        sortie: [">> round(Tg')"].concat(ans([matLigne(Array.from(Tg.T).map(Math.round))]), [">> min(Tg)"], ans([matLigne([TP4.stats(Tg.T).min])])),
+        q: "La paroi descend à 145 K, sous l'air ambiant. Bug dans euler_explicite ?",
+        o: [["Non : le code est juste, c'est le schéma qui devient instable car h = 300 s dépasse le pas critique 2/|f′(T₀)| ≈ 235 s", 1], ["Oui : il manque un max(T, Tamb)", 0], ["Oui : le signe de f est inversé", 0], ["Non : le rayonnement peut refroidir sous l'ambiante", 0]],
+        expl: "1 + h·f′(T₀) = " + virgule(1 + 300 * M4.dfdT(0, 1200), 2) + " : le premier pas « traverse » l'équilibre. Le remède est numérique (réduire h, ou Euler implicite), pas un garde-fou dans le code." },
+      { titre: "Le four polaire", code: ["#C = 5000; hA = 8; epsA = 5e-9; Tamb = 20;", "f = @(t,T) -(hA*(T-Tamb) + epsA*(T.^4-Tamb^4))/C;"],
+        sortie: [">> [t, Tr] = rk4(f, 1200, 1200, 5);", ">> Tr(end)"].concat(ans([matLigne([fin(TP4.rk4(m20.f, 1200, 1200, 5))])])),
+        q: "La paroi finit à 154 K, bien plus froide que l'air de l'atelier. Diagnostic ?",
+        o: [["Tamb est en degrés Celsius alors que T est en kelvins : avec T⁴, tout doit être en kelvins (Tamb = 293 K)", 1], ["RK4 est instable avec h = 5 s", 0], ["Le rayonnement est trop fort, il faut réduire epsA", 0], ["C'est normal après 1200 s", 0]],
+        expl: "Avec Tamb = 20, la paroi refroidit vers « 20 K » ! La loi de Stefan-Boltzmann (T⁴) n'a de sens qu'en <b>kelvins</b> : 20 °C = 293 K." },
+      { titre: "L'erreur qui ne baisse pas", code: ["#N = round(tf/h);", "t = (0:N)'*h;"],
+        sortie: [">> format short e", ">> erreur_finale('rk4', 8)"].concat(ans(["   " + expo(TP4.erreurFinale("rk4", 8))]), [">> erreur_finale('rk4', 7)"], ans(["   " + expo(TP4.erreurFinale("rk4", 7))])),
+        q: "Avec h = 7 s, RK4 se trompe de 0,4 K ; avec h = 8 s, de 1e−7 K. Pourquoi ?",
+        o: [["1200/7 n'est pas entier : N = round(1200/7) = 171 pas, le calcul s'arrête à t = 1197 s au lieu de 1200 s", 1], ["RK4 est instable pour h = 7 s", 0], ["Les nombres impairs posent problème à RK4", 0], ["La référence est fausse", 0]],
+        expl: "erreur_finale compare T(end) à la référence en 1200 s : avec h = 7 s, T(end) est la température à 171 × 7 = 1197 s. Choisissez des pas qui divisent la durée, ou corrigez le dernier pas." },
+      { titre: "Le rayonnement disparu", code: ["#[f, dfdT] = modele_four(0);", "[t, Tr] = rk4(f, 1200, 1200, 5);"],
+        sortie: [">> Tr(end)"].concat(ans([matLigne([fin(TP4.rk4(MC4.f, 1200, 1200, 5))])])),
+        q: "RK4 donne 425,97 K au lieu des 368,43 K du corrigé. Pourquoi ?",
+        o: [["modele_four(0) : 0 vaut false, le rayonnement est coupé (convection seule)", 1], ["RK4 est instable", 0], ["h = 5 s est trop grand", 0], ["C'est l'imprécision normale de RK4", 0]],
+        expl: "modele_four(rayonnement) : en MATLAB, 0 est faux. C'est le modèle de la manipulation 3 (convection seule), qui finit à " + virgule(fin(TP4.rk4(MC4.f, 1200, 1200, 5)), 4) + " K. Appelez modele_four() ou modele_four(true)." },
+    ];
+  } });
+
+const JEUX = { "jeu-1": jeu1, "jeu-2": jeu2, "jeu-3": jeu3, "jeu-4": jeu4, "jeu-5": jeu5 };
+(function () {
+  const e = TP4.eulerExplicite(M4.f, 1200, 1200, 5), r = TP4.rk4(M4.f, 1200, 1200, 5), i = TP4.eulerImplicite(M4.f, M4.dfdT, 1200, 1200, 5);
+  $("#verif-base").textContent = "T(1200 s) = " + virgule(e.T[240], 4) + " K (Euler), " + virgule(r.T[240], 4) + " K (RK4), " + virgule(i.T[240], 4) + " K (implicite), h = 5 s";
+})();
+demarrerPage();
+</script>
+</body>
+</html>

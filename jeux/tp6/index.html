@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jeux du TP6 · Attracteur de Lorenz</title>
+<meta name="description" content="Cinq jeux pour manipuler le TP6 de Méthodes numériques (FSTM, UH2C) : RK4 pour un système, attracteur de Lorenz, effet papillon, Euler contre RK4, instabilité ou chaos, chasse aux bugs, calculés en direct par le code du TP.">
+<style>
+:root{
+  --bg:#F4F6FB; --surface:#FFFFFF; --surface-2:#EEF2F9; --ink:#15213B; --ink-2:#4B5875; --line:#DCE3EE;
+  --navy:#0B2545; --navy-2:#13315C; --blue:#0056D2; --violet:#6A4C93; --red:#C1121F; --green:#2E7D32;
+  --orange:#E67E22; --gold:#D99A00; --ok:#1E7B34; --ok-bg:#E7F5EA; --ko:#B3261E; --ko-bg:#FCEDEC;
+  --code-bg:#0F1B2D; --code-ink:#E4ECF7; --code-dim:#8FA3BF; --code-err:#FF8A80; --code-warn:#FFB74D;
+  --sol:#F3EEE2; --mur:#5C6680; --ombre:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.07);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0D1422; --surface:#151F33; --surface-2:#1C2942; --ink:#E7ECF5; --ink-2:#A7B3C9; --line:#2A3A57;
+    --blue:#6EA8FF; --violet:#B49AE0; --red:#FF6B6B; --green:#5CC47A; --orange:#F5A35C; --gold:#F2C14E;
+    --ok:#6BD48A; --ok-bg:#15301F; --ko:#FF8A80; --ko-bg:#3A1A1A; --code-bg:#0A1220; --sol:#232B3D; --mur:#8C97B2;
+    --ombre:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+a{color:var(--blue)}
+button{font:inherit;color:inherit}
+code,pre,.mono{font-family:ui-monospace,"Cascadia Mono",Consolas,"Liberation Mono",monospace}
+.enveloppe{max-width:1120px;margin:0 auto;padding:0 16px}
+[hidden]{display:none!important}
+
+/* En-tete */
+.entete{background:linear-gradient(120deg,var(--navy) 0%,var(--navy-2) 60%,#1B4F8A 100%);color:#fff;padding:18px 0 26px}
+.ariane{font-size:13px;opacity:.85}
+.ariane a{color:#fff}
+.entete h1{font-size:clamp(24px,4vw,36px);line-height:1.15;margin:10px 0 6px}
+.entete p{margin:0;max-width:760px;opacity:.92}
+.entete .ligne{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.total{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 14px;font-weight:600;white-space:nowrap}
+.total .etoile{color:#FFC93C}
+
+/* Accueil */
+.intro{display:grid;gap:14px;margin:22px 0 8px}
+.note{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:12px 14px;font-size:15px}
+.cartes{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin:16px 0 30px}
+.carte-jeu{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--ombre);overflow:hidden;display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
+.carte-jeu:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(16,24,40,.14)}
+.carte-jeu .vignette{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:54px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.carte-jeu .vignette img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.carte-jeu .num{z-index:2}
+.carte-jeu .num{position:absolute;top:10px;left:12px;background:rgba(255,255,255,.9);color:#15213B;font-weight:700;font-size:13px;border-radius:999px;padding:2px 10px}
+.carte-jeu .corps{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.carte-jeu h3{margin:0;font-size:19px}
+.carte-jeu .notion{color:var(--ink-2);font-size:14.5px;flex:1}
+.puces{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.puce{font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--ink-2)}
+.carte-jeu .pied{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.etoiles{color:var(--gold);letter-spacing:2px;font-size:18px}
+.etoiles .vide{color:var(--line)}
+
+/* Boutons */
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:600;padding:10px 16px;cursor:pointer;text-decoration:none;min-height:44px}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn.sec{background:transparent;color:var(--blue);border:1.5px solid var(--blue)}
+.btn.vert{background:var(--green)}
+.btn.petit{min-height:36px;padding:6px 12px;font-size:14px}
+:focus-visible{outline:3px solid #FFB000;outline-offset:2px}
+.choix-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.choix{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;min-height:52px;font-size:15.5px;line-height:1.35}
+.choix:hover:not(:disabled){border-color:var(--blue);background:var(--surface-2)}
+.choix.mono{font-size:16px;text-align:center}
+.choix.bon{border-color:var(--ok);background:var(--ok-bg)}
+.choix.faux{border-color:var(--ko);background:var(--ko-bg)}
+.choix:disabled{cursor:default}
+.choix-1col{grid-template-columns:1fr}
+.segment{display:inline-flex;flex-wrap:wrap;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.segment button{border:0;background:var(--surface);padding:8px 12px;cursor:pointer;font-size:14px;min-height:40px;border-right:1px solid var(--line)}
+.segment button:last-child{border-right:0}
+.segment button[aria-pressed="true"]{background:var(--blue);color:#fff;font-weight:600}
+
+/* Vue de jeu */
+.jeu-entete{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin:18px 0 12px}
+.jeu-entete h2{margin:0;font-size:clamp(20px,3vw,26px)}
+.jeu-entete .sous{color:var(--ink-2);font-size:14.5px;margin:2px 0 0}
+.retour{font-weight:600;text-decoration:none;font-size:14.5px}
+.compteurs{display:flex;gap:8px;flex-wrap:wrap}
+.compteur{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-weight:600;font-size:14px;white-space:nowrap}
+.barre{height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-bottom:14px}
+.barre>div{height:100%;background:linear-gradient(90deg,var(--blue),var(--violet));width:0;transition:width .3s}
+.panneau{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--ombre);padding:16px}
+.deux{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:880px){.deux{grid-template-columns:minmax(0,1fr)}}
+.deux>*{min-width:0}
+.question{font-size:19px;font-weight:650;margin:0 0 4px}
+.aide{color:var(--ink-2);font-size:14.5px;margin:0 0 12px}
+.retour-msg{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:15px}
+.retour-msg.ok{background:var(--ok-bg);border:1px solid var(--ok)}
+.retour-msg.ko{background:var(--ko-bg);border:1px solid var(--ko)}
+.retour-msg b.t{display:block;margin-bottom:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.formule{font-family:ui-monospace,Consolas,monospace;background:var(--surface-2);border-radius:8px;padding:2px 7px;white-space:nowrap}
+.niveau{background:linear-gradient(90deg,var(--violet),var(--blue));color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-weight:600}
+
+/* Grille SVG (jeux 1 et 2) */
+.salle svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.salle .noeud circle{fill:var(--surface);stroke:var(--ink-2);stroke-width:2;transition:fill .15s}
+.salle.cliquable .noeud{cursor:pointer}
+.salle.cliquable .noeud:hover circle{fill:#FFE3A3;stroke:var(--orange)}
+.salle .noeud text{font-size:15px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.salle .noeud.allume circle{fill:var(--orange);stroke:#9A4A00}
+.salle .noeud.allume text{fill:#fff}
+.salle .noeud.bon circle{fill:var(--green);stroke:#145A1E}
+.salle .noeud.bon text,.salle .noeud.faux text{fill:#fff}
+.salle .noeud.faux circle{fill:var(--red);stroke:#7A0B13}
+.salle .noeud.voisin circle{fill:#CFE0FF;stroke:var(--blue)}
+.salle .noeud.voisin text{fill:#0B2545}
+.salle .noeud.discret circle{opacity:.35}
+.salle .axe{font-size:12px;fill:var(--ink-2);text-anchor:middle;dominant-baseline:central}
+.salle .etiquette-mur{font-size:12.5px;font-weight:600;text-anchor:middle;dominant-baseline:central}
+
+/* Carte thermique (jeux 3 et 4) */
+.carte-cadre{position:relative;width:100%}
+.carte-cadre canvas{display:block;width:100%;cursor:crosshair}
+.bulle{position:absolute;transform:translate(-50%,calc(-100% - 12px));background:var(--navy);color:#fff;border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.35;pointer-events:none;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:2}
+.bulle b{font-size:15px}
+.echelle{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);margin:4px 0 0}
+.echelle .grad{flex:1;height:10px;border-radius:99px;background:linear-gradient(90deg,#313695,#4575b4,#74add1,#abd9e9,#e0f3f8,#fee090,#fdae61,#f46d43,#d73027,#a50026)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin-top:12px}
+.stat{background:var(--surface-2);border-radius:10px;padding:8px 10px}
+.stat .l{font-size:12px;color:var(--ink-2)}
+.stat .v{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat.ok .v{color:var(--ok)}
+.stat.ko .v{color:var(--ko)}
+.reglage{margin:0 0 12px}
+.reglage label{display:flex;justify-content:space-between;font-size:14.5px;font-weight:600;margin-bottom:2px}
+.reglage label span{font-variant-numeric:tabular-nums;color:var(--blue)}
+input[type=range]{width:100%;accent-color:var(--blue);height:28px}
+.groupe-titre{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);font-weight:700;margin:14px 0 8px}
+.etapes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.etapes button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer}
+.etapes button.fait{background:var(--green);border-color:var(--green);color:#fff}
+.etapes button.actuel{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,86,210,.2)}
+.mission h4{margin:0 0 4px;font-size:18px}
+.mission .obj{background:var(--surface-2);border-radius:10px;padding:8px 12px;margin:10px 0;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Course SOR */
+.chrono{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.graphe{position:relative;width:100%;margin-top:8px}
+.graphe canvas{display:block;width:100%}
+.legende{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.legende i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.medaille{font-size:40px;line-height:1}
+.resultat{display:flex;gap:12px;align-items:center;border-radius:12px;padding:12px 14px;background:var(--surface-2);margin-top:12px}
+
+/* Consoles MATLAB */
+.console{max-width:100%;background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.5;overflow-x:auto;margin:10px 0;white-space:pre}
+.console .cmd{color:#9CDCFE}
+.console .err{color:var(--code-err)}
+.console .warn{color:var(--code-warn)}
+.console .com{color:#6A9955}
+.console .bug{background:rgba(255,138,128,.16);outline:1px dashed rgba(255,138,128,.6);border-radius:3px}
+.console-titre{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:700;margin-top:10px}
+
+/* Fin de partie */
+.fin{text-align:center;padding:22px 10px}
+.fin .grandes{font-size:46px;color:var(--gold);letter-spacing:6px}
+.fin .grandes .vide{color:var(--line)}
+.fin h3{font-size:24px;margin:6px 0}
+.pied-page{border-top:1px solid var(--line);margin-top:30px;padding:20px 0 36px;color:var(--ink-2);font-size:14px}
+.pied-page a{font-weight:600}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:50;pointer-events:none;animation:tombe linear forwards}
+@keyframes tombe{to{transform:translateY(105vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}.carte-jeu{transition:none}}
+@media (max-width:520px){.chrono .v{font-size:14.5px}.choix-grille{grid-template-columns:1fr}.panneau{padding:13px}.chrono{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Ajouts communs aux pages TP4 et TP6 */
+.nb{text-transform:none;letter-spacing:0}
+.autres{font-size:13px;opacity:.9;margin-top:4px}
+.autres a{color:#fff;font-weight:600}
+.tableau{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums;margin-top:10px}
+.tableau th,.tableau td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:right}
+.tableau th{color:var(--ink-2);font-weight:600;font-size:12.5px}
+.tableau td:first-child,.tableau th:first-child{text-align:center}
+.tableau tr.neuf td{background:var(--surface-2)}
+.pari-choisi{display:inline-block;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-weight:600;margin-top:6px}
+.bacs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.bac{border:2px dashed var(--line);border-radius:14px;padding:12px;background:var(--surface);cursor:pointer;text-align:left;min-height:96px}
+.bac:hover:not(:disabled){border-color:var(--blue);background:var(--surface-2)}
+.bac b{display:block;font-size:15.5px;margin-bottom:4px}
+.bac span{font-size:13px;color:var(--ink-2)}
+.bac.bon{border-style:solid;border-color:var(--ok);background:var(--ok-bg)}
+.bac.faux{border-style:solid;border-color:var(--ko);background:var(--ko-bg)}
+@media (max-width:640px){.bacs{grid-template-columns:1fr}}
+.plan{position:relative;width:100%}
+.plan canvas{display:block;width:100%}
+.lecture{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-top:10px}
+</style>
+</head>
+<body>
+<header class="entete">
+  <div class="enveloppe">
+    <div class="ariane"><a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-genie-mecanique.md">Méthodes numériques pour la mécanique</a> › Module 11 · EDO › <a href="#">Jeux du TP6</a></div>
+    <div class="ligne">
+      <h1>🎮 Le TP6 en jeux : l'attracteur de Lorenz</h1>
+      <div class="total" id="total" aria-live="polite">★ 0 / 15</div>
+    </div>
+    <p>x′ = σ(y − x), y′ = x(ρ − z) − y, z′ = xy − βz, avec σ = 10, ρ = 28, β = 8/3 et Y(0) = (1, 1, 1) : trois EDO couplées, un papillon, et le chaos. Cinq jeux pour manipuler RK4 sur un système, la sensibilité aux conditions initiales et le choix du pas.</p>
+    <div class="autres">Autres jeux : <a href="../tp4/">TP4 · paroi de four</a> · <a href="../tp5/">TP5 · salle de sport</a></div>
+  </div>
+</header>
+
+<main class="enveloppe">
+
+<section id="accueil" class="vue">
+  <div class="intro">
+    <div class="note">🧮 <b>Rien n'est recopié :</b> chaque nombre affiché est calculé en direct dans votre navigateur par le code MATLAB du TP6 (<code>modele_lorenz</code>, <code>rk4_systeme</code>, <code>euler_systeme</code>, <code>distance_trajectoires</code>) porté ligne pour ligne en JavaScript. Ce sont les mêmes nombres que MATLAB : <span id="verif-base">…</span>.</div>
+  </div>
+  <div class="cartes" id="cartes"></div>
+  <div class="note" style="border-left-color:var(--green)">💡 <b>Conseil :</b> jouez <b>après</b> avoir lu l'énoncé du TP6 et <b>avant</b> d'écrire votre code MATLAB. Chaque jeu correspond à une manipulation de l'énoncé ; à la fin, comparez avec le corrigé.</div>
+</section>
+
+<!-- JEU 1 : le papillon -->
+<section id="jeu-1" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🦋 Le papillon de Lorenz</h2><p class="sous">RK4 pour un système, h = 0,01 : la trajectoire se dessine dans le plan (x, z)</p></div>
+    <div class="compteurs"><span class="compteur" id="j1-compte">Missions : 0 / 4</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau">
+      <div class="plan" id="j1-plan"><canvas aria-label="Projection x–z de la trajectoire de Lorenz"></canvas></div>
+      <div class="stats" id="j1-stats"></div>
+      <div class="actions"><button class="btn" id="j1-go">▶ Lancer</button><button class="btn sec" id="j1-bout">⏩ Aller au bout</button><button class="btn sec" id="j1-zero">↺</button></div>
+    </div>
+    <div>
+      <div class="panneau mission" id="j1-mission"></div>
+      <div class="panneau" style="margin-top:16px">
+        <div class="reglage"><label for="j1-rho">Paramètre ρ <span id="j1-rhov">28</span></label><input type="range" id="j1-rho" min="0.5" max="50" step="0.5" value="28"></div>
+        <p class="aide" style="margin:0">σ = 10 et β = 8/3 restent fixés. Simulation de t = 0 à t = 40.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 2 : l'effet papillon -->
+<section id="jeu-2" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🌪️ L'effet papillon</h2><p class="sous">Deux départs : (1, 1, 1) et (1 + ε, 1, 1). À quel instant les trajectoires se séparent-elles ?</p></div>
+    <div class="compteurs"><span class="compteur" id="j2-q">Manche 1 / 4</span><span class="compteur" id="j2-score">0 pt</span></div>
+  </div>
+  <div class="barre"><div id="j2-barre"></div></div>
+  <div id="j2-jeu" class="deux">
+    <div class="panneau">
+      <div class="groupe-titre" style="margin-top:0"><span class="nb">x(t)</span> pour les deux départs</div>
+      <div class="graphe" id="j2-x"><canvas aria-label="x en fonction du temps pour les deux trajectoires"></canvas></div>
+      <div class="legende"><span><i style="background:var(--blue)"></i>départ (1, 1, 1)</span><span><i style="background:var(--orange)"></i>départ (1 + ε, 1, 1)</span></div>
+      <div class="groupe-titre">Distance entre les deux trajectoires (échelle log)</div>
+      <div class="graphe" id="j2-d"><canvas aria-label="Distance entre les trajectoires"></canvas></div>
+      <div id="j2-console"></div>
+    </div>
+    <div class="panneau">
+      <p class="question" id="j2-question"></p>
+      <p class="aide" id="j2-aide"></p>
+      <div class="reglage"><label for="j2-pro">Mon pronostic <span id="j2-prov">10 s</span></label><input type="range" id="j2-pro" min="0" max="40" step="0.5" value="10"></div>
+      <div class="actions"><button class="btn" id="j2-go">▶ Lancer les deux trajectoires</button></div>
+      <div id="j2-retour" aria-live="polite"></div>
+      <div id="j2-histo"></div>
+      <div class="actions"><button class="btn" id="j2-suivant" hidden>Manche suivante →</button></div>
+    </div>
+  </div>
+  <div id="j2-fin" class="panneau" hidden></div>
+</section>
+
+<!-- JEU 3 : crash test -->
+<section id="jeu-3" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>💥 Crash test : Euler contre RK4</h2><p class="sous">Même système, deux schémas, plusieurs pas : qui s'écarte de la référence, qui explose ?</p></div>
+    <div class="compteurs"><span class="compteur" id="j3-compte">Missions : 0 / 4</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau">
+      <div class="plan" id="j3-plan"><canvas aria-label="Trajectoire calculée et référence dans le plan x–z"></canvas></div>
+      <div class="legende"><span><i style="background:var(--blue)"></i>schéma choisi</span><span><i style="background:var(--ink-2);opacity:.6"></i>référence : RK4, h = 0,001</span></div>
+      <div class="groupe-titre">Distance à la référence (échelle log)</div>
+      <div class="graphe" id="j3-d"><canvas aria-label="Distance à la référence"></canvas></div>
+      <div class="stats" id="j3-stats"></div>
+    </div>
+    <div>
+      <div class="panneau mission" id="j3-mission"></div>
+      <div class="panneau" style="margin-top:16px">
+        <div class="groupe-titre" style="margin-top:0">Schéma</div>
+        <div class="segment" id="j3-s"><button data-v="euler">Euler explicite</button><button data-v="rk4">RK4</button></div>
+        <div class="groupe-titre">Pas <span class="nb">h</span></div>
+        <div class="segment" id="j3-h"><button data-v="0.0025">0,0025</button><button data-v="0.005">0,005</button><button data-v="0.01">0,01</button><button data-v="0.02">0,02</button><button data-v="0.05">0,05</button><button data-v="0.1">0,1</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 4 : instabilite ou chaos -->
+<section id="jeu-4" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🗂️ Instabilité, chaos ou erreur de schéma ?</h2><p class="sous">Huit courbes calculées : classez chacune dans la bonne boîte</p></div>
+    <div class="compteurs"><span class="compteur" id="j4-q">Courbe 1 / 8</span><span class="compteur" id="j4-score">0 pt</span></div>
+  </div>
+  <div class="barre"><div id="j4-barre"></div></div>
+  <div id="j4-jeu" class="panneau">
+    <h3 id="j4-titre" style="margin:0 0 4px"></h3>
+    <p class="aide" id="j4-legende" style="margin:0 0 6px"></p>
+    <div class="graphe" id="j4-g"><canvas aria-label="Courbe à classer"></canvas></div>
+    <div class="legende" id="j4-leg"></div>
+    <div class="bacs" id="j4-bacs">
+      <button class="bac" data-v="instab"><b>🔥 Instabilité numérique</b><span>la solution part à l'infini ; réduire h corrige</span></button>
+      <button class="bac" data-v="chaos"><b>🦋 Chaos</b><span>deux solutions bornées, longtemps collées, qui finissent par se séparer ; rien ne corrige</span></button>
+      <button class="bac" data-v="schema"><b>📐 Erreur de schéma</b><span>bornée mais fausse très tôt ; réduire h ou monter en ordre corrige</span></button>
+    </div>
+    <div id="j4-retour" aria-live="polite"></div>
+    <div class="actions"><button class="btn" id="j4-suivant" hidden>Courbe suivante →</button></div>
+  </div>
+  <div id="j4-fin" class="panneau" hidden></div>
+</section>
+
+<!-- JEU 5 : detective du code -->
+<section id="jeu-5" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🕵️ Détective du code</h2><p class="sous">Chaque affaire : un extrait de code, la sortie de la console. Trouvez le bug… ou prouvez qu'il n'y en a pas.</p></div>
+    <div class="compteurs"><span class="compteur" id="j5-q">Affaire 1 / 8</span><span class="compteur" id="j5-score">0 pt</span></div>
+  </div>
+  <div class="barre"><div id="j5-barre"></div></div>
+  <div id="j5-jeu" class="deux">
+    <div class="panneau"><div id="j5-dossier"></div></div>
+    <div class="panneau">
+      <p class="question" id="j5-question"></p>
+      <div id="j5-choix" class="choix-grille choix-1col"></div>
+      <div id="j5-retour" aria-live="polite"></div>
+      <div class="actions"><button class="btn" id="j5-suivant" hidden>Affaire suivante →</button></div>
+    </div>
+  </div>
+  <div id="j5-fin" class="panneau" hidden></div>
+</section>
+
+</main>
+
+<footer class="enveloppe pied-page">
+  <div>📄 <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/methodes-numeriques/Chapitre_11_EDO_Euler_Runge_Kutta/4_TP6_enonce.pdf">Énoncé du TP6</a> · ✅ <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/methodes-numeriques/Chapitre_11_EDO_Euler_Runge_Kutta/4_TP6_corrige_scripts_MATLAB.zip">Corrigé : scripts MATLAB</a> · 📚 <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-genie-mecanique.md">Retour au cours</a></div>
+  <div style="margin-top:6px">Pr. Mohamed JANANE ALLAH · Faculté des Sciences et Techniques de Mohammedia — Université Hassan II de Casablanca · Votre progression reste dans ce navigateur, rien n'est envoyé.</div>
+</footer>
+
+<noscript><p class="enveloppe">Ces jeux ont besoin de JavaScript.</p></noscript>
+<script src="noyau.js"></script>
+<script>window.CLE_JEUX = "tp6-jeux-v1";</script>
+<script>
+"use strict";
+/* ============================================================
+   Outils communs des pages de jeux (meme base que la page du TP5)
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const virgule = (v, d) => v.toFixed(d).replace(".", ",").replace("-", "−");
+const melanger = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const hasard = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const attendre = ms => new Promise(r => setTimeout(r, ms));
+function el(tag, attrs, ...enfants) {
+  const e = document.createElement(tag);
+  for (const [c, v] of Object.entries(attrs || {})) {
+    if (c === "html") e.innerHTML = v; else if (c === "texte") e.textContent = v;
+    else if (c.startsWith("on")) e.addEventListener(c.slice(2), v); else e.setAttribute(c, v);
+  }
+  enfants.forEach(x => e.append(x));
+  return e;
+}
+const css = nom => getComputedStyle(document.documentElement).getPropertyValue(nom).trim();
+
+// Affichage des nombres a la maniere de MATLAB (format short / short e)
+function expo(v) { return v.toExponential(4).replace(/e([+-])(\d)$/, "e$10$2"); }
+function champ(v, entiers, large) {
+  if (entiers) return String(v).padStart(large ? 12 : 6);
+  return (v === 0 ? "0" : v.toFixed(4)).padStart(10);
+}
+function matLigne(vals) {
+  const entiers = vals.every(v => Number.isInteger(v)), large = vals.some(v => Math.abs(v) >= 1000);
+  return vals.map(v => champ(v, entiers, large)).join("");
+}
+function matColonne(vals) {
+  const entiers = vals.every(v => Number.isInteger(v)), large = vals.some(v => Math.abs(v) >= 1000);
+  return vals.map(v => champ(v, entiers, large));
+}
+function matLigneE(vals) { return vals.map(v => expo(v).padStart(13)).join(""); }
+function echapper(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+// lignes : ">> " commande, "!" erreur, "?" avertissement, "#" ligne suspecte, "%..." commentaire en fin de ligne
+function console_(lignes) {
+  return '<pre class="console">' + lignes.map(l => {
+    if (l.startsWith(">> ")) return '<span class="cmd">' + echapper(l) + "</span>";
+    if (l.startsWith("!")) return '<span class="err">' + echapper(l.slice(1)) + "</span>";
+    if (l.startsWith("?")) return '<span class="warn">' + echapper(l.slice(1)) + "</span>";
+    if (l.startsWith("#")) return '<span class="bug">' + echapper(l.slice(1)) + "</span>";
+    return echapper(l).replace(/(%.*)$/, '<span class="com">$1</span>');
+  }).join("\n") + "</pre>";
+}
+// "ans =" a la MATLAB (format loose) : ["", nom + " =", "", ...lignes]
+const ans = (lignes, nom) => ["", (nom || "ans") + " =", ""].concat(lignes).concat([""]);
+
+// Progression (dans ce navigateur seulement) : window.CLE_JEUX = cle de stockage de la page
+let progres = {};
+try { progres = JSON.parse(localStorage.getItem(window.CLE_JEUX)) || {}; } catch (e) { progres = {}; }
+function noter(jeu, n) {
+  if (n > (progres[jeu] || 0)) { progres[jeu] = n; try { localStorage.setItem(window.CLE_JEUX, JSON.stringify(progres)); } catch (e) { /* stockage indisponible */ } }
+  majAccueil();
+}
+function etoilesHTML(n) { return '<span class="etoiles">' + "★".repeat(n) + '<span class="vide">' + "★".repeat(3 - n) + "</span></span>"; }
+function confettis() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cols = ["#0056D2", "#6A4C93", "#C1121F", "#2E7D32", "#E67E22", "#F2C14E"];
+  for (let q = 0; q < 70; q++) {
+    const c = el("div", { class: "confetti" });
+    c.style.left = Math.random() * 100 + "vw"; c.style.background = cols[q % cols.length];
+    c.style.animationDuration = 1.6 + Math.random() * 1.6 + "s"; c.style.animationDelay = Math.random() * 0.4 + "s";
+    document.body.append(c); setTimeout(() => c.remove(), 3800);
+  }
+}
+function ecranFin(zone, o) {
+  zone.innerHTML = '<div class="fin"><div class="grandes">' + "★".repeat(o.etoiles) + '<span class="vide">' + "★".repeat(3 - o.etoiles) +
+    "</span></div><h3>" + o.titre + '</h3><p class="aide" style="font-size:16px">' + o.detail + "</p>" + (o.extra || "") +
+    '<div class="actions" style="justify-content:center"><button class="btn" data-r>↻ Rejouer</button><a class="btn sec" href="#">Tous les jeux</a></div></div>';
+  $("[data-r]", zone).addEventListener("click", o.rejouer);
+  if (o.etoiles === 3) confettis();
+}
+function choixBoutons(zone, options, rappel, mono) {
+  zone.innerHTML = "";
+  options.forEach((o, q) => zone.append(el("button", { class: "choix" + (mono ? " mono" : ""), html: o.html, "data-q": q,
+    onclick: () => { $$("button", zone).forEach(b => b.disabled = true); rappel(o, q, $$("button", zone)); } })));
+}
+function marquerChoix(boutons, options, choisi) {
+  boutons.forEach((b, q) => { if (options[q].bon) b.classList.add("bon"); else if (q === choisi) b.classList.add("faux"); });
+}
+function retour(zone, ok, titre, html) {
+  zone.innerHTML = '<div class="retour-msg ' + (ok ? "ok" : "ko") + '"><b class="t">' + titre + "</b>" + (html || "") + "</div>";
+}
+function segment(zone, valeur, rappel) {
+  $$("button", zone).forEach(b => {
+    b.setAttribute("aria-pressed", b.dataset.v === String(valeur));
+    if (!b.dataset.lie) { b.dataset.lie = 1; b.addEventListener("click", () => rappel(b.dataset.v)); }
+  });
+}
+function graduations(min, max, n) {
+  const brut = (max - min) / (n || 5), p = Math.pow(10, Math.floor(Math.log10(brut))), m = brut / p;
+  const pas = (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p, r = [];
+  for (let v = Math.ceil(min / pas) * pas; v <= max + pas * 1e-9; v += pas) r.push(+v.toFixed(10));
+  return r;
+}
+
+/* Traceur de courbes : axes, grille, series, points, droites horizontales et verticales, textes */
+function tracer(cadre, o) {
+  const cv = $("canvas", cadre), W = cadre.clientWidth, H = o.hauteur || Math.max(180, Math.min(260, W * 0.55)), dpr = window.devicePixelRatio || 1;
+  if (!W) return null;
+  cv.style.height = H + "px"; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  const m = Object.assign({ l: 54, r: 12, t: 12, b: 36 }, o.marges || {}), ink = css("--ink-2"), ligne = css("--line");
+  const X = x => m.l + (x - o.x[0]) / (o.x[1] - o.x[0]) * (W - m.l - m.r);
+  const Y = y => H - m.b - (y - o.y[0]) / (o.y[1] - o.y[0]) * (H - m.t - m.b);
+  ctx.font = "11.5px system-ui,Segoe UI,Arial"; ctx.fillStyle = ink; ctx.strokeStyle = ligne; ctx.lineWidth = 1;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  (o.xt || []).forEach(([v, t]) => { ctx.beginPath(); ctx.moveTo(X(v), m.t); ctx.lineTo(X(v), H - m.b); ctx.stroke(); ctx.fillText(t, X(v), H - m.b + 5); });
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  (o.yt || []).forEach(([v, t]) => { ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(W - m.r, Y(v)); ctx.stroke(); ctx.fillText(t, m.l - 6, Y(v)); });
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; if (o.xl) ctx.fillText(o.xl, (m.l + W - m.r) / 2, H - 1);
+  if (o.yl) { ctx.save(); ctx.translate(9, (m.t + H - m.b) / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = "middle"; ctx.fillText(o.yl, 0, 0); ctx.restore(); }
+  ctx.save(); ctx.beginPath(); ctx.rect(m.l, m.t, W - m.l - m.r, H - m.t - m.b); ctx.clip();
+  (o.horiz || []).forEach(h => { ctx.strokeStyle = h.c; ctx.lineWidth = h.l || 1.5; ctx.setLineDash(h.tir || []); ctx.beginPath(); ctx.moveTo(m.l, Y(h.y)); ctx.lineTo(W - m.r, Y(h.y)); ctx.stroke(); });
+  (o.vert || []).forEach(h => { ctx.strokeStyle = h.c; ctx.lineWidth = h.l || 1.5; ctx.setLineDash(h.tir || []); ctx.beginPath(); ctx.moveTo(X(h.x), m.t); ctx.lineTo(X(h.x), H - m.b); ctx.stroke(); });
+  ctx.setLineDash([]);
+  (o.series || []).forEach(s => {
+    ctx.strokeStyle = s.c; ctx.lineWidth = s.l || 2; ctx.globalAlpha = s.a || 1; ctx.setLineDash(s.tir || []); ctx.lineJoin = "round"; ctx.beginPath();
+    let debut = true;
+    s.pts.forEach(([x, y]) => { if (!isFinite(y) || !isFinite(x)) { debut = true; return; } if (debut) ctx.moveTo(X(x), Y(y)); else ctx.lineTo(X(x), Y(y)); debut = false; });
+    ctx.stroke(); ctx.globalAlpha = 1; ctx.setLineDash([]);
+    if (s.marques) { ctx.fillStyle = s.c; s.pts.forEach(([x, y]) => { if (isFinite(y)) { ctx.beginPath(); ctx.arc(X(x), Y(y), s.marques, 0, 7); ctx.fill(); } }); }
+  });
+  (o.points || []).forEach(p => {
+    ctx.fillStyle = p.c; ctx.strokeStyle = p.c; ctx.lineWidth = 2;
+    if (p.croix) { ctx.beginPath(); ctx.moveTo(X(p.x) - 5, Y(p.y) - 5); ctx.lineTo(X(p.x) + 5, Y(p.y) + 5); ctx.moveTo(X(p.x) + 5, Y(p.y) - 5); ctx.lineTo(X(p.x) - 5, Y(p.y) + 5); ctx.stroke(); }
+    else if (p.anneau) { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r || 7, 0, 7); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r || 4.5, 0, 7); ctx.fill(); }
+  });
+  ctx.restore();
+  (o.textes || []).forEach(t => { ctx.fillStyle = t.c || ink; ctx.font = (t.gras ? "600 " : "") + "12px system-ui,Segoe UI,Arial"; ctx.textAlign = t.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t.t, X(t.x) + (t.dx || 0), Y(t.y) + (t.dy || 0)); });
+  return { X, Y, W, H, m, inverse: (px, py) => [o.x[0] + (px - m.l) / (W - m.l - m.r) * (o.x[1] - o.x[0]), o.y[0] + (H - m.b - py) / (H - m.t - m.b) * (o.y[1] - o.y[0])] };
+}
+
+/* ============================================================
+   Moteur de missions : etapes numerotees, pari facultatif, consigne suivie en direct,
+   action, bouton de validation, quiz final, message de reussite.
+   ============================================================ */
+function moteurMissions(o) {
+  const E = { m: 0, phase: "consigne", faites: new Set(), paris: {}, essais: 0 }, M = o.missions;
+  const val = f => typeof f === "function" ? f() : f;
+  function entrer(m) {
+    E.m = m; E.essais = 0;
+    E.phase = E.faites.has(m) ? "fini" : (M[m].pari && E.paris[m] === undefined) ? "pari" : "consigne";
+    if (M[m].entree) M[m].entree();
+    o.recalculer(); afficher();
+  }
+  function gagner() {
+    E.faites.add(E.m); const n = E.faites.size;
+    noter(o.jeu, o.etoiles(n)); if (o.compteur) o.compteur.textContent = "Missions : " + n + " / " + M.length;
+    if (n === M.length) confettis();
+  }
+  function verifier() {
+    const X = M[E.m], avant = E.phase;
+    if (E.phase === "consigne" && X.ok && X.ok()) { E.phase = X.quiz ? "quiz" : "fini"; if (!X.quiz) gagner(); }
+    if (E.phase === "consigne" || E.phase !== avant) afficher();
+  }
+  function afficher() {
+    const X = M[E.m], z = o.zone;
+    let h = '<div class="etapes">' + M.map((_, q) => '<button data-m="' + q + '" class="' + (E.faites.has(q) ? "fait " : "") + (q === E.m ? "actuel" : "") + '" aria-label="Mission ' + (q + 1) + '">' + (q + 1) + "</button>").join("") + "</div>";
+    h += "<h4>Mission " + (E.m + 1) + " · " + X.titre + '</h4><p style="margin:0">' + val(X.consigne) + "</p>";
+    if (X.pari && E.paris[E.m] !== undefined && E.phase !== "pari") h += '<span class="pari-choisi">Votre pronostic : ' + X.pari.o[E.paris[E.m]] + "</span>";
+    if (E.phase === "pari") {
+      h += '<p class="question" style="font-size:16.5px;margin-top:12px">🔮 ' + val(X.pari.q) + '</p><div class="choix-grille" id="mm-pari"></div>';
+    } else if (E.phase === "consigne") {
+      if (X.suivi) h += '<div class="obj">' + X.suivi() + "</div>";
+      if (X.action) h += '<div class="actions"><button class="btn" id="mm-action">' + X.action.label + "</button></div>";
+      if (X.valider) h += '<div class="actions"><button class="btn" id="mm-valider">' + val(X.valider.label) + '</button></div><div id="mm-vret"></div>';
+    } else if (E.phase === "quiz") {
+      h += '<div class="retour-msg ok"><b class="t">✔ Mission accomplie : une dernière question</b>' + (X.avantQuiz ? val(X.avantQuiz) : "") + "</div>";
+      h += '<p class="question" style="font-size:16.5px;margin-top:12px">' + val(X.quiz.q) + '</p><div class="choix-grille choix-1col" id="mm-quiz"></div><div id="mm-qret"></div>';
+    } else {
+      let bilan = "";
+      if (X.pari && E.paris[E.m] !== undefined) {
+        const bon = X.pari.bon();
+        bilan = "<br>" + (E.paris[E.m] === bon ? "🎯 Pronostic juste !" : "Pronostic : " + X.pari.o[E.paris[E.m]] + " · réponse : <b>" + X.pari.o[bon] + "</b>.");
+      }
+      h += '<div class="retour-msg ok"><b class="t">✔ Mission accomplie</b>' + (X.bravo ? val(X.bravo) : val(X.quiz.expl)) + bilan + "</div>";
+      h += '<div class="actions">' + (E.m < M.length - 1 ? '<button class="btn" id="mm-suite">Mission suivante →</button>' : '<a class="btn" href="#">🎉 Retour aux jeux</a>') + "</div>";
+    }
+    z.innerHTML = h;
+    $$(".etapes button", z).forEach(b => b.addEventListener("click", () => entrer(+b.dataset.m)));
+    const su = $("#mm-suite", z); if (su) su.addEventListener("click", () => entrer(E.m + 1));
+    const ac = $("#mm-action", z); if (ac) ac.addEventListener("click", () => { X.action.faire(); o.recalculer(); verifier(); });
+    const va = $("#mm-valider", z);
+    if (va) va.addEventListener("click", () => {
+      const [ok, msg] = X.valider.test();
+      if (ok) { E.phase = X.quiz ? "quiz" : "fini"; if (!X.quiz) gagner(); afficher(); }
+      else retour($("#mm-vret", z), false, "✘ Pas encore", msg);
+    });
+    if (E.phase === "pari") {
+      const L = X.pari.o.map((t, q) => ({ html: t, q }));
+      choixBoutons($("#mm-pari", z), L, c => { E.paris[E.m] = c.q; E.phase = "consigne"; if (X.apresPari) X.apresPari(); o.recalculer(); afficher(); verifier(); }, true);
+    }
+    if (E.phase === "quiz") {
+      const L = melanger(X.quiz.o.map(([t, b]) => ({ html: t, bon: !!b })));
+      choixBoutons($("#mm-quiz", z), L, (c, q, bs) => {
+        marquerChoix(bs, L, q);
+        if (c.bon) { E.phase = "fini"; gagner(); setTimeout(afficher, 900); }
+        else { retour($("#mm-qret", z), false, "✘ Non, réessayez", ""); setTimeout(afficher, 1100); }
+      });
+    }
+  }
+  return { E, entrer, verifier, afficher };
+}
+
+/* ============================================================
+   Moteur du detective : AFFAIRES = [{titre, code, sortie, q, o:[[texte, bon]], expl}]
+   ============================================================ */
+function moteurDetective(o) {
+  let E, A;
+  function demarrer() {
+    if (!A) A = o.dossiers();
+    E = { q: 0, bons: 0, score: 0 }; $("#" + o.p + "-jeu").hidden = false; $("#" + o.p + "-fin").hidden = true; poser();
+  }
+  function poser() {
+    const X = A[E.q];
+    $("#" + o.p + "-q").textContent = "Affaire " + (E.q + 1) + " / " + A.length; $("#" + o.p + "-score").textContent = E.score + " pt";
+    $("#" + o.p + "-barre").style.width = E.q / A.length * 100 + "%";
+    $("#" + o.p + "-dossier").innerHTML = '<h3 style="margin:0 0 6px">📁 ' + X.titre + '</h3><div class="console-titre">Extrait du code (ligne suspecte surlignée)</div>' + console_(X.code) +
+      '<div class="console-titre">Fenêtre de commandes</div>' + console_(X.sortie);
+    $("#" + o.p + "-question").textContent = X.q; $("#" + o.p + "-retour").innerHTML = ""; $("#" + o.p + "-suivant").hidden = true;
+    const L = melanger(X.o.map(([t, b]) => ({ html: t, bon: !!b })));
+    choixBoutons($("#" + o.p + "-choix"), L, (c, q, bs) => {
+      marquerChoix(bs, L, q); if (c.bon) { E.bons++; E.score += 100; }
+      retour($("#" + o.p + "-retour"), c.bon, c.bon ? "✔ Affaire résolue ! +100 pt" : "✘ Fausse piste", X.expl);
+      $("#" + o.p + "-score").textContent = E.score + " pt"; $("#" + o.p + "-suivant").hidden = false;
+      $("#" + o.p + "-suivant").textContent = E.q === A.length - 1 ? "Voir le résultat →" : "Affaire suivante →";
+    });
+  }
+  function suivant() {
+    if (E.q < A.length - 1) { E.q++; poser(); window.scrollTo({ top: $("#" + o.id).offsetTop - 10, behavior: "smooth" }); return; }
+    $("#" + o.p + "-barre").style.width = "100%"; $("#" + o.p + "-jeu").hidden = true; const z = $("#" + o.p + "-fin"); z.hidden = false;
+    const et = E.bons >= 7 ? 3 : E.bons >= 5 ? 2 : E.bons >= 3 ? 1 : 0; noter(o.id, et);
+    ecranFin(z, { etoiles: et, titre: E.bons + " / " + A.length + " affaires résolues · " + E.score + " pt", rejouer: demarrer, detail: o.morale });
+  }
+  $("#" + o.p + "-suivant").addEventListener("click", suivant);
+  return { ouvrir: demarrer };
+}
+
+/* ============================================================
+   Accueil et navigation : window.FICHES (cartes) et window.JEUX (objets { ouvrir })
+   ============================================================ */
+function majAccueil() {
+  const zone = $("#cartes"); if (!zone) return; zone.innerHTML = "";
+  FICHES.forEach((f, q) => zone.append(el("a", { class: "carte-jeu", href: "#" + f.id, html:
+    '<div class="vignette" style="background:' + f.fond + '"><img src="vignettes/' + f.id + '.jpg" alt="" loading="lazy" onerror="this.remove()"><span class="num">Jeu ' + (q + 1) + "</span>" + f.emoji + "</div>" +
+    '<div class="corps"><h3>' + f.titre + '</h3><div class="notion">' + f.notion + '</div><div class="puces">' + f.puces.map(p => '<span class="puce">' + p + "</span>").join("") +
+    '</div><div class="pied">' + etoilesHTML(progres[f.id] || 0) + '<span class="btn petit">' + ((progres[f.id] || 0) ? "Rejouer" : "Jouer") + " ▶</span></div></div>" })));
+  const tot = FICHES.reduce((s, f) => s + (progres[f.id] || 0), 0);
+  $("#total").innerHTML = '<span class="etoile">★</span> ' + tot + " / " + 3 * FICHES.length;
+}
+function routeur() {
+  const id = location.hash.slice(1), vue = JEUX[id] ? id : "accueil";
+  $$(".vue").forEach(v => v.hidden = v.id !== vue);
+  majAccueil(); if (JEUX[id]) JEUX[id].ouvrir();
+  window.scrollTo(0, 0);
+}
+function demarrerPage() { addEventListener("hashchange", routeur); routeur(); }
+/* ============================================================
+   TP6 : l'attracteur de Lorenz
+   ============================================================ */
+const F6 = TP6.lorenz(), Y0 = [1, 1, 1];
+let REF6 = null;
+const ref6 = () => REF6 || (REF6 = TP6.rk4Systeme(F6, Y0, 20, 0.001));
+const ticks = (a, b, n) => graduations(a, b, n).map(v => [v, String(v).replace(".", ",")]);
+const ytLog = (a, b) => { const r = []; for (let v = Math.ceil(a); v <= b; v += 2) r.push([v, "1e" + v]); return r; };
+const xz = (g, n0, n1, pas) => { const p = []; pas = pas || 1; for (let n = n0; n <= n1; n += pas) p.push([g.Y[3 * n], g.Y[3 * n + 2]]); return p; };
+const xt = (g, n1, pas) => { const p = []; pas = pas || 1; for (let n = 0; n <= Math.min(n1, g.N); n += pas) p.push([g.t[n], g.Y[3 * n]]); return p; };
+const f4 = v => virgule(v, 4);
+const vitesse = (F, y) => { const o = [0, 0, 0]; F(0, y, o); return Math.hypot(o[0], o[1], o[2]); };
+const explosion = g => { for (let n = 0; n <= g.N; n++) for (let c = 0; c < 3; c++) if (!(Math.abs(g.Y[3 * n + c]) <= 1000)) return n; return -1; };
+// distance a la reference aux instants communs ; renvoie [[t, d]] et l'instant ou d depasse 1 (ou NaN)
+function ecartRef(g, R) {
+  const r = g.h / R.h, d = []; let t1 = NaN;
+  for (let n = 0; n <= g.N; n++) {
+    const ir = n * r; if (Math.abs(ir - Math.round(ir)) > 1e-9) continue;
+    const m = Math.round(ir); if (m > R.N) break;
+    const e = Math.hypot(g.Y[3 * n] - R.Y[3 * m], g.Y[3 * n + 1] - R.Y[3 * m + 1], g.Y[3 * n + 2] - R.Y[3 * m + 2]);
+    d.push([g.t[n], e]); if (isNaN(t1) && e > 1) t1 = g.t[n];
+  }
+  return { d, t1 };
+}
+
+const FICHES = [
+  { id: "jeu-1", emoji: "🦋", fond: "linear-gradient(135deg,#0056D2,#3D8BFF)", titre: "Le papillon de Lorenz", notion: "Regardez l'attracteur se dessiner, comptez les changements d'aile, trouvez les centres et calmez la tempête avec ρ.", puces: ["Manip. 1", "RK4 système", "≈ 5 min"] },
+  { id: "jeu-2", emoji: "🌪️", fond: "linear-gradient(135deg,#6A4C93,#9B7BD0)", titre: "L'effet papillon", notion: "Deux départs distants de 10⁻³, 10⁻⁵, 10⁻⁷… Pariez sur l'instant où les trajectoires se séparent.", puces: ["Manip. 2", "sensibilité", "≈ 4 min"] },
+  { id: "jeu-3", emoji: "💥", fond: "linear-gradient(135deg,#C1121F,#F46D43)", titre: "Crash test : Euler contre RK4", notion: "Même système, deux schémas, plusieurs pas : qui s'écarte, qui explose, qui gagne à coût égal ?", puces: ["Manip. 3", "pas de temps", "≈ 5 min"] },
+  { id: "jeu-4", emoji: "🗂️", fond: "linear-gradient(135deg,#2E7D32,#58B35E)", titre: "Instabilité, chaos ou erreur ?", notion: "Huit courbes à classer : la solution part à l'infini, reste bornée mais fausse, ou se sépare d'une voisine ?", puces: ["Synthèse", "classement", "≈ 4 min"] },
+  { id: "jeu-5", emoji: "🕵️", fond: "linear-gradient(135deg,#E67E22,#F5B041)", titre: "Détective du code", notion: "Vecteur ligne, 8\\3, sum sans dimension… huit affaires tirées des pièges du TP6.", puces: ["Manip. 1 à 3", "diagnostic", "≈ 5 min"] },
+];
+
+/* ---------- JEU 1 : le papillon ---------- */
+const jeu1 = (() => {
+  const E = { rho: 28, n: 0, joue: false, clic: null, centres: false, demarre: false };
+  let S, F, MM, anim = 0, plan = null, bornes;
+  const C = rho => Math.sqrt(8 / 3 * (rho - 1));
+  function simuler() {
+    F = TP6.lorenz(10, E.rho, 8 / 3); S = TP6.rk4Systeme(F, Y0, 40, 0.01);
+    const m = TP6.maxAbs(S); let zmin = Infinity; for (let n = 0; n <= S.N; n++) zmin = Math.min(zmin, S.Y[3 * n + 2]);
+    const X = Math.max(5, Math.ceil(m[0] / 5) * 5 + 2.5); bornes = { x: [-X, X], z: [Math.min(0, Math.floor(zmin)), Math.max(10, Math.ceil(m[2] / 5) * 5 + 3)] };
+    E.n = 0;
+  }
+  function dessiner() {
+    const n = E.n, c = E.rho > 1 ? C(E.rho) : 0;
+    const p = [];
+    if (E.centres && E.rho > 1) p.push({ x: c, y: E.rho - 1, c: css("--gold"), anneau: true, r: 8 }, { x: -c, y: E.rho - 1, c: css("--gold"), anneau: true, r: 8 });
+    if (E.clic) p.push({ x: E.clic[0], y: E.clic[1], c: css("--red"), croix: true });
+    p.push({ x: S.Y[3 * n], y: S.Y[3 * n + 2], c: css("--orange"), r: 5.5 });
+    plan = tracer($("#j1-plan"), { hauteur: Math.min(380, Math.max(260, $("#j1-plan").clientWidth * 0.75)), x: bornes.x, y: bornes.z, xl: "x", yl: "z", xt: ticks(bornes.x[0], bornes.x[1], 6), yt: ticks(bornes.z[0], bornes.z[1], 5),
+      series: [{ pts: xz(S, 0, n), c: css("--blue"), l: 1.3, a: 0.85 }], points: p,
+      textes: E.centres && E.rho > 1 ? [{ t: "C+", x: c, y: E.rho - 1, dx: 11, gras: true, c: css("--gold") }, { t: "C−", x: -c, y: E.rho - 1, dx: 11, gras: true, c: css("--gold") }] : [] });
+    let ailes = 0; const m = [0, 0, 0];
+    for (let q = 0; q <= n; q++) { if (q && Math.sign(S.Y[3 * q]) !== Math.sign(S.Y[3 * q - 3])) ailes++; for (let k = 0; k < 3; k++) m[k] = Math.max(m[k], Math.abs(S.Y[3 * q + k])); }
+    E.ailes = ailes;
+    $("#j1-stats").innerHTML = [["t", virgule(S.t[n], 2)], ["(x, y, z)", virgule(S.Y[3 * n], 2) + " ; " + virgule(S.Y[3 * n + 1], 2) + " ; " + virgule(S.Y[3 * n + 2], 2)],
+      ["Changements d'aile", ailes], ["max |x|, |y|, |z|", virgule(m[0], 1) + " ; " + virgule(m[1], 1) + " ; " + virgule(m[2], 1)]]
+      .map(([l, v]) => '<div class="stat"><div class="l">' + l + '</div><div class="v">' + v + "</div></div>").join("");
+    $("#j1-go").textContent = E.joue ? "⏸ Pause" : n >= S.N ? "▶ Relancer" : "▶ Lancer";
+    $("#j1-rho").value = E.rho; $("#j1-rhov").textContent = virgule(E.rho, 1);
+  }
+  function calculer() { dessiner(); if (MM) MM.verifier(); }
+  function jouer() {
+    if (E.joue) { E.joue = false; cancelAnimationFrame(anim); dessiner(); return; }
+    if (E.n >= S.N) E.n = 0;
+    E.joue = true; let avant = null;
+    const pas = t => {
+      if (avant === null) avant = t;
+      const dn = Math.max(1, Math.round((t - avant) / 1000 * 250)); avant = t;
+      const v = E.n; E.n = Math.min(S.N, E.n + dn);
+      if (v < 2000 && E.n >= 2000 && E.rho === 28) { E.n = 2000; E.joue = false; }   // pause a t = 20 pour la mission 1
+      if (E.n >= S.N) E.joue = false;
+      calculer(); if (E.joue) anim = requestAnimationFrame(pas);
+    };
+    anim = requestAnimationFrame(pas); dessiner();
+  }
+  const missions = [
+    { titre: "Le papillon du TP", pari: { q: "Avec ρ = 28, entre t = 0 et t = 20, combien de fois x change-t-il de signe (changements d'aile) ?", o: ["2", "6", "12", "20"],
+        bon: () => { const k = TP6.changementsSigne(TP6.rk4Systeme(F6, Y0, 20, 0.01)); return [2, 6, 12, 20].reduce((b, v, q, a) => Math.abs(v - k) < Math.abs(a[b] - k) ? q : b, 0); } },
+      consigne: "Avec <b>ρ = 28</b>, lancez la simulation (RK4, h = 0,01) et laissez-la aller jusqu'à <b>t = 20</b> : elle s'y arrête toute seule.",
+      ok: () => E.rho === 28 && E.n >= 2000,
+      bravo: () => { const g = TP6.rk4Systeme(F6, Y0, 20, 0.01), m = TP6.maxAbs(g), e = TP6.etat(g);
+        return "<b>" + TP6.changementsSigne(g) + " changements d'aile</b>, Y(20) = (" + e.map(f4).join(" ; ") + "), comme dans MATLAB. La trajectoire reste bornée (|x| ≤ " + f4(m[0]) + ", |y| ≤ " + f4(m[1]) + ", z ≤ " + f4(m[2]) + ") sans jamais se fixer."; } },
+    { titre: "Trouvez un centre", consigne: "Les deux « yeux » du papillon sont des points d'équilibre C±. Avec <b>ρ = 28</b>, touchez la carte là où vous pensez trouver l'un d'eux.",
+      suivi: () => E.clic ? "Votre point : (x, z) = (" + virgule(E.clic[0], 1) + " ; " + virgule(E.clic[1], 1) + ") · distance au centre le plus proche : " + virgule(Math.min(Math.hypot(E.clic[0] - C(28), E.clic[1] - 27), Math.hypot(E.clic[0] + C(28), E.clic[1] - 27)), 1) : "Touchez la carte.",
+      ok: () => E.rho === 28 && E.clic && Math.min(Math.hypot(E.clic[0] - C(28), E.clic[1] - 27), Math.hypot(E.clic[0] + C(28), E.clic[1] - 27)) < 3,
+      bravo: () => { E.centres = true; setTimeout(dessiner, 0); const o = [0, 0, 0]; F6(0, [C(28), C(28), 27], o);
+        return "C± = (±√(β(ρ − 1)), ±√(β(ρ − 1)), ρ − 1) = (±" + f4(C(28)) + " ; ±" + f4(C(28)) + " ; 27). Ce sont de vrais équilibres (|F(C+)| = " + expo(Math.hypot(...o)) + "), mais <b>instables</b> : la trajectoire tourne autour sans jamais s'y poser."; } },
+    { titre: "Calmer la tempête", consigne: "Changez <b>ρ</b> pour que la trajectoire finisse par se poser sur un point fixe, puis allez au bout de la simulation (t = 40).",
+      suivi: () => E.n < S.N ? "ρ = " + virgule(E.rho, 1) + " · allez jusqu'à t = 40 pour juger" : "ρ = " + virgule(E.rho, 1) + " · à t = 40, vitesse |F(Y)| = " + expo(vitesse(F, TP6.etat(S))) + (vitesse(F, TP6.etat(S)) < 0.05 ? " ✓" : " : la trajectoire bouge encore"),
+      ok: () => E.n >= S.N && vitesse(F, TP6.etat(S)) < 0.05,
+      bravo: () => { const e = TP6.etat(S), rH = 10 * (10 + 8 / 3 + 3) / (10 - 8 / 3 - 1);
+        return "Avec ρ = " + virgule(E.rho, 1) + ", la trajectoire se pose en (" + e.map(v => virgule(v, 3)).join(" ; ") + ")" + (E.rho < 1 ? " : l'origine, seul équilibre pour ρ < 1." : " : un des centres C±, (±" + virgule(C(E.rho), 3) + " ; ±" + virgule(C(E.rho), 3) + " ; " + virgule(E.rho - 1, 1) + ").") +
+          " Les centres sont stables tant que ρ < σ(σ + β + 3)/(σ − β − 1) = " + virgule(rH, 2) + " ; plus on s'en approche, plus la spirale est lente. À ρ = 28, c'est le chaos."; } },
+    { titre: "La boîte du papillon", consigne: "Dernière question.", ok: () => true,
+      quiz: { q: "Avec ρ = 28, dans quelle « boîte » la trajectoire reste-t-elle entre t = 0 et t = 20 ?", o: [["|x| < 20, |y| < 28 et 0 < z < 48", 1], ["Elle grandit sans limite", 0], ["|x|, |y| et |z| restent sous 5", 0], ["Elle converge vers l'origine", 0]],
+        expl: () => { const m = TP6.maxAbs(TP6.rk4Systeme(F6, Y0, 20, 0.01)); return "max |x| = " + f4(m[0]) + ", max |y| = " + f4(m[1]) + ", max |z| = " + f4(m[2]) + " : bornée, ni point fixe ni cycle. C'est le premier contrôle de l'énoncé : un code juste donne cette boîte."; } } },
+  ];
+  return { ouvrir: () => {
+    if (!E.demarre) {
+      E.demarre = true; simuler();
+      MM = moteurMissions({ zone: $("#j1-mission"), compteur: $("#j1-compte"), jeu: "jeu-1", missions, recalculer: calculer, etoiles: n => n >= 4 ? 3 : n >= 3 ? 2 : n >= 2 ? 1 : 0 });
+      $("#j1-go").addEventListener("click", jouer);
+      $("#j1-bout").addEventListener("click", () => { E.joue = false; cancelAnimationFrame(anim); E.n = S.N; calculer(); });
+      $("#j1-zero").addEventListener("click", () => { E.joue = false; cancelAnimationFrame(anim); E.n = 0; calculer(); });
+      $("#j1-rho").addEventListener("input", e => { E.joue = false; cancelAnimationFrame(anim); E.rho = +e.target.value; simuler(); calculer(); });
+      $("#j1-plan canvas").addEventListener("click", e => {
+        if (!plan) return; const r = e.target.getBoundingClientRect(); E.clic = plan.inverse(e.clientX - r.left, e.clientY - r.top); calculer();
+      });
+      addEventListener("resize", () => { if (!$("#jeu-1").hidden) dessiner(); });
+      MM.entrer(0);
+    } else { calculer(); MM.afficher(); }
+  } };
+})();
+
+/* ---------- JEU 2 : l'effet papillon ---------- */
+const jeu2 = (() => {
+  const EPS = [1e-3, 1e-5, 1e-7, 1e-9], TF = 40;
+  let E, A = null, anim = 0;
+  const puiss = e => "10" + ({ "-3": "⁻³", "-5": "⁻⁵", "-7": "⁻⁷", "-9": "⁻⁹" }[Math.round(Math.log10(e))]);
+  function manche(e) {
+    if (!A) A = TP6.rk4Systeme(F6, Y0, TF, 0.01);
+    const B = TP6.rk4Systeme(F6, [1 + e, 1, 1], TF, 0.01), d = TP6.distance(A, B), q = TP6.premier(d, v => v > 1);
+    return { e, B, d, th: q < 0 ? NaN : A.t[q] };
+  }
+  function demarrer() { E = { q: 0, score: 0, ecarts: [], hist: [] }; $("#j2-jeu").hidden = false; $("#j2-fin").hidden = true; poser(); }
+  function dessiner(Mn, n) {
+    tracer($("#j2-x"), { hauteur: 210, x: [0, TF], y: [-22, 22], xl: "t", yl: "x", xt: ticks(0, TF, 8), yt: ticks(-20, 20, 4),
+      series: n > 0 ? [{ pts: xt(A, n), c: css("--blue"), l: 1.6 }, { pts: xt(Mn.B, n), c: css("--orange"), l: 1.6, a: 0.9 }] : [],
+      vert: Mn.vu && !isNaN(Mn.th) ? [{ x: Mn.th, c: css("--red"), tir: [4, 3] }] : [] });
+    const pd = []; for (let k = 0; k <= n; k += 2) pd.push([A.t[k], Math.log10(Math.max(Mn.d[k], 1e-12))]);
+    tracer($("#j2-d"), { hauteur: 190, x: [0, TF], y: [-10, 2], xl: "t", yl: "distance", xt: ticks(0, TF, 8), yt: ytLog(-10, 2),
+      horiz: [{ y: 0, c: css("--red"), tir: [5, 4] }], series: [{ pts: pd, c: css("--violet"), l: 2 }],
+      vert: [{ x: E.pro, c: css("--gold"), tir: [6, 4] }] });
+  }
+  function poser() {
+    const e = EPS[E.q]; E.M = manche(e); E.pro = +$("#j2-pro").value;
+    $("#j2-q").textContent = "Manche " + (E.q + 1) + " / " + EPS.length; $("#j2-score").textContent = E.score + " pt";
+    $("#j2-barre").style.width = E.q / EPS.length * 100 + "%";
+    $("#j2-question").innerHTML = "Écart initial ε = <b>" + puiss(e) + "</b> sur x₀. À quel instant la distance entre les deux trajectoires dépasse-t-elle <b>1</b> ?";
+    $("#j2-aide").innerHTML = E.q === 0 ? "Les deux trajectoires sont calculées par RK4 (h = 0,01). Placez la ligne dorée sur votre pronostic, puis lancez." :
+      "Indice : regardez les manches précédentes. L'écart initial est " + (Math.log10(EPS[E.q - 1] / e)) + " ordres de grandeur plus petit.";
+    $("#j2-retour").innerHTML = ""; $("#j2-suivant").hidden = true; $("#j2-go").disabled = false; $("#j2-console").innerHTML = "";
+    histo(); dessiner(E.M, 0);
+  }
+  function histo() {
+    $("#j2-histo").innerHTML = E.hist.length ? '<table class="tableau"><tr><th>ε</th><th>horizon (d &gt; 1)</th><th>votre pronostic</th></tr>' +
+      E.hist.map(h => "<tr><td>" + puiss(h.e) + "</td><td>" + virgule(h.th, 2) + " s</td><td>" + virgule(h.pro, 1) + " s</td></tr>").join("") + "</table>" : "";
+  }
+  function lancer() {
+    $("#j2-go").disabled = true; cancelAnimationFrame(anim);
+    const M = E.M, fin = Math.min(A.N, Math.round((isNaN(M.th) ? TF : Math.min(TF, M.th + 6)) / 0.01)), t0 = performance.now();
+    const pas = t => {
+      const n = Math.max(0, Math.min(fin, Math.round((t - t0) / 2800 * fin)));
+      dessiner(M, n); if (n < fin) anim = requestAnimationFrame(pas); else resultat();
+    };
+    anim = requestAnimationFrame(pas);
+  }
+  function resultat() {
+    const M = E.M; M.vu = true; const ec = Math.abs(E.pro - M.th), pts = Math.max(0, Math.round(100 - 25 * ec));
+    E.score += pts; E.ecarts.push(ec); E.hist.push({ e: M.e, th: M.th, pro: E.pro }); dessiner(M, Math.min(A.N, Math.round(Math.min(TF, M.th + 6) / 0.01)));
+    retour($("#j2-retour"), ec <= 2, (ec <= 0.5 ? "🎯 " : ec <= 2 ? "✔ " : "✘ ") + "Horizon : t = " + virgule(M.th, 2) + " s · votre pronostic : " + virgule(E.pro, 1) + " s (écart " + virgule(ec, 2) + " s) · +" + pts + " pt",
+      E.q === 0 ? "La distance part de 10⁻³, bouge à peine jusque vers t ≈ 12, puis croît comme une <b>exponentielle</b> : une droite en échelle log." :
+        "Écart initial " + (Math.log10(EPS[E.q - 1] / M.e)) + " ordres de grandeur plus petit… et l'horizon ne recule que de " + virgule(M.th - E.hist[E.hist.length - 2].th, 2) + " s.");
+    if (E.q === 0) {
+      const ix = [0, 100, 500, 1000, 1500, 2000];
+      $("#j2-console").innerHTML = console_([">> d = distance_trajectoires(Y, Yp);", ">> format short e", ">> d([1 101 501 1001 1501 2001])"].concat(ans(ix.map(k => "   " + expo(M.d[k]))), [">> format short", ">> t(find(d > 1, 1))"], ans([matLigne([M.th])])));
+    }
+    histo(); $("#j2-score").textContent = E.score + " pt"; $("#j2-suivant").hidden = false;
+    $("#j2-suivant").textContent = E.q === EPS.length - 1 ? "Voir le bilan →" : "Manche suivante →";
+  }
+  function fin() {
+    $("#j2-barre").style.width = "100%"; $("#j2-jeu").hidden = true; const z = $("#j2-fin"); z.hidden = false;
+    const moy = E.ecarts.reduce((a, b) => a + b) / E.ecarts.length, et = moy <= 1.5 ? 3 : moy <= 3 ? 2 : moy <= 5 ? 1 : 0; noter("jeu-2", et);
+    const h = E.hist, parDec = (h[h.length - 1].th - h[0].th) / Math.log10(h[0].e / h[h.length - 1].e);
+    ecranFin(z, { etoiles: et, titre: E.score + " pt · écart moyen " + virgule(moy, 2) + " s", rejouer: demarrer,
+      detail: "Diviser l'écart initial par 10 ne repousse l'horizon que d'environ <b>" + virgule(parDec, 1) + " s</b> : la distance croît exponentiellement. Même avec une précision de 10⁻⁹ sur x₀, on ne prédit pas l'état au-delà de t ≈ " + virgule(h[h.length - 1].th, 0) + " s. Ce qui reste prédictible : la <b>forme</b> de l'attracteur." });
+  }
+  $("#j2-pro").addEventListener("input", e => { if (!E) return; E.pro = +e.target.value; $("#j2-prov").textContent = virgule(E.pro, 1) + " s"; if (!$("#j2-go").disabled) dessiner(E.M, 0); });
+  $("#j2-go").addEventListener("click", lancer);
+  $("#j2-suivant").addEventListener("click", () => { if (E.q < EPS.length - 1) { E.q++; poser(); } else fin(); });
+  addEventListener("resize", () => { if (!$("#jeu-2").hidden && E && E.M) dessiner(E.M, E.M.vu ? Math.round(Math.min(TF, E.M.th + 6) / 0.01) : 0); });
+  return { ouvrir: demarrer };
+})();
+
+/* ---------- JEU 3 : crash test ---------- */
+const jeu3 = (() => {
+  const E = { s: "euler", h: 0.05, vus: new Set(), demarre: false };
+  let R, MM, CACHE = {};
+  const calc = (s, h) => {
+    const c = s + h; if (CACHE[c]) return CACHE[c];
+    const g = (s === "euler" ? TP6.eulerSysteme : TP6.rk4Systeme)(F6, Y0, 20, h), k = explosion(g), er = ecartRef(g, ref6());
+    return (CACHE[c] = { g, k, er, ailes: k < 0 ? TP6.changementsSigne(g) : NaN, m: TP6.maxAbs(g) });
+  };
+  function calculer() {
+    R = calc(E.s, E.h); E.vus.add(E.s + ":" + E.h);
+    segment($("#j3-s"), E.s, v => { E.s = v; calculer(); }); segment($("#j3-h"), E.h, v => { E.h = +v; calculer(); });
+    const g = R.g, Rf = ref6(), fin = R.k < 0 ? g.N : R.k, pas = Math.max(1, Math.round(0.01 / g.h));
+    tracer($("#j3-plan"), { hauteur: 300, x: [-30, 30], y: [-5, 65], xl: "x", yl: "z", xt: ticks(-30, 30, 6), yt: ticks(0, 60, 6),
+      series: [{ pts: xz(Rf, 0, Rf.N, 10), c: css("--ink-2"), a: 0.45, l: 1.2 }, { pts: xz(g, 0, fin, pas), c: css("--blue"), l: 1.4, a: 0.9 }],
+      textes: R.k >= 0 ? [{ t: "💥 explosion au pas " + R.k + " (t = " + virgule(g.t[R.k], 2) + ")", x: 0, y: 60, align: "center", gras: true, c: css("--red") }] : [] });
+    const pd = R.er.d.filter((_, q) => q % Math.max(1, Math.round(R.er.d.length / 800)) === 0).map(([t, d]) => [t, Math.log10(Math.max(d, 1e-12))]);
+    tracer($("#j3-d"), { hauteur: 190, x: [0, 20], y: [-10, 4], xl: "t", yl: "distance", xt: ticks(0, 20, 5), yt: ytLog(-10, 4),
+      horiz: [{ y: 0, c: css("--red"), tir: [5, 4] }], series: [{ pts: pd, c: css("--violet"), l: 2 }] });
+    const e = TP6.etat(g);
+    $("#j3-stats").innerHTML = [["Pas N", g.N], ["Évaluations de F", (g.N * (E.s === "rk4" ? 4 : 1)).toLocaleString("fr-FR")],
+      ["|Y| > 1000", R.k < 0 ? "jamais" : "pas " + R.k + " (t = " + virgule(g.t[R.k], 2) + ")", R.k < 0 ? "ok" : "ko"],
+      ["Écart à la réf. > 1", isNaN(R.er.t1) ? "jamais" : "t = " + virgule(R.er.t1, 2)], ["Changements d'aile", isNaN(R.ailes) ? "—" : R.ailes + " (réf. 6)"],
+      ["Y(20)", R.k < 0 ? e.map(v => virgule(v, 2)).join(" ; ") : "—"]]
+      .map(([l, v, c]) => '<div class="stat ' + (c || "") + '"><div class="l">' + l + '</div><div class="v" style="font-size:15px">' + v + "</div></div>").join("");
+    if (MM) MM.verifier();
+  }
+  const quand = t => isNaN(t) ? 3 : t < 1 ? 0 : t < 10 ? 1 : 2, proche = (v, L) => L.reduce((b, x, q) => Math.abs(x - v) < Math.abs(L[b] - v) ? q : b, 0);
+  const missions = [
+    { titre: "Le pas du TP", pari: { q: "Euler explicite avec h = 0,01 (le pas du TP) : quand s'écarte-t-il de plus de 1 de la référence ?", o: ["dès t ≈ 0,2", "vers t ≈ 5", "vers t ≈ 18", "jamais avant t = 20"], bon: () => quand(calc("euler", 0.01).er.t1) },
+      consigne: "Choisissez <b>Euler explicite, h = 0,01</b>.", ok: () => E.s === "euler" && E.h === 0.01,
+      bravo: () => { const r = calc("rk4", 0.01); return "Euler s'écarte dès <b>t = " + virgule(R.er.t1, 2) + "</b> ; RK4 au même pas tient jusqu'à t = " + virgule(r.er.t1, 2) + ". Y(20) = (" + TP6.etat(R.g).map(f4).join(" ; ") + ") avec Euler, (" + TP6.etat(r.g).map(f4).join(" ; ") + ") avec RK4 : Euler reste sur l'attracteur, mais sur une autre trajectoire."; } },
+    { titre: "Le crash", pari: { q: "Euler explicite avec h = 0,05 : après combien de pas une composante dépasse-t-elle 1000 ?", o: ["5", "14", "100", "jamais"], bon: () => { const k = calc("euler", 0.05).k; return k < 0 ? 3 : proche(k, [5, 14, 100]); } },
+      consigne: "Choisissez <b>Euler explicite, h = 0,05</b>.", ok: () => E.s === "euler" && E.h === 0.05,
+      bravo: () => "Au pas <b>" + R.k + "</b> (t = " + virgule(R.g.t[R.k], 2) + ") : la solution quitte toute plage physique. C'est une <b>instabilité numérique</b> : le schéma amplifie ses propres erreurs, réduire h la supprime." },
+    { titre: "Le papillon à une aile", pari: { q: "RK4 avec h = 0,1 : combien de changements d'aile sur [0, 20] (la référence en fait 6) ?", o: ["0", "1", "6", "plus de 10"], bon: () => { const a = calc("rk4", 0.1).ailes; return a > 10 ? 3 : proche(a, [0, 1, 6]); } },
+      consigne: "Choisissez <b>RK4, h = 0,1</b>.", ok: () => E.s === "rk4" && E.h === 0.1,
+      avantQuiz: () => "RK4 (h = 0,1) : " + R.ailes + " changement(s) d'aile, |x| ≤ " + virgule(R.m[0], 2) + " : rien n'explose.",
+      quiz: { q: "La solution reste bornée mais ne ressemble plus à la référence. Qu'est-ce que c'est ?", o: [["Une erreur de schéma : le pas est trop grand pour suivre la dynamique, même si rien n'explose", 1], ["Du chaos : la sensibilité aux conditions initiales", 0], ["Une instabilité numérique", 0], ["Un bug dans RK4", 0]],
+        expl: "Bornée ne veut pas dire juste : avec h = 0,1, l'erreur de RK4 est trop grande dès les premiers tours. Réduire h corrige (à h = 0,005, RK4 reste à moins de 1 de la référence jusqu'à t = 20)." } },
+    { titre: "À coût égal", pari: { q: "RK4 coûte 4 évaluations de F par pas. À coût égal avec RK4 (h = 0,01), Euler a droit à h = 0,0025. Qui reste le plus longtemps près de la référence ?", o: ["Euler (h = 0,0025)", "RK4 (h = 0,01)", "égalité"],
+        bon: () => { const a = calc("euler", 0.0025).er.t1, b = calc("rk4", 0.01).er.t1; return Math.abs(a - b) < 0.5 ? 2 : (isNaN(b) || b > a) ? 1 : 0; } },
+      consigne: "Regardez <b>Euler, h = 0,0025</b> puis <b>RK4, h = 0,01</b> : même nombre d'évaluations de F (8000).",
+      suivi: () => (E.vus.has("euler:0.0025") ? "✓" : "○") + " Euler, h = 0,0025 · " + (E.vus.has("rk4:0.01") ? "✓" : "○") + " RK4, h = 0,01",
+      entree: () => { E.vus.delete("euler:0.0025"); E.vus.delete("rk4:0.01"); },
+      ok: () => E.vus.has("euler:0.0025") && E.vus.has("rk4:0.01"),
+      bravo: () => "Euler (h = 0,0025) s'écarte de la référence à t = " + virgule(calc("euler", 0.0025).er.t1, 2) + " ; RK4 (h = 0,01) à t = " + virgule(calc("rk4", 0.01).er.t1, 2) + ", pour le même coût : l'ordre 4 l'emporte largement. C'est la comparaison honnête que demande l'énoncé." },
+  ];
+  return { ouvrir: () => {
+    if (!E.demarre) {
+      E.demarre = true;
+      MM = moteurMissions({ zone: $("#j3-mission"), compteur: $("#j3-compte"), jeu: "jeu-3", missions, recalculer: calculer, etoiles: n => n >= 4 ? 3 : n >= 3 ? 2 : n >= 2 ? 1 : 0 });
+      addEventListener("resize", () => { if (!$("#jeu-3").hidden) calculer(); });
+      MM.entrer(0);
+    } else { calculer(); MM.afficher(); }
+  } };
+})();
+
+/* ---------- JEU 4 : instabilite, chaos ou erreur de schema ---------- */
+const jeu4 = (() => {
+  let E, CARTES;
+  const NOM = { instab: "🔥 Instabilité numérique", chaos: "🦋 Chaos", schema: "📐 Erreur de schéma" };
+  function cartes() {
+    const R = ref6(), A = TP6.rk4Systeme(F6, Y0, 40, 0.01), deux = (g1, g2, tf) => ({ a: g1, b: g2, tf });
+    const exp = h => { const g = TP6.eulerSysteme(F6, Y0, 20, h), k = explosion(g), p = [];
+      for (let n = 0; n <= Math.min(g.N, k + 1); n++) { const v = Math.max(Math.abs(g.Y[3 * n]), Math.abs(g.Y[3 * n + 1]), Math.abs(g.Y[3 * n + 2])); p.push([g.t[n], Math.log10(Math.min(v, 1e30))]); }
+      return { log: p, k, tk: g.t[k] }; };
+    const e05 = exp(0.05), e03 = exp(0.03), Bp = TP6.rk4Systeme(F6, [1.001, 1, 1], 40, 0.01), B8 = TP6.rk4Systeme(F6, [1 + 1e-8, 1, 1], 40, 0.01);
+    const r1 = TP6.rk4Systeme(F6, Y0, 20, 0.1), eu1 = TP6.eulerSysteme(F6, Y0, 20, 0.01), eu2 = TP6.eulerSysteme(F6, Y0, 20, 0.02), rh = TP6.rk4Systeme(F6, Y0, 20, 0.01);
+    const sep = (g1, g2) => { const r = g2.h / g1.h; let t = NaN;
+      for (let n = 0; n <= g2.N; n++) { const m = Math.round(n * r); if (m > g1.N) break; if (Math.hypot(g2.Y[3 * n] - g1.Y[3 * m], g2.Y[3 * n + 1] - g1.Y[3 * m + 1], g2.Y[3 * n + 2] - g1.Y[3 * m + 2]) > 1) { t = g2.t[n]; break; } } return t; };
+    const C = {
+      instab: t => "La solution quitte toute plage physique (|Y| > 1000 dès t = " + virgule(t, 2) + ") : le schéma amplifie ses propres erreurs. Réduire h corrige.",
+      chaos: t => "Les deux solutions restent bornées et collées longtemps, puis se séparent vers t = " + virgule(t, 2) + " : c'est le problème qui amplifie un écart minuscule. Réduire h ne fait que repousser la date.",
+      schema: t => "La solution reste bornée mais s'écarte de la référence dès t = " + virgule(t, 2) + " : le pas est trop grand pour la précision du schéma. Réduire h ou monter en ordre corrige." };
+    return melanger([
+      { titre: "Euler explicite, h = 0,05", leg: "la plus grande des trois composantes |x|, |y|, |z|, en échelle log", log: e05, bon: "instab", expl: C.instab(e05.tk) },
+      { titre: "Euler explicite, h = 0,03", leg: "la plus grande des trois composantes |x|, |y|, |z|, en échelle log", log: e03, bon: "instab", expl: C.instab(e03.tk) },
+      { titre: "RK4, h = 0,01 : départs (1, 1, 1) et (1,001 ; 1 ; 1)", leg: "x(t) des deux trajectoires", deux: deux(A, Bp, 25), bon: "chaos", expl: C.chaos(sep(A, Bp)) },
+      { titre: "RK4, h = 0,01 et RK4, h = 0,001 : même départ", leg: "x(t) des deux calculs", deux: deux(rh, R, 20), bon: "chaos", expl: C.chaos(sep(R, rh)) + " (ici l'« écart » est l'erreur de troncature de RK4, minuscule au départ)." },
+      { titre: "RK4, h = 0,1, comparé à la référence (RK4, h = 0,001)", leg: "x(t) : calcul et référence", deux: deux(r1, R, 20), bon: "schema", expl: C.schema(sep(R, r1)) },
+      { titre: "Euler explicite, h = 0,02, comparé à la référence", leg: "x(t) : calcul et référence", deux: deux(eu2, R, 20), bon: "schema", expl: C.schema(sep(R, eu2)) + " (z monte même à " + virgule(TP6.maxAbs(eu2)[2], 1) + " au lieu de 47,8)." },
+      { titre: "Euler explicite, h = 0,01, comparé à la référence", leg: "x(t) : calcul et référence", deux: deux(eu1, R, 20), bon: "schema", expl: C.schema(sep(R, eu1)) },
+      { titre: "RK4, h = 0,01 : départs (1, 1, 1) et (1 + 10⁻⁸ ; 1 ; 1)", leg: "x(t) des deux trajectoires", deux: deux(A, B8, 40), bon: "chaos", expl: C.chaos(sep(A, B8)) },
+    ]);
+  }
+  function demarrer() { if (!CARTES) CARTES = cartes(); E = { q: 0, bons: 0, score: 0 }; $("#j4-jeu").hidden = false; $("#j4-fin").hidden = true; poser(); }
+  function dessiner() {
+    const K = CARTES[E.q];
+    if (K.log) {
+      tracer($("#j4-g"), { hauteur: 230, x: [0, Math.max(1, K.log.tk * 1.3)], y: [0, 8], xl: "t", yl: "max |composante|", xt: ticks(0, Math.max(1, K.log.tk * 1.3), 5), yt: [0, 2, 4, 6, 8].map(v => [v, "1e" + v]),
+        horiz: [{ y: 3, c: css("--red"), tir: [5, 4] }], series: [{ pts: K.log.log, c: css("--blue"), l: 2.4, marques: 2.5 }] });
+      $("#j4-leg").innerHTML = '<span><i style="background:var(--blue)"></i>max(|x|, |y|, |z|)</span><span><i style="background:var(--red)"></i>seuil 1000</span>';
+    } else {
+      const { a, b, tf } = K.deux, pa = Math.max(1, Math.round(0.01 / a.h)), pb = Math.max(1, Math.round(0.01 / b.h));
+      tracer($("#j4-g"), { hauteur: 230, x: [0, tf], y: [-25, 25], xl: "t", yl: "x", xt: ticks(0, tf, 6), yt: ticks(-20, 20, 4),
+        series: [{ pts: xt(b, Math.round(tf / b.h), pb), c: css("--ink-2"), l: 1.8, a: 0.7 }, { pts: xt(a, Math.round(tf / a.h), pa), c: css("--orange"), l: 1.6, a: 0.9 }] });
+      const dep = K.titre.includes("départs");
+      $("#j4-leg").innerHTML = '<span><i style="background:var(--orange)"></i>' + (dep ? "départ (1, 1, 1)" : "calcul") + '</span><span><i style="background:var(--ink-2)"></i>' + (dep ? "second départ" : "référence") + "</span>";
+    }
+  }
+  function poser() {
+    const K = CARTES[E.q];
+    $("#j4-q").textContent = "Courbe " + (E.q + 1) + " / " + CARTES.length; $("#j4-score").textContent = E.score + " pt";
+    $("#j4-barre").style.width = E.q / CARTES.length * 100 + "%";
+    $("#j4-titre").textContent = K.titre; $("#j4-legende").textContent = "Tracé : " + K.leg + ".";
+    $("#j4-retour").innerHTML = ""; $("#j4-suivant").hidden = true;
+    $$("#j4-bacs .bac").forEach(b => { b.disabled = false; b.classList.remove("bon", "faux"); });
+    dessiner();
+  }
+  function choisir(v) {
+    const K = CARTES[E.q], ok = v === K.bon;
+    $$("#j4-bacs .bac").forEach(b => { b.disabled = true; if (b.dataset.v === K.bon) b.classList.add("bon"); else if (b.dataset.v === v) b.classList.add("faux"); });
+    if (ok) { E.bons++; E.score += 100; }
+    retour($("#j4-retour"), ok, ok ? "✔ Bien classé ! +100 pt" : "✘ Non : c'est « " + NOM[K.bon] + " »", K.expl);
+    $("#j4-score").textContent = E.score + " pt"; $("#j4-suivant").hidden = false;
+    $("#j4-suivant").textContent = E.q === CARTES.length - 1 ? "Voir le résultat →" : "Courbe suivante →";
+  }
+  function suivant() {
+    if (E.q < CARTES.length - 1) { E.q++; poser(); return; }
+    $("#j4-barre").style.width = "100%"; $("#j4-jeu").hidden = true; const z = $("#j4-fin"); z.hidden = false;
+    const et = E.bons >= 7 ? 3 : E.bons >= 5 ? 2 : E.bons >= 3 ? 1 : 0; noter("jeu-4", et);
+    ecranFin(z, { etoiles: et, titre: E.bons + " / " + CARTES.length + " courbes bien classées · " + E.score + " pt", rejouer: demarrer,
+      detail: "Le test pratique de l'énoncé : une solution qui part à l'infini dénonce le <b>schéma</b> ; deux solutions bornées qui divergent l'une de l'autre dénoncent le <b>problème</b>. Et une solution bornée mais fausse dès le début dénonce un <b>pas trop grand</b>." });
+  }
+  $$("#j4-bacs .bac").forEach(b => b.addEventListener("click", () => choisir(b.dataset.v)));
+  $("#j4-suivant").addEventListener("click", suivant);
+  addEventListener("resize", () => { if (!$("#jeu-4").hidden && E) dessiner(); });
+  return { ouvrir: demarrer };
+})();
+
+/* ---------- JEU 5 : detective du code ---------- */
+const jeu5 = moteurDetective({ id: "jeu-5", p: "j5",
+  morale: "Une solution qui part à l'infini dénonce le schéma ; deux solutions bornées qui divergent dénoncent le problème. Et en MATLAB : F rend une colonne, 8/3 n'est pas 8\\3, et sum(…, 2) somme par instant.",
+  dossiers: () => {
+    const Y = TP6.rk4Systeme(F6, Y0, 20, 0.01), Fb = TP6.lorenz(10, 28, 3 / 8), Yb = TP6.rk4Systeme(Fb, Y0, 20, 0.01);
+    const Ye = TP6.eulerSysteme(F6, Y0, 20, 0.01), Ex = TP6.eulerSysteme(F6, Y0, 20, 0.05), k = explosion(Ex), Y1 = TP6.rk4Systeme(F6, Y0, 20, 0.1);
+    const Ya = TP6.rk4Systeme(F6, Y0, 40, 0.01), Yh = TP6.rk4Systeme(F6, Y0, 40, 0.005);
+    let ts = NaN; for (let n = 0; n <= Ya.N; n++) { if (Math.hypot(Ya.Y[3 * n] - Yh.Y[6 * n], Ya.Y[3 * n + 1] - Yh.Y[6 * n + 1], Ya.Y[3 * n + 2] - Yh.Y[6 * n + 2]) > 1) { ts = Ya.t[n]; break; } }
+    return [
+      { titre: "Le vecteur ligne", code: ["#Fl = @(t, Y) [10*(Y(2)-Y(1)), Y(1)*(28-Y(3))-Y(2), Y(1)*Y(2)-8/3*Y(3)];"],
+        sortie: [">> [t, Y] = rk4_systeme(Fl, [1; 1; 1], 1, 0.01);", "!Error in rk4_systeme (line 14)", "!Unable to perform assignment because the size of the left side is 1-by-3 and", "!the size of the right side is 3-by-3."],
+        q: "RK4 plante dès le premier pas. Pourquoi ?",
+        o: [["F rend un vecteur LIGNE (virgules) : y + h/2*k1 additionne une colonne 3×1 et une ligne 1×3, ce qui donne une matrice 3×3", 1], ["Le pas h = 0,01 est trop grand", 0], ["Y0 doit être une ligne [1 1 1]", 0], ["Il manque un « end » dans rk4_systeme", 0]],
+        expl: "Message réel de MATLAB (fichier <code>sorties/video_consoles.txt</code> du corrigé). Dans F, séparez les composantes par des <b>points-virgules</b> : F rend alors une colonne, comme Y." },
+      { titre: "Le papillon déformé", code: ["sigma = 10; rho = 28;", "#beta = 8\\3;", "F = modele_lorenz(sigma, rho, beta);"],
+        sortie: [">> [t, Y] = rk4_systeme(F, [1; 1; 1], 20, 0.01);", ">> Y(end, :)"].concat(ans([matLigne(TP6.etat(Yb))]), [">> max(abs(Y))"], ans([matLigne(TP6.maxAbs(Yb))])),
+        q: "z monte à " + virgule(TP6.maxAbs(Yb)[2], 2) + " au lieu de 47,83, et Y(20) ne ressemble pas au corrigé. Diagnostic ?",
+        o: [["8\\3 est la division à gauche de MATLAB : 3/8 = 0,375, et non 8/3 ≈ 2,667", 1], ["Le pas h = 0,01 est trop grand", 0], ["C'est le chaos : un autre ordinateur donnerait autre chose", 0], ["rho doit valoir 8/3", 0]],
+        expl: "En MATLAB, a\\b = b/a. Avec β = 0,375, on simule un autre système de Lorenz : la forme de l'attracteur change. Vérifiez toujours les paramètres sur un repère connu (ici Y(20) ≈ (13,47 ; 12,69 ; 34,39))." },
+      { titre: "L'état final introuvable", code: ["#Y = zeros(numel(Y0), N+1);", "Y(:, 1) = Y0;", "...", "    Y(:, n+1) = y + h/6*(k1 + 2*k2 + 2*k3 + k4);"],
+        sortie: [">> [t, Y] = rk4_systeme(F, [1; 1; 1], 20, 0.01);", ">> size(Y)"].concat(ans([matLigne([3, 2001])]), [">> Y(end, 1:3)"], ans([matLigne([0, 1, 2].map(n => Y.Y[3 * n + 2]))])),
+        q: "Y(end, 1:3) devait être l'état final (x, y, z)… Diagnostic ?",
+        o: [["Y est rangée en colonnes (3 × 2001) : Y(end, :) donne z(t). La convention du TP est une ligne par instant, Y(n, :)", 1], ["RK4 a divergé", 0], ["Il faut écrire Y(end)", 0], ["C'est le chaos", 0]],
+        expl: "Ces trois nombres sont z(0), z(0,01) et z(0,02). Le code calcule juste, mais range autrement : tout ce qui suit (Y(end, :), max(abs(Y)), Y(:, 1)) lit alors les mauvaises cases. Gardez la convention de l'énoncé : Y est (N+1) × 3." },
+      { titre: "Euler s'envole", code: ["#[tt, Yb] = euler_systeme(F, [1; 1; 1], 20, 0.05);", "k = find(any(abs(Yb) > 1000, 2), 1);"],
+        sortie: [">> [k - 1  tt(k)]"].concat(ans([matLigne([k, Ex.t[k]])])),
+        q: "Au " + k + "e pas, une composante dépasse 1000. Bug dans euler_systeme ?",
+        o: [["Non : instabilité numérique d'Euler explicite, le pas est trop grand ; réduire h (ou passer à RK4) la supprime", 1], ["Oui : il manque le facteur h", 0], ["Non : c'est le chaos, la solution est imprévisible", 0], ["Oui : F rend un vecteur ligne", 0]],
+        expl: "Le chaos garde la solution bornée sur l'attracteur ; ici elle part à l'infini en " + virgule(Ex.t[k], 2) + " unité de temps : c'est le <b>schéma</b> qui amplifie ses erreurs. Avec h = 0,01, Euler reste borné." },
+      { titre: "Deux codes, deux papillons", code: ["[~, Ye] = euler_systeme(F, [1; 1; 1], 20, 0.01);", "[~, Y]  = rk4_systeme(F, [1; 1; 1], 20, 0.01);"],
+        sortie: [">> Ye(end, :)"].concat(ans([matLigne(TP6.etat(Ye))]), [">> Y(end, :)"], ans([matLigne(TP6.etat(Y))])),
+        q: "À t = 20, Euler et RK4 ne sont même pas dans la même aile. Lequel a un bug ?",
+        o: [["Aucun : Euler (ordre 1) s'écarte de la référence dès t ≈ 0,2 et RK4 vers t ≈ 18 ; sur un système chaotique, la moindre erreur finit amplifiée", 1], ["Euler, car il ne trouve pas le même résultat que RK4", 0], ["RK4, car Euler est plus simple donc plus sûr", 0], ["Les deux, il faudrait les mêmes valeurs", 0]],
+        expl: "C'est la question 4 de la manipulation 3 : un écart à l'état final ne prouve pas un bug. Ce qui se compare, c'est la date à laquelle chaque schéma quitte une référence très précise, et la forme de l'attracteur." },
+      { titre: "Le papillon à une aile", code: ["#[~, Y1] = rk4_systeme(F, [1; 1; 1], 20, 0.1);"],
+        sortie: [">> sum(diff(sign(Y1(:, 1))) ~= 0)"].concat(ans([matLigne([TP6.changementsSigne(Y1)])]), [">> max(abs(Y1))"], ans([matLigne(TP6.maxAbs(Y1))])),
+        q: "Avec h = 0,1, la trajectoire ne change qu'une fois d'aile au lieu de 6. Diagnostic ?",
+        o: [["Le pas est trop grand pour suivre la dynamique : la solution reste bornée mais elle est fausse (erreur de schéma)", 1], ["C'est une instabilité numérique", 0], ["RK4 ne marche pas pour les systèmes", 0], ["C'est normal : le nombre de changements d'aile est aléatoire", 0]],
+        expl: "Rien n'explose (|x| ≤ " + virgule(TP6.maxAbs(Y1)[0], 2) + "), mais RK4 avec h = 0,1 est trop imprécis pour les tours rapides autour des centres. Réduisez h : à 0,01, on retrouve les 6 changements d'aile." },
+      { titre: "Une distance à trois valeurs", code: ["function d = distance_trajectoires(Y1, Y2)", "#d = sqrt(sum((Y1 - Y2).^2));", "end"],
+        sortie: [">> d = distance_trajectoires(Y, Yp);", ">> size(d)"].concat(ans([matLigne([1, 3])])),
+        q: "La distance devait avoir une valeur par instant (2001). Diagnostic ?",
+        o: [["sum somme par défaut le long des colonnes (dimension 1) : il faut sum(..., 2) pour sommer x, y et z à chaque instant", 1], ["Y et Yp n'ont pas la même taille", 0], ["Il faut écrire sqrt(sum(Y1 - Y2).^2)", 0], ["La distance n'a de sens qu'à t = 20", 0]],
+        expl: "Sur une matrice 2001 × 3, sum(A) rend 1 × 3 (une somme par colonne, sur tout le temps). sum(A, 2) rend 2001 × 1 : une distance par ligne, c'est-à-dire par instant." },
+      { titre: "Le chaos qui n'en est pas un ?", code: ["[~, Ya] = rk4_systeme(F, [1; 1; 1], 40, 0.01);", "#[~, Yh] = rk4_systeme(F, [1; 1; 1], 40, 0.005);", "d = distance_trajectoires(Ya, Yh(1:2:end, :));"],
+        sortie: [">> t(find(d > 1, 1))"].concat(ans([matLigne([ts])])),
+        q: "Même départ, même schéma RK4 : seul le pas change. Les trajectoires se séparent à t = " + virgule(ts, 2) + ". Bug ?",
+        o: [["Non : les deux erreurs de troncature, minuscules, sont amplifiées par le chaos, exactement comme un écart de conditions initiales", 1], ["Oui : RK4 doit donner le même résultat quel que soit h", 0], ["Oui : Yh(1:2:end, :) ne prend pas les bons instants", 0], ["Non : c'est une instabilité numérique", 0]],
+        expl: "Les deux calculs sont justes à 10⁻⁷ près au début ; le système amplifie cet écart comme n'importe quelle perturbation (exposant de Lyapunov positif). Réduire h repousse la date, mais ne la supprime pas." },
+    ];
+  } });
+
+const JEUX = { "jeu-1": jeu1, "jeu-2": jeu2, "jeu-3": jeu3, "jeu-4": jeu4, "jeu-5": jeu5 };
+(function () {
+  const Y = TP6.rk4Systeme(F6, Y0, 20, 0.01);
+  $("#verif-base").textContent = "Y(20) = (" + TP6.etat(Y).map(f4).join(" ; ") + "), " + TP6.changementsSigne(Y) + " changements d'aile (RK4, h = 0,01)";
+})();
+demarrerPage();
+</script>
+</body>
+</html>

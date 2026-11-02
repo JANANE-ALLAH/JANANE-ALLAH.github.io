@@ -186,6 +186,7 @@ input[type=range]{width:100%;accent-color:var(--blue);height:28px}
       <div class="total" id="total" aria-live="polite">★ 0 / 15</div>
     </div>
     <p>Salle de 4 m × 3 m, mur chauffant à 25 °C, trois murs à 10 °C : cinq jeux pour manipuler, à la main, chaque brique du TP5, de la numérotation des nœuds jusqu'au ω optimal de SOR.</p>
+    <div style="font-size:13px;opacity:.9;margin-top:4px">Autres jeux : <a style="color:#fff;font-weight:600" href="../tp4/">TP4 · paroi de four</a> · <a style="color:#fff;font-weight:600" href="../tp6/">TP6 · attracteur de Lorenz</a></div>
   </div>
 </header>
 
@@ -262,7 +263,7 @@ input[type=range]{width:100%;accent-color:var(--blue);height:28px}
         <div id="j3-murs"></div>
         <div class="groupe-titre">Mur du bas (sol)</div>
         <div class="segment" id="j3-mode"><button data-v="dirichlet">Température imposée</button><button data-v="isole">Isolé (Neumann)</button><button data-v="faux">Isolé, code piégé</button></div>
-        <div class="groupe-titre">Grille (Nx × Ny)</div>
+        <div class="groupe-titre">Grille <span style="text-transform:none;letter-spacing:0">(Nx × Ny)</span></div>
         <div class="segment" id="j3-grille"><button data-v="8">8 × 6</button><button data-v="16">16 × 12</button><button data-v="32">32 × 24</button></div>
         <div class="actions"><button class="btn sec petit" id="j3-base">↺ Cas de base du TP</button></div>
       </div>
@@ -367,7 +368,8 @@ const css = nom => getComputedStyle(document.documentElement).getPropertyValue(n
 function expo(v) { return v.toExponential(4).replace(/e([+-])(\d)$/, "e$10$2"); }
 function matLigne(vals) {
   const entiers = vals.every(v => Number.isInteger(v));
-  return vals.map(v => entiers ? String(v).padStart(6) : v.toFixed(4).padStart(10)).join("");
+  const large = vals.some(v => Math.abs(v) >= 1000);
+  return vals.map(v => entiers ? String(v).padStart(large ? 12 : 6) : v.toFixed(4).padStart(10)).join("");
 }
 function matLigneE(vals) { return vals.map(v => expo(v).padStart(13)).join(""); }
 function echapper(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
