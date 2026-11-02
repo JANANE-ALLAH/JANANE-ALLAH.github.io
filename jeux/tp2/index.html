@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jeux du TP2 · Paroi d'un four</title>
+<meta name="description" content="Cinq jeux pour manipuler le TP2 de Méthodes numériques (FSTM, UH2C) : Jacobi, Gauss-Seidel, SOR, raffinement du maillage, ω optimal, critère d'arrêt, chasse aux bugs, calculés en direct par le code du TP.">
+<style>
+:root{
+  --bg:#F4F6FB; --surface:#FFFFFF; --surface-2:#EEF2F9; --ink:#15213B; --ink-2:#4B5875; --line:#DCE3EE;
+  --navy:#0B2545; --navy-2:#13315C; --blue:#0056D2; --violet:#6A4C93; --red:#C1121F; --green:#2E7D32;
+  --orange:#E67E22; --gold:#D99A00; --ok:#1E7B34; --ok-bg:#E7F5EA; --ko:#B3261E; --ko-bg:#FCEDEC;
+  --code-bg:#0F1B2D; --code-ink:#E4ECF7; --code-dim:#8FA3BF; --code-err:#FF8A80; --code-warn:#FFB74D;
+  --sol:#F3EEE2; --mur:#5C6680; --ombre:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.07);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0D1422; --surface:#151F33; --surface-2:#1C2942; --ink:#E7ECF5; --ink-2:#A7B3C9; --line:#2A3A57;
+    --blue:#6EA8FF; --violet:#B49AE0; --red:#FF6B6B; --green:#5CC47A; --orange:#F5A35C; --gold:#F2C14E;
+    --ok:#6BD48A; --ok-bg:#15301F; --ko:#FF8A80; --ko-bg:#3A1A1A; --code-bg:#0A1220; --sol:#232B3D; --mur:#8C97B2;
+    --ombre:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+a{color:var(--blue)}
+button{font:inherit;color:inherit}
+code,pre,.mono{font-family:ui-monospace,"Cascadia Mono",Consolas,"Liberation Mono",monospace}
+.enveloppe{max-width:1120px;margin:0 auto;padding:0 16px}
+[hidden]{display:none!important}
+
+/* En-tete */
+.entete{background:linear-gradient(120deg,var(--navy) 0%,var(--navy-2) 60%,#1B4F8A 100%);color:#fff;padding:18px 0 26px}
+.ariane{font-size:13px;opacity:.85}
+.ariane a{color:#fff}
+.entete h1{font-size:clamp(24px,4vw,36px);line-height:1.15;margin:10px 0 6px}
+.entete p{margin:0;max-width:760px;opacity:.92}
+.entete .ligne{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.total{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 14px;font-weight:600;white-space:nowrap}
+.total .etoile{color:#FFC93C}
+
+/* Accueil */
+.intro{display:grid;gap:14px;margin:22px 0 8px}
+.note{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:12px 14px;font-size:15px}
+.cartes{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin:16px 0 30px}
+.carte-jeu{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--ombre);overflow:hidden;display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
+.carte-jeu:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(16,24,40,.14)}
+.carte-jeu .vignette{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:54px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.carte-jeu .vignette img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.carte-jeu .num{z-index:2}
+.carte-jeu .num{position:absolute;top:10px;left:12px;background:rgba(255,255,255,.9);color:#15213B;font-weight:700;font-size:13px;border-radius:999px;padding:2px 10px}
+.carte-jeu .corps{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.carte-jeu h3{margin:0;font-size:19px}
+.carte-jeu .notion{color:var(--ink-2);font-size:14.5px;flex:1}
+.puces{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.puce{font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--ink-2)}
+.carte-jeu .pied{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.etoiles{color:var(--gold);letter-spacing:2px;font-size:18px}
+.etoiles .vide{color:var(--line)}
+
+/* Boutons */
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:600;padding:10px 16px;cursor:pointer;text-decoration:none;min-height:44px}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn.sec{background:transparent;color:var(--blue);border:1.5px solid var(--blue)}
+.btn.vert{background:var(--green)}
+.btn.petit{min-height:36px;padding:6px 12px;font-size:14px}
+:focus-visible{outline:3px solid #FFB000;outline-offset:2px}
+.choix-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.choix{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;min-height:52px;font-size:15.5px;line-height:1.35}
+.choix:hover:not(:disabled){border-color:var(--blue);background:var(--surface-2)}
+.choix.mono{font-size:16px;text-align:center}
+.choix.bon{border-color:var(--ok);background:var(--ok-bg)}
+.choix.faux{border-color:var(--ko);background:var(--ko-bg)}
+.choix:disabled{cursor:default}
+.choix-1col{grid-template-columns:1fr}
+.segment{display:inline-flex;flex-wrap:wrap;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.segment button{border:0;background:var(--surface);padding:8px 12px;cursor:pointer;font-size:14px;min-height:40px;border-right:1px solid var(--line)}
+.segment button:last-child{border-right:0}
+.segment button[aria-pressed="true"]{background:var(--blue);color:#fff;font-weight:600}
+
+/* Vue de jeu */
+.jeu-entete{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin:18px 0 12px}
+.jeu-entete h2{margin:0;font-size:clamp(20px,3vw,26px)}
+.jeu-entete .sous{color:var(--ink-2);font-size:14.5px;margin:2px 0 0}
+.retour{font-weight:600;text-decoration:none;font-size:14.5px}
+.compteurs{display:flex;gap:8px;flex-wrap:wrap}
+.compteur{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-weight:600;font-size:14px;white-space:nowrap}
+.barre{height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-bottom:14px}
+.barre>div{height:100%;background:linear-gradient(90deg,var(--blue),var(--violet));width:0;transition:width .3s}
+.panneau{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--ombre);padding:16px}
+.deux{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:880px){.deux{grid-template-columns:minmax(0,1fr)}}
+.deux>*{min-width:0}
+.question{font-size:19px;font-weight:650;margin:0 0 4px}
+.aide{color:var(--ink-2);font-size:14.5px;margin:0 0 12px}
+.retour-msg{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:15px}
+.retour-msg.ok{background:var(--ok-bg);border:1px solid var(--ok)}
+.retour-msg.ko{background:var(--ko-bg);border:1px solid var(--ko)}
+.retour-msg b.t{display:block;margin-bottom:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.formule{font-family:ui-monospace,Consolas,monospace;background:var(--surface-2);border-radius:8px;padding:2px 7px;white-space:nowrap}
+.niveau{background:linear-gradient(90deg,var(--violet),var(--blue));color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-weight:600}
+
+/* Grille SVG (jeux 1 et 2) */
+.salle svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.salle .noeud circle{fill:var(--surface);stroke:var(--ink-2);stroke-width:2;transition:fill .15s}
+.salle.cliquable .noeud{cursor:pointer}
+.salle.cliquable .noeud:hover circle{fill:#FFE3A3;stroke:var(--orange)}
+.salle .noeud text{font-size:15px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.salle .noeud.allume circle{fill:var(--orange);stroke:#9A4A00}
+.salle .noeud.allume text{fill:#fff}
+.salle .noeud.bon circle{fill:var(--green);stroke:#145A1E}
+.salle .noeud.bon text,.salle .noeud.faux text{fill:#fff}
+.salle .noeud.faux circle{fill:var(--red);stroke:#7A0B13}
+.salle .noeud.voisin circle{fill:#CFE0FF;stroke:var(--blue)}
+.salle .noeud.voisin text{fill:#0B2545}
+.salle .noeud.discret circle{opacity:.35}
+.salle .axe{font-size:12px;fill:var(--ink-2);text-anchor:middle;dominant-baseline:central}
+.salle .etiquette-mur{font-size:12.5px;font-weight:600;text-anchor:middle;dominant-baseline:central}
+
+/* Carte thermique (jeux 3 et 4) */
+.carte-cadre{position:relative;width:100%}
+.carte-cadre canvas{display:block;width:100%;cursor:crosshair}
+.bulle{position:absolute;transform:translate(-50%,calc(-100% - 12px));background:var(--navy);color:#fff;border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.35;pointer-events:none;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:2}
+.bulle b{font-size:15px}
+.echelle{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);margin:4px 0 0}
+.echelle .grad{flex:1;height:10px;border-radius:99px;background:linear-gradient(90deg,#313695,#4575b4,#74add1,#abd9e9,#e0f3f8,#fee090,#fdae61,#f46d43,#d73027,#a50026)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin-top:12px}
+.stat{background:var(--surface-2);border-radius:10px;padding:8px 10px}
+.stat .l{font-size:12px;color:var(--ink-2)}
+.stat .v{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat.ok .v{color:var(--ok)}
+.stat.ko .v{color:var(--ko)}
+.reglage{margin:0 0 12px}
+.reglage label{display:flex;justify-content:space-between;font-size:14.5px;font-weight:600;margin-bottom:2px}
+.reglage label span{font-variant-numeric:tabular-nums;color:var(--blue)}
+input[type=range]{width:100%;accent-color:var(--blue);height:28px}
+.groupe-titre{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);font-weight:700;margin:14px 0 8px}
+.etapes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.etapes button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer}
+.etapes button.fait{background:var(--green);border-color:var(--green);color:#fff}
+.etapes button.actuel{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,86,210,.2)}
+.mission h4{margin:0 0 4px;font-size:18px}
+.mission .obj{background:var(--surface-2);border-radius:10px;padding:8px 12px;margin:10px 0;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Course SOR */
+.chrono{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.graphe{position:relative;width:100%;margin-top:8px}
+.graphe canvas{display:block;width:100%}
+.legende{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.legende i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.medaille{font-size:40px;line-height:1}
+.resultat{display:flex;gap:12px;align-items:center;border-radius:12px;padding:12px 14px;background:var(--surface-2);margin-top:12px}
+
+/* Consoles MATLAB */
+.console{max-width:100%;background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.5;overflow-x:auto;margin:10px 0;white-space:pre}
+.console .cmd{color:#9CDCFE}
+.console .err{color:var(--code-err)}
+.console .warn{color:var(--code-warn)}
+.console .com{color:#6A9955}
+.console .bug{background:rgba(255,138,128,.16);outline:1px dashed rgba(255,138,128,.6);border-radius:3px}
+.console-titre{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:700;margin-top:10px}
+
+/* Fin de partie */
+.fin{text-align:center;padding:22px 10px}
+.fin .grandes{font-size:46px;color:var(--gold);letter-spacing:6px}
+.fin .grandes .vide{color:var(--line)}
+.fin h3{font-size:24px;margin:6px 0}
+.pied-page{border-top:1px solid var(--line);margin-top:30px;padding:20px 0 36px;color:var(--ink-2);font-size:14px}
+.pied-page a{font-weight:600}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:50;pointer-events:none;animation:tombe linear forwards}
+@keyframes tombe{to{transform:translateY(105vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}.carte-jeu{transition:none}}
+@media (max-width:520px){.chrono .v{font-size:14.5px}.choix-grille{grid-template-columns:1fr}.panneau{padding:13px}.chrono{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Ajouts communs aux pages TP4 et TP6 */
+.nb{text-transform:none;letter-spacing:0}
+.autres{font-size:13px;opacity:.9;margin-top:4px}
+.autres a{color:#fff;font-weight:600}
+.tableau{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums;margin-top:10px}
+.tableau th,.tableau td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:right}
+.tableau th{color:var(--ink-2);font-weight:600;font-size:12.5px}
+.tableau td:first-child,.tableau th:first-child{text-align:center}
+.tableau tr.neuf td{background:var(--surface-2)}
+.pari-choisi{display:inline-block;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-weight:600;margin-top:6px}
+.bacs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.bac{border:2px dashed var(--line);border-radius:14px;padding:12px;background:var(--surface);cursor:pointer;text-align:left;min-height:96px}
+.bac:hover:not(:disabled){border-color:var(--blue);background:var(--surface-2)}
+.bac b{display:block;font-size:15.5px;margin-bottom:4px}
+.bac span{font-size:13px;color:var(--ink-2)}
+.bac.bon{border-style:solid;border-color:var(--ok);background:var(--ok-bg)}
+.bac.faux{border-style:solid;border-color:var(--ko);background:var(--ko-bg)}
+@media (max-width:640px){.bacs{grid-template-columns:1fr}}
+.plan{position:relative;width:100%}
+.plan canvas{display:block;width:100%}
+.lecture{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-top:10px}
+.matrice{border-collapse:separate;border-spacing:0;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:14.5px;margin:10px auto;border-left:2px solid var(--ink);border-right:2px solid var(--ink);border-radius:6px}
+.matrice td{padding:5px 9px;text-align:right;min-width:58px;font-variant-numeric:tabular-nums}
+.matrice td.barre{border-left:2px dashed var(--ink-2)}
+.matrice tr.piv td{background:#FFE9B8;color:#15213B}
+.matrice td.col{background:rgba(0,86,210,.10)}
+.matrice tr.piv td.col{background:#FFD36B}
+.matrice td.nul{color:var(--ink-2)}
+.matrice-titre{text-align:center;font-size:13px;color:var(--ink-2);margin-top:6px}
+.banc svg{width:100%;height:auto;display:block}
+</style>
+</head>
+<body>
+<header class="entete">
+  <div class="enveloppe">
+    <div class="ariane"><a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-genie-mecanique.md">Méthodes numériques pour la mécanique</a> › Module 03 · Systèmes linéaires itératifs › <a href="#">Jeux du TP2</a></div>
+    <div class="ligne">
+      <h1>🎮 Le TP2 en jeux : la paroi du four</h1>
+      <div class="total" id="total" aria-live="polite">★ 0 / 15</div>
+    </div>
+    <p>Une paroi à 100 °C côté four, 0 °C dehors, A x = b tridiagonal : cinq jeux pour faire la course entre Jacobi, Gauss-Seidel et SOR, raffiner le maillage, traquer le ω optimal et se méfier de l'incrément.</p>
+    <div class="autres">Autres jeux : <a href="../tp1/">TP1 · amortisseurs</a> · <a href="../tp3/">TP3 · pompage</a> · <a href="../tp4/">TP4 · refroidissement d'un four</a> · <a href="../tp5/">TP5 · salle de sport</a> · <a href="../tp6/">TP6 · Lorenz</a></div>
+  </div>
+</header>
+
+<main class="enveloppe">
+
+<section id="accueil" class="vue">
+  <div class="intro">
+    <div class="note">🧮 <b>Rien n'est recopié :</b> chaque nombre affiché est calculé en direct dans votre navigateur par le code MATLAB du TP2 (<code>tp2_jacobi</code>, <code>tp2_gauss_seidel</code>, <code>tp2_sor</code>) porté ligne pour ligne en JavaScript. Ce sont les mêmes nombres que MATLAB : <span id="verif-base">…</span>.</div>
+  </div>
+  <div class="cartes" id="cartes"></div>
+  <div class="note" style="border-left-color:var(--green)">💡 <b>Conseil :</b> jouez <b>après</b> avoir lu l'énoncé du TP2 et <b>avant</b> d'écrire votre code MATLAB. Chaque jeu correspond à une manipulation de l'énoncé ; à la fin, comparez avec le corrigé.</div>
+</section>
+
+<!-- JEU 1 : Jacobi contre Gauss-Seidel -->
+<section id="jeu-1" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🏁 Jacobi contre Gauss-Seidel</h2><p class="sous">Même paroi, même départ T = 0 : qui atteint la tolérance 1e−8 le premier ?</p></div>
+    <div class="compteurs"><span class="compteur" id="j1-compte">Missions : 0 / 4</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau"><div class="graphe" id="j1-profil"><canvas aria-label="Profil de température dans la paroi"></canvas></div><div class="legende"><span><i style="background:var(--blue)"></i>Jacobi</span><span><i style="background:var(--green)"></i>Gauss-Seidel</span><span><i style="background:var(--violet)"></i>SOR</span><span><i style="background:var(--ink-2)"></i>solution exacte</span></div><div class="stats" id="j1-stats"></div></div>
+    <div class="panneau mission" id="j1-mission"></div>
+  </div>
+</section>
+
+<!-- JEU 2 : La paroi s'affine -->
+<section id="jeu-2" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🔬 La paroi s'affine</h2><p class="sous">Plus de nœuds, mêmes températures de bord : combien d'itérations faut-il maintenant ?</p></div>
+    <div class="compteurs"><span class="compteur" id="j2-compte">Missions : 0 / 4</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau"><div class="graphe" id="j2-iter"><canvas aria-label="Nombre d'itérations en fonction de n"></canvas></div><div class="legende"><span><i style="background:var(--blue)"></i>Jacobi</span><span><i style="background:var(--green)"></i>Gauss-Seidel</span><span><i style="background:var(--violet)"></i>SOR optimal</span></div><div class="graphe" id="j2-profil" style="margin-top:10px"><canvas aria-label="Profil de température"></canvas></div><div class="stats" id="j2-stats"></div></div>
+    <div>
+      <div class="panneau mission" id="j2-mission"></div>
+      <div class="panneau" style="margin-top:16px"><div class="groupe-titre" style="margin-top:0">Nombre de nœuds internes <span class="nb">n</span></div><div class="segment" id="j2-n"><button data-v="4">4</button><button data-v="9">9</button><button data-v="19">19</button><button data-v="49">49</button><button data-v="99">99</button></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 3 : chasse au omega -->
+<section id="jeu-3" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🎯 La chasse au ω*</h2><p class="sous">SOR sur la paroi à n = 4 : choisissez ω, lancez, et descendez sous les 53 itérations de Gauss-Seidel</p></div>
+    <div class="compteurs"><span class="compteur" id="j3-record">Record : –</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau">
+      <div class="graphe" id="j3-profil"><canvas aria-label="Profil de température pendant les itérations"></canvas></div>
+      <div class="chrono"><div class="stat"><div class="l">Itération k</div><div class="v" id="j3-k">0</div></div><div class="stat"><div class="l">Incrément</div><div class="v" id="j3-inc">–</div></div><div class="stat"><div class="l">Arrêt si &lt;</div><div class="v">1e−8</div></div></div>
+      <div class="groupe-titre">Incrément ‖x(k) − x(k−1)‖ (échelle log)</div>
+      <div class="graphe" id="j3-courbe"><canvas aria-label="Incréments"></canvas></div>
+    </div>
+    <div>
+      <div class="panneau">
+        <div class="reglage"><label for="j3-w">Facteur de relaxation ω <span id="j3-wv">1,00</span></label><input type="range" id="j3-w" min="0.5" max="1.99" step="0.01" value="1"></div>
+        <div class="actions" style="margin-top:4px"><button class="btn sec petit" id="j3-moins">− 0,01</button><button class="btn sec petit" id="j3-plus">+ 0,01</button><button class="btn" id="j3-go">▶ Lancer SOR</button></div>
+        <div id="j3-resultat" aria-live="polite"></div>
+      </div>
+      <div class="panneau" style="margin-top:16px">
+        <div class="groupe-titre" style="margin-top:0">Vos essais : itérations en fonction de ω</div>
+        <div class="graphe" id="j3-nuage"><canvas></canvas></div>
+        <div class="actions"><button class="btn sec petit" id="j3-theorie" disabled>🎓 La théorie (après 3 essais)</button></div>
+        <div id="j3-explication"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 4 : Incrément ou erreur ? -->
+<section id="jeu-4" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>📏 Incrément ou erreur ?</h2><p class="sous">Le calcul s'arrête quand l'incrément passe sous 1e−8. Mais l'erreur réelle, elle, vaut combien ?</p></div>
+    <div class="compteurs"><span class="compteur" id="j4-q">Manche 1 / 5</span><span class="compteur" id="j4-score">0 pt</span></div>
+  </div>
+  <div class="barre"><div id="j4-barre"></div></div>
+  <div id="j4-jeu" class="deux">
+    <div class="panneau"><div id="j4-dossier"></div></div>
+    <div class="panneau">
+      <p class="question" id="j4-question"></p>
+      <div id="j4-choix" class="choix-grille choix-1col"></div>
+      <div id="j4-retour" aria-live="polite"></div>
+      <div class="actions"><button class="btn" id="j4-suivant" hidden>Suivant →</button></div>
+    </div>
+  </div>
+  <div id="j4-fin" class="panneau" hidden></div>
+</section>
+
+<!-- JEU 5 : Détective du code -->
+<section id="jeu-5" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🕵️ Détective du code</h2><p class="sous">Chaque affaire : un extrait de code, la sortie de la console. Trouvez le bug… ou prouvez qu'il n'y en a pas.</p></div>
+    <div class="compteurs"><span class="compteur" id="j5-q">Affaire 1 / 8</span><span class="compteur" id="j5-score">0 pt</span></div>
+  </div>
+  <div class="barre"><div id="j5-barre"></div></div>
+  <div id="j5-jeu" class="deux">
+    <div class="panneau"><div id="j5-dossier"></div></div>
+    <div class="panneau">
+      <p class="question" id="j5-question"></p>
+      <div id="j5-choix" class="choix-grille choix-1col"></div>
+      <div id="j5-retour" aria-live="polite"></div>
+      <div class="actions"><button class="btn" id="j5-suivant" hidden>Suivant →</button></div>
+    </div>
+  </div>
+  <div id="j5-fin" class="panneau" hidden></div>
+</section>
+
+</main>
+
+<footer class="enveloppe pied-page">
+  <div>📄 <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/methodes-numeriques/Chapitre_03_Systemes_lineaires_iteratifs/4_TP2_enonce.pdf">Énoncé du TP2</a> · ✅ <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/methodes-numeriques/Chapitre_03_Systemes_lineaires_iteratifs/4_TP2_corrige_scripts_MATLAB.zip">Corrigé : scripts MATLAB</a> · 📚 <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-genie-mecanique.md">Retour au cours</a></div>
+  <div style="margin-top:6px">Pr. Mohamed JANANE ALLAH · Faculté des Sciences et Techniques de Mohammedia — Université Hassan II de Casablanca · Votre progression reste dans ce navigateur, rien n'est envoyé.</div>
+</footer>
+
+<noscript><p class="enveloppe">Ces jeux ont besoin de JavaScript.</p></noscript>
+<script src="noyau.js"></script>
+<script>window.CLE_JEUX = "tp2-jeux-v1";</script>
+<script>
+"use strict";
+/* ============================================================
+   Outils communs des pages de jeux (meme base que la page du TP5)
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const virgule = (v, d) => v.toFixed(d).replace(".", ",").replace("-", "−");
+const melanger = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const hasard = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const attendre = ms => new Promise(r => setTimeout(r, ms));
+function el(tag, attrs, ...enfants) {
+  const e = document.createElement(tag);
+  for (const [c, v] of Object.entries(attrs || {})) {
+    if (c === "html") e.innerHTML = v; else if (c === "texte") e.textContent = v;
+    else if (c.startsWith("on")) e.addEventListener(c.slice(2), v); else e.setAttribute(c, v);
+  }
+  enfants.forEach(x => e.append(x));
+  return e;
+}
+const css = nom => getComputedStyle(document.documentElement).getPropertyValue(nom).trim();
+
+// Affichage des nombres a la maniere de MATLAB (format short / short e)
+function expo(v) { return v.toExponential(4).replace(/e([+-])(\d)$/, "e$10$2"); }
+function champ(v, entiers, large) {
+  if (entiers) return String(v).padStart(large ? 12 : 6);
+  return (v === 0 ? "0" : v.toFixed(4)).padStart(10);
+}
+function matLigne(vals) {
+  const entiers = vals.every(v => Number.isInteger(v)), large = vals.some(v => Math.abs(v) >= 1000);
+  return vals.map(v => champ(v, entiers, large)).join("");
+}
+function matColonne(vals) {
+  const entiers = vals.every(v => Number.isInteger(v)), large = vals.some(v => Math.abs(v) >= 1000);
+  return vals.map(v => champ(v, entiers, large));
+}
+function matLigneE(vals) { return vals.map(v => expo(v).padStart(13)).join(""); }
+function echapper(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+// lignes : ">> " commande, "!" erreur, "?" avertissement, "#" ligne suspecte, "%..." commentaire en fin de ligne
+function console_(lignes) {
+  return '<pre class="console">' + lignes.map(l => {
+    if (l.startsWith(">> ")) return '<span class="cmd">' + echapper(l) + "</span>";
+    if (l.startsWith("!")) return '<span class="err">' + echapper(l.slice(1)) + "</span>";
+    if (l.startsWith("?")) return '<span class="warn">' + echapper(l.slice(1)) + "</span>";
+    if (l.startsWith("#")) return '<span class="bug">' + echapper(l.slice(1)) + "</span>";
+    return echapper(l).replace(/(%.*)$/, '<span class="com">$1</span>');
+  }).join("\n") + "</pre>";
+}
+// "ans =" a la MATLAB (format loose) : ["", nom + " =", "", ...lignes]
+const ans = (lignes, nom) => ["", (nom || "ans") + " =", ""].concat(lignes).concat([""]);
+
+// Progression (dans ce navigateur seulement) : window.CLE_JEUX = cle de stockage de la page
+let progres = {};
+try { progres = JSON.parse(localStorage.getItem(window.CLE_JEUX)) || {}; } catch (e) { progres = {}; }
+function noter(jeu, n) {
+  if (n > (progres[jeu] || 0)) { progres[jeu] = n; try { localStorage.setItem(window.CLE_JEUX, JSON.stringify(progres)); } catch (e) { /* stockage indisponible */ } }
+  majAccueil();
+}
+function etoilesHTML(n) { return '<span class="etoiles">' + "★".repeat(n) + '<span class="vide">' + "★".repeat(3 - n) + "</span></span>"; }
+function confettis() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cols = ["#0056D2", "#6A4C93", "#C1121F", "#2E7D32", "#E67E22", "#F2C14E"];
+  for (let q = 0; q < 70; q++) {
+    const c = el("div", { class: "confetti" });
+    c.style.left = Math.random() * 100 + "vw"; c.style.background = cols[q % cols.length];
+    c.style.animationDuration = 1.6 + Math.random() * 1.6 + "s"; c.style.animationDelay = Math.random() * 0.4 + "s";
+    document.body.append(c); setTimeout(() => c.remove(), 3800);
+  }
+}
+function ecranFin(zone, o) {
+  zone.innerHTML = '<div class="fin"><div class="grandes">' + "★".repeat(o.etoiles) + '<span class="vide">' + "★".repeat(3 - o.etoiles) +
+    "</span></div><h3>" + o.titre + '</h3><p class="aide" style="font-size:16px">' + o.detail + "</p>" + (o.extra || "") +
+    '<div class="actions" style="justify-content:center"><button class="btn" data-r>↻ Rejouer</button><a class="btn sec" href="#">Tous les jeux</a></div></div>';
+  $("[data-r]", zone).addEventListener("click", o.rejouer);
+  if (o.etoiles === 3) confettis();
+}
+function choixBoutons(zone, options, rappel, mono) {
+  zone.innerHTML = "";
+  options.forEach((o, q) => zone.append(el("button", { class: "choix" + (mono ? " mono" : ""), html: o.html, "data-q": q,
+    onclick: () => { $$("button", zone).forEach(b => b.disabled = true); rappel(o, q, $$("button", zone)); } })));
+}
+function marquerChoix(boutons, options, choisi) {
+  boutons.forEach((b, q) => { if (options[q].bon) b.classList.add("bon"); else if (q === choisi) b.classList.add("faux"); });
+}
+function retour(zone, ok, titre, html) {
+  zone.innerHTML = '<div class="retour-msg ' + (ok ? "ok" : "ko") + '"><b class="t">' + titre + "</b>" + (html || "") + "</div>";
+}
+function segment(zone, valeur, rappel) {
+  $$("button", zone).forEach(b => {
+    b.setAttribute("aria-pressed", b.dataset.v === String(valeur));
+    if (!b.dataset.lie) { b.dataset.lie = 1; b.addEventListener("click", () => rappel(b.dataset.v)); }
+  });
+}
+function graduations(min, max, n) {
+  const brut = (max - min) / (n || 5), p = Math.pow(10, Math.floor(Math.log10(brut))), m = brut / p;
+  const pas = (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p, r = [];
+  for (let v = Math.ceil(min / pas) * pas; v <= max + pas * 1e-9; v += pas) r.push(+v.toFixed(10));
+  return r;
+}
+
+/* Traceur de courbes : axes, grille, series, points, droites horizontales et verticales, textes */
+function tracer(cadre, o) {
+  const cv = $("canvas", cadre), W = cadre.clientWidth, H = o.hauteur || Math.max(180, Math.min(260, W * 0.55)), dpr = window.devicePixelRatio || 1;
+  if (!W) return null;
+  cv.style.height = H + "px"; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  const m = Object.assign({ l: 54, r: 12, t: 12, b: 36 }, o.marges || {}), ink = css("--ink-2"), ligne = css("--line");
+  const X = x => m.l + (x - o.x[0]) / (o.x[1] - o.x[0]) * (W - m.l - m.r);
+  const Y = y => H - m.b - (y - o.y[0]) / (o.y[1] - o.y[0]) * (H - m.t - m.b);
+  ctx.font = "11.5px system-ui,Segoe UI,Arial"; ctx.fillStyle = ink; ctx.strokeStyle = ligne; ctx.lineWidth = 1;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  (o.xt || []).forEach(([v, t]) => { ctx.beginPath(); ctx.moveTo(X(v), m.t); ctx.lineTo(X(v), H - m.b); ctx.stroke(); ctx.fillText(t, X(v), H - m.b + 5); });
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  (o.yt || []).forEach(([v, t]) => { ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(W - m.r, Y(v)); ctx.stroke(); ctx.fillText(t, m.l - 6, Y(v)); });
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; if (o.xl) ctx.fillText(o.xl, (m.l + W - m.r) / 2, H - 1);
+  if (o.yl) { ctx.save(); ctx.translate(9, (m.t + H - m.b) / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = "middle"; ctx.fillText(o.yl, 0, 0); ctx.restore(); }
+  ctx.save(); ctx.beginPath(); ctx.rect(m.l, m.t, W - m.l - m.r, H - m.t - m.b); ctx.clip();
+  (o.horiz || []).forEach(h => { ctx.strokeStyle = h.c; ctx.lineWidth = h.l || 1.5; ctx.setLineDash(h.tir || []); ctx.beginPath(); ctx.moveTo(m.l, Y(h.y)); ctx.lineTo(W - m.r, Y(h.y)); ctx.stroke(); });
+  (o.vert || []).forEach(h => { ctx.strokeStyle = h.c; ctx.lineWidth = h.l || 1.5; ctx.setLineDash(h.tir || []); ctx.beginPath(); ctx.moveTo(X(h.x), m.t); ctx.lineTo(X(h.x), H - m.b); ctx.stroke(); });
+  ctx.setLineDash([]);
+  (o.series || []).forEach(s => {
+    ctx.strokeStyle = s.c; ctx.lineWidth = s.l || 2; ctx.globalAlpha = s.a || 1; ctx.setLineDash(s.tir || []); ctx.lineJoin = "round"; ctx.beginPath();
+    let debut = true;
+    s.pts.forEach(([x, y]) => { if (!isFinite(y) || !isFinite(x)) { debut = true; return; } if (debut) ctx.moveTo(X(x), Y(y)); else ctx.lineTo(X(x), Y(y)); debut = false; });
+    ctx.stroke(); ctx.globalAlpha = 1; ctx.setLineDash([]);
+    if (s.marques) { ctx.fillStyle = s.c; s.pts.forEach(([x, y]) => { if (isFinite(y)) { ctx.beginPath(); ctx.arc(X(x), Y(y), s.marques, 0, 7); ctx.fill(); } }); }
+  });
+  (o.points || []).forEach(p => {
+    ctx.fillStyle = p.c; ctx.strokeStyle = p.c; ctx.lineWidth = 2;
+    if (p.croix) { ctx.beginPath(); ctx.moveTo(X(p.x) - 5, Y(p.y) - 5); ctx.lineTo(X(p.x) + 5, Y(p.y) + 5); ctx.moveTo(X(p.x) + 5, Y(p.y) - 5); ctx.lineTo(X(p.x) - 5, Y(p.y) + 5); ctx.stroke(); }
+    else if (p.anneau) { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r || 7, 0, 7); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r || 4.5, 0, 7); ctx.fill(); }
+  });
+  ctx.restore();
+  (o.textes || []).forEach(t => { ctx.fillStyle = t.c || ink; ctx.font = (t.gras ? "600 " : "") + "12px system-ui,Segoe UI,Arial"; ctx.textAlign = t.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t.t, X(t.x) + (t.dx || 0), Y(t.y) + (t.dy || 0)); });
+  return { X, Y, W, H, m, inverse: (px, py) => [o.x[0] + (px - m.l) / (W - m.l - m.r) * (o.x[1] - o.x[0]), o.y[0] + (H - m.b - py) / (H - m.t - m.b) * (o.y[1] - o.y[0])] };
+}
+
+/* ============================================================
+   Moteur de missions : etapes numerotees, pari facultatif, consigne suivie en direct,
+   action, bouton de validation, quiz final, message de reussite.
+   ============================================================ */
+function moteurMissions(o) {
+  const E = { m: 0, phase: "consigne", faites: new Set(), paris: {}, essais: 0 }, M = o.missions;
+  const val = f => typeof f === "function" ? f() : f;
+  function entrer(m) {
+    E.m = m; E.essais = 0;
+    E.phase = E.faites.has(m) ? "fini" : (M[m].pari && E.paris[m] === undefined) ? "pari" : "consigne";
+    if (M[m].entree) M[m].entree();
+    o.recalculer(); afficher();
+  }
+  function gagner() {
+    E.faites.add(E.m); const n = E.faites.size;
+    noter(o.jeu, o.etoiles(n)); if (o.compteur) o.compteur.textContent = "Missions : " + n + " / " + M.length;
+    if (n === M.length) confettis();
+  }
+  function verifier() {
+    const X = M[E.m], avant = E.phase;
+    if (E.phase === "consigne" && X.ok && X.ok()) { E.phase = X.quiz ? "quiz" : "fini"; if (!X.quiz) gagner(); }
+    if (E.phase === "consigne" || E.phase !== avant) afficher();
+  }
+  function afficher() {
+    const X = M[E.m], z = o.zone;
+    let h = '<div class="etapes">' + M.map((_, q) => '<button data-m="' + q + '" class="' + (E.faites.has(q) ? "fait " : "") + (q === E.m ? "actuel" : "") + '" aria-label="Mission ' + (q + 1) + '">' + (q + 1) + "</button>").join("") + "</div>";
+    h += "<h4>Mission " + (E.m + 1) + " · " + X.titre + '</h4><p style="margin:0">' + val(X.consigne) + "</p>";
+    if (X.pari && E.paris[E.m] !== undefined && E.phase !== "pari") h += '<span class="pari-choisi">Votre pronostic : ' + X.pari.o[E.paris[E.m]] + "</span>";
+    if (E.phase === "pari") {
+      h += '<p class="question" style="font-size:16.5px;margin-top:12px">🔮 ' + val(X.pari.q) + '</p><div class="choix-grille" id="mm-pari"></div>';
+    } else if (E.phase === "consigne") {
+      if (X.suivi) h += '<div class="obj">' + X.suivi() + "</div>";
+      if (X.action) h += '<div class="actions"><button class="btn" id="mm-action">' + X.action.label + "</button></div>";
+      if (X.valider) h += '<div class="actions"><button class="btn" id="mm-valider">' + val(X.valider.label) + '</button></div><div id="mm-vret"></div>';
+    } else if (E.phase === "quiz") {
+      h += '<div class="retour-msg ok"><b class="t">✔ Mission accomplie : une dernière question</b>' + (X.avantQuiz ? val(X.avantQuiz) : "") + "</div>";
+      h += '<p class="question" style="font-size:16.5px;margin-top:12px">' + val(X.quiz.q) + '</p><div class="choix-grille choix-1col" id="mm-quiz"></div><div id="mm-qret"></div>';
+    } else {
+      let bilan = "";
+      if (X.pari && E.paris[E.m] !== undefined) {
+        const bon = X.pari.bon();
+        bilan = "<br>" + (E.paris[E.m] === bon ? "🎯 Pronostic juste !" : "Pronostic : " + X.pari.o[E.paris[E.m]] + " · réponse : <b>" + X.pari.o[bon] + "</b>.");
+      }
+      h += '<div class="retour-msg ok"><b class="t">✔ Mission accomplie</b>' + (X.bravo ? val(X.bravo) : val(X.quiz.expl)) + bilan + "</div>";
+      h += '<div class="actions">' + (E.m < M.length - 1 ? '<button class="btn" id="mm-suite">Mission suivante →</button>' : '<a class="btn" href="#">🎉 Retour aux jeux</a>') + "</div>";
+    }
+    z.innerHTML = h;
+    $$(".etapes button", z).forEach(b => b.addEventListener("click", () => entrer(+b.dataset.m)));
+    const su = $("#mm-suite", z); if (su) su.addEventListener("click", () => entrer(E.m + 1));
+    const ac = $("#mm-action", z); if (ac) ac.addEventListener("click", () => { X.action.faire(); o.recalculer(); verifier(); });
+    const va = $("#mm-valider", z);
+    if (va) va.addEventListener("click", () => {
+      const [ok, msg] = X.valider.test();
+      if (ok) { E.phase = X.quiz ? "quiz" : "fini"; if (!X.quiz) gagner(); afficher(); }
+      else retour($("#mm-vret", z), false, "✘ Pas encore", msg);
+    });
+    if (E.phase === "pari") {
+      const L = X.pari.o.map((t, q) => ({ html: t, q }));
+      choixBoutons($("#mm-pari", z), L, c => { E.paris[E.m] = c.q; E.phase = "consigne"; if (X.apresPari) X.apresPari(); o.recalculer(); afficher(); verifier(); }, true);
+    }
+    if (E.phase === "quiz") {
+      const L = melanger(X.quiz.o.map(([t, b]) => ({ html: t, bon: !!b })));
+      choixBoutons($("#mm-quiz", z), L, (c, q, bs) => {
+        marquerChoix(bs, L, q);
+        if (c.bon) { E.phase = "fini"; gagner(); setTimeout(afficher, 900); }
+        else { retour($("#mm-qret", z), false, "✘ Non, réessayez", ""); setTimeout(afficher, 1100); }
+      });
+    }
+  }
+  return { E, entrer, verifier, afficher };
+}
+
+/* ============================================================
+   Moteur de manches : une suite de questions a choix, avec un panneau de gauche
+   (HTML ou fonction de dessin) et une explication. Le detective en est un cas particulier.
+   manches() rend [{gauche, q, o:[[texte, bon]], expl, apres?, mono?, ordre?}]
+   ============================================================ */
+function moteurManches(o) {
+  let E, A;
+  const P = s => $("#" + o.p + "-" + s), val = f => typeof f === "function" ? f() : f;
+  function demarrer() { A = o.manches(); E = { q: 0, bons: 0, score: 0 }; P("jeu").hidden = false; P("fin").hidden = true; poser(); }
+  function poser() {
+    const X = A[E.q];
+    P("q").textContent = (o.nom || "Question") + " " + (E.q + 1) + " / " + A.length; P("score").textContent = E.score + " pt";
+    P("barre").style.width = E.q / A.length * 100 + "%";
+    const g = P("dossier"); if (typeof X.gauche === "function") X.gauche(g); else g.innerHTML = X.gauche;
+    P("question").innerHTML = X.q; P("retour").innerHTML = ""; P("suivant").hidden = true;
+    const L0 = X.o.map(([t, b]) => ({ html: t, bon: !!b })), L = X.ordre ? L0 : melanger(L0);
+    choixBoutons(P("choix"), L, (c, q, bs) => {
+      marquerChoix(bs, L, q); if (c.bon) { E.bons++; E.score += 100; }
+      retour(P("retour"), c.bon, c.bon ? (o.juste || "✔ Juste ! +100 pt") : (o.faux || "✘ Non"), val(X.expl));
+      if (X.apres) X.apres(g, c.bon);
+      P("score").textContent = E.score + " pt"; P("suivant").hidden = false;
+      P("suivant").textContent = E.q === A.length - 1 ? "Voir le résultat →" : (o.suite || "Question suivante →");
+    }, X.mono);
+  }
+  function suivant() {
+    if (E.q < A.length - 1) { E.q++; poser(); window.scrollTo({ top: $("#" + o.id).offsetTop - 10, behavior: "smooth" }); return; }
+    P("barre").style.width = "100%"; P("jeu").hidden = true; const z = P("fin"); z.hidden = false;
+    const r = E.bons / A.length, et = o.etoiles ? o.etoiles(E.bons, A.length) : r >= 0.85 ? 3 : r >= 0.6 ? 2 : r >= 0.4 ? 1 : 0; noter(o.id, et);
+    ecranFin(z, { etoiles: et, titre: E.bons + " / " + A.length + " " + (o.bilan || "bonnes réponses") + " · " + E.score + " pt", rejouer: demarrer, detail: val(o.morale) });
+  }
+  P("suivant").addEventListener("click", suivant);
+  return { ouvrir: demarrer };
+}
+
+/* Detective du code : AFFAIRES = [{titre, code, sortie, q, o:[[texte, bon]], expl}] */
+function moteurDetective(o) {
+  let A = null;
+  return moteurManches({ id: o.id, p: o.p, nom: "Affaire", bilan: "affaires résolues", juste: "✔ Affaire résolue ! +100 pt", faux: "✘ Fausse piste", suite: "Affaire suivante →",
+    morale: o.morale, etoiles: (b) => b >= 7 ? 3 : b >= 5 ? 2 : b >= 3 ? 1 : 0,
+    manches: () => (A || (A = o.dossiers())).map(X => ({ gauche: '<h3 style="margin:0 0 6px">📁 ' + X.titre + '</h3><div class="console-titre">Extrait du code (ligne suspecte surlignée)</div>' + console_(X.code) +
+      '<div class="console-titre">Fenêtre de commandes</div>' + console_(X.sortie), q: X.q, o: X.o, expl: X.expl })) });
+}
+
+/* ============================================================
+   Accueil et navigation : window.FICHES (cartes) et window.JEUX (objets { ouvrir })
+   ============================================================ */
+function majAccueil() {
+  const zone = $("#cartes"); if (!zone) return; zone.innerHTML = "";
+  FICHES.forEach((f, q) => zone.append(el("a", { class: "carte-jeu", href: "#" + f.id, html:
+    '<div class="vignette" style="background:' + f.fond + '"><img src="vignettes/' + f.id + '.jpg" alt="" loading="lazy" onerror="this.remove()"><span class="num">Jeu ' + (q + 1) + "</span>" + f.emoji + "</div>" +
+    '<div class="corps"><h3>' + f.titre + '</h3><div class="notion">' + f.notion + '</div><div class="puces">' + f.puces.map(p => '<span class="puce">' + p + "</span>").join("") +
+    '</div><div class="pied">' + etoilesHTML(progres[f.id] || 0) + '<span class="btn petit">' + ((progres[f.id] || 0) ? "Rejouer" : "Jouer") + " ▶</span></div></div>" })));
+  const tot = FICHES.reduce((s, f) => s + (progres[f.id] || 0), 0);
+  $("#total").innerHTML = '<span class="etoile">★</span> ' + tot + " / " + 3 * FICHES.length;
+}
+function routeur() {
+  const id = location.hash.slice(1), vue = JEUX[id] ? id : "accueil";
+  $$(".vue").forEach(v => v.hidden = v.id !== vue);
+  majAccueil(); if (JEUX[id]) JEUX[id].ouvrir();
+  window.scrollTo(0, 0);
+}
+function demarrerPage() { addEventListener("hashchange", routeur); routeur(); }
+/* ============================================================
+   TP2 : la paroi du four (Jacobi, Gauss-Seidel, SOR)
+   ============================================================ */
+const TOL = 1e-8;
+const ticks = (a, b, n) => graduations(a, b, n).map(v => [v, String(v).replace(".", ",")]);
+const ytLog = (a, b, pas) => { const r = []; for (let v = Math.ceil(a); v <= b; v += (pas || 2)) r.push([v, "1e" + v]); return r; };
+const NOM = { jacobi: "Jacobi", gs: "Gauss-Seidel", sor: "SOR" }, COUL = { jacobi: "--blue", gs: "--green", sor: "--violet" };
+// profil complet de la paroi : T0 = 100, n inconnues, T(n+1) = 0
+const profil = x => [[0, 100]].concat(Array.from(x, (v, i) => [i + 1, v]), [[x.length + 1, 0]]);
+function dessinerProfil(cadre, n, series, h) {
+  tracer(cadre, { hauteur: h || 240, x: [0, n + 1], y: [0, 105], xl: "nœud i (0 = côté four, " + (n + 1) + " = extérieur)", yl: "T (°C)", xt: ticks(0, n + 1, Math.min(n + 1, 10)), yt: ticks(0, 100, 5),
+    series: [{ pts: profil(TP2.direct(TP2.paroi(n))), c: css("--ink-2"), a: 0.5, tir: [5, 4], l: 1.5 }].concat(series) });
+}
+
+const FICHES = [
+  { id: "jeu-1", emoji: "🏁", fond: "linear-gradient(135deg,#0056D2,#3D8BFF)", titre: "Jacobi contre Gauss-Seidel", notion: "Une course sur la paroi à n = 4 : pariez sur les itérations, trouvez la ligne qui sépare les deux méthodes, puis lâchez SOR.", puces: ["Manip. 1", "rayon spectral", "≈ 4 min"] },
+  { id: "jeu-2", emoji: "🔬", fond: "linear-gradient(135deg,#6A4C93,#9B7BD0)", titre: "La paroi s'affine", notion: "n = 4, 9, 19, 49, 99 : regardez le nombre d'itérations exploser, et SOR résister.", puces: ["Manip. 2", "raffinement", "≈ 4 min"] },
+  { id: "jeu-3", emoji: "🎯", fond: "linear-gradient(135deg,#2E7D32,#58B35E)", titre: "La chasse au ω*", notion: "Choisissez ω, battez Gauss-Seidel, trouvez le creux de la courbe et vérifiez la formule de Young.", puces: ["Manip. 3", "SOR · ω optimal", "≈ 4 min"] },
+  { id: "jeu-4", emoji: "📏", fond: "linear-gradient(135deg,#C1121F,#F46D43)", titre: "Incrément ou erreur ?", notion: "L'arrêt se fait sur l'incrément : pariez sur l'erreur réelle, et découvrez le facteur ρ/(1 − ρ).", puces: ["Synthèse", "critère d'arrêt", "≈ 3 min"] },
+  { id: "jeu-5", emoji: "🕵️", fond: "linear-gradient(135deg,#E67E22,#F5B041)", titre: "Détective du code", notion: "Un Jacobi trop rapide, un SOR qui explose, un four à l'envers… huit affaires tirées du TP2.", puces: ["Manip. 1 à 3", "diagnostic", "≈ 5 min"] },
+];
+
+/* ---------- JEU 1 : Jacobi contre Gauss-Seidel ---------- */
+const jeu1 = (() => {
+  const S = TP2.paroi(4), xex = TP2.direct(S), E = { courses: {}, t: 0, avecSOR: false, demarre: false };
+  let MM, anim = 0;
+  const run = (m, w) => { const h = []; const r = TP2.iterer(S, m, w || 1, TOL, 2000, xex, { suivi: x => h.push(Float64Array.from(x)) }); r.hist = h; return r; };
+  const RUNS = { jacobi: run("jacobi"), gs: run("gs"), sor: run("sor", TP2.omegaOpt(4)) };
+  function dessiner() {
+    const ms = E.avecSOR ? ["jacobi", "gs", "sor"] : ["jacobi", "gs"], series = [];
+    ms.forEach(m => { if (E.t > 0) { const r = RUNS[m], q = Math.min(E.t, r.k) - 1; series.push({ pts: profil(r.hist[q]), c: css(COUL[m]), l: 2.4, marques: 4 }); } });
+    dessinerProfil($("#j1-profil"), 4, series);
+    $("#j1-stats").innerHTML = ms.map(m => { const r = RUNS[m], k = Math.min(E.t, r.k), fini = E.t >= r.k;
+      return '<div class="stat ' + (fini ? "ok" : "") + '"><div class="l">' + NOM[m] + (m === "sor" ? " (ω* = " + virgule(TP2.omegaOpt(4), 4) + ")" : "") + '</div><div class="v">' + k + (fini ? " ✓" : "") + "</div></div>"; }).join("") +
+      '<div class="stat"><div class="l">Solution exacte</div><div class="v" style="font-size:15px">' + Array.from(xex, v => virgule(v, 0)).join(" ; ") + "</div></div>";
+  }
+  function lancer(avecSOR) {
+    E.avecSOR = avecSOR; cancelAnimationFrame(anim); const fin = RUNS.jacobi.k, t0 = performance.now();
+    const pas = t => { E.t = Math.max(1, Math.min(fin, Math.round((t - t0) / 3500 * fin))); dessiner(); if (E.t < fin) anim = requestAnimationFrame(pas); else { E.courses[avecSOR ? "sor" : "jg"] = true; MM.verifier(); } };
+    anim = requestAnimationFrame(pas);
+  }
+  function calculer() { dessiner(); if (MM) MM.verifier(); }
+  const missions = [
+    { titre: "La course", pari: { q: "n = 4, départ T = 0, arrêt quand l'incrément passe sous 1e−8 : combien d'itérations pour Jacobi ?", o: ["≈ 25", "≈ 50", "≈ 100", "≈ 400"], bon: () => [25, 50, 100, 400].reduce((b, v, q, a) => Math.abs(v - RUNS.jacobi.k) < Math.abs(a[b] - RUNS.jacobi.k) ? q : b, 0) },
+      consigne: "Lancez la course entre Jacobi et Gauss-Seidel.", action: { label: "🏁 Lancer la course", faire: () => lancer(false) }, ok: () => !!E.courses.jg,
+      bravo: () => "Jacobi : <b>" + RUNS.jacobi.k + " itérations</b>, Gauss-Seidel : <b>" + RUNS.gs.k + "</b>, deux fois moins. Les deux arrivent sur T = (80, 60, 40, 20), le profil linéaire de la conduction." },
+    { titre: "Une seule ligne", consigne: "Question.", ok: () => true,
+      quiz: { q: "Une seule chose sépare le code de Gauss-Seidel de celui de Jacobi. Laquelle ?", o: [["Gauss-Seidel lit le vecteur x lui-même (les composantes j < i sont déjà à jour) ; Jacobi lit une copie xold de l'itération précédente", 1], ["Gauss-Seidel parcourt les lignes de n à 1", 0], ["Gauss-Seidel utilise une tolérance plus grande", 0], ["Jacobi divise par la diagonale, pas Gauss-Seidel", 0]],
+        expl: "C'est la remarque de l'énoncé : écrire x(i) = … en lisant x, c'est Gauss-Seidel ; lire xold, c'est Jacobi. Vérifiez lequel vous avez écrit avant d'interpréter vos compteurs !" } },
+    { titre: "Le rayon spectral", pari: { q: "À chaque itération, l'erreur de Jacobi est multipliée par ρ_J. Que vaut ρ_J pour n = 4 ?", o: ["0,5", "0,809 = cos(π/5)", "0,95", "1"], bon: () => 1 },
+      consigne: "Le taux observé en fin de calcul, e(k)/e(k−1), donne ρ.", ok: () => true,
+      bravo: () => { const t = r => r.err[r.k - 1] / r.err[r.k - 2];
+        return "Taux observés : Jacobi " + virgule(t(RUNS.jacobi), 4) + " (cos(π/5) = " + virgule(TP2.rhoJ(4), 4) + "), Gauss-Seidel " + virgule(t(RUNS.gs), 4) + " = ρ_J² = " + virgule(TP2.rhoJ(4) ** 2, 4) + ". Comme ρ_GS = ρ_J², il faut deux fois moins d'itérations : ln(ρ_J²) = 2 ln(ρ_J)."; } },
+    { titre: "SOR entre en piste", consigne: "Relancez la course avec SOR, ω* = 2/(1 + sin(π/5)) = " + virgule(TP2.omegaOpt(4), 4) + ".",
+      action: { label: "🏁 Relancer avec SOR", faire: () => lancer(true) }, ok: () => !!E.courses.sor,
+      bravo: () => "SOR optimal : <b>" + RUNS.sor.k + " itérations</b>, contre " + RUNS.gs.k + " et " + RUNS.jacobi.k + ". Ce sont les nombres de l'énoncé (104, 53, 20). Son taux final vaut " + virgule(RUNS.sor.err[RUNS.sor.k - 1] / RUNS.sor.err[RUNS.sor.k - 2], 4) + ", proche de ω* − 1 = " + virgule(TP2.omegaOpt(4) - 1, 4) + "." },
+  ];
+  return { ouvrir: () => {
+    if (!E.demarre) { E.demarre = true; MM = moteurMissions({ zone: $("#j1-mission"), compteur: $("#j1-compte"), jeu: "jeu-1", missions, recalculer: calculer, etoiles: n => n >= 4 ? 3 : n >= 3 ? 2 : n >= 2 ? 1 : 0 }); addEventListener("resize", () => { if (!$("#jeu-1").hidden) dessiner(); }); MM.entrer(0); }
+    else { calculer(); MM.afficher(); }
+  } };
+})();
+
+/* ---------- JEU 2 : la paroi s'affine ---------- */
+const jeu2 = (() => {
+  const NS = [4, 9, 19, 49, 99], E = { n: 4, vus: new Set(), demarre: false }, CACHE = {};
+  let MM;
+  const res = n => CACHE[n] || (CACHE[n] = (() => { const S = TP2.paroi(n); return { S, kJ: TP2.iterer(S, "jacobi", 1, TOL, 1e6).k, kG: TP2.iterer(S, "gs", 1, TOL, 1e6).k, kS: TP2.iterer(S, "sor", TP2.omegaOpt(n), TOL, 1e6).k, x: TP2.direct(S) }; })());
+  function calculer() {
+    E.vus.add(E.n); const R = res(E.n), L = Math.log10;
+    segment($("#j2-n"), E.n, v => { E.n = +v; calculer(); });
+    const pts = k => NS.filter(n => E.vus.has(n)).map(n => [L(n + 1), L(res(n)[k])]);
+    tracer($("#j2-iter"), { hauteur: 230, x: [L(4), L(110)], y: [1, 5], xl: "n + 1 (échelle log)", yl: "itérations", xt: NS.map(n => [L(n + 1), String(n + 1)]), yt: [1, 2, 3, 4, 5].map(v => [v, "1e" + v]),
+      series: [["kJ", "--blue"], ["kG", "--green"], ["kS", "--violet"]].map(([k, c]) => ({ pts: pts(k), c: css(c), l: 2.2, marques: 4.5 })) });
+    dessinerProfil($("#j2-profil"), E.n, [{ pts: profil(R.x), c: css("--orange"), l: 2.2, marques: E.n <= 19 ? 3.5 : 0 }], 200);
+    $("#j2-stats").innerHTML = [["ρ_J = cos(π/(n+1))", virgule(TP2.rhoJ(E.n), 5)], ["ω*", virgule(TP2.omegaOpt(E.n), 4)], ["Jacobi", R.kJ.toLocaleString("fr-FR")], ["Gauss-Seidel", R.kG.toLocaleString("fr-FR")], ["SOR optimal", R.kS.toLocaleString("fr-FR")]]
+      .map(([l, v]) => '<div class="stat"><div class="l">' + l + '</div><div class="v">' + v + "</div></div>").join("");
+    if (MM) MM.verifier();
+  }
+  const missions = [
+    { titre: "Deux fois plus de nœuds", pari: { q: "n passe de 4 à 9 (le pas d'espace est divisé par 2). Jacobi demande combien de fois plus d'itérations ?", o: ["≈ 2", "≈ 4", "≈ 10", "≈ 100"], bon: () => { const r = res(9).kJ / res(4).kJ; return r < 3 ? 0 : r < 7 ? 1 : r < 30 ? 2 : 3; } },
+      consigne: "Passez à <b>n = 9</b>.", ok: () => E.n === 9,
+      bravo: () => "Jacobi : " + res(4).kJ + " → " + res(9).kJ + " (× " + virgule(res(9).kJ / res(4).kJ, 2) + "), Gauss-Seidel : " + res(4).kG + " → " + res(9).kG + ", SOR optimal : " + res(4).kS + " → " + res(9).kS + " (× " + virgule(res(9).kS / res(4).kS, 1) + "). (10/5)² = 4 pour Jacobi et Gauss-Seidel, 10/5 = 2 pour SOR. La solution reste linéaire : 90, 80, …, 10 °C." },
+    { titre: "Le vieux ω", pari: { q: "Pour n = 9, on garde ω = 1,2596, l'optimum de n = 4. Combien d'itérations ?", o: ["≈ 20", "≈ 40", "≈ 120", "≈ 400"], bon: () => { const k = TP2.iterer(TP2.paroi(9), "sor", TP2.omegaOpt(4), TOL, 2000).k; return [20, 40, 120, 400].reduce((b, v, q, a) => Math.abs(v - k) < Math.abs(a[b] - k) ? q : b, 0); } },
+      consigne: "ω* dépend de n : ω* = 2/(1 + sin(π/(n + 1))).", ok: () => true,
+      bravo: () => "Avec ω = 1,2596 : <b>" + TP2.iterer(TP2.paroi(9), "sor", TP2.omegaOpt(4), TOL, 2000).k + " itérations</b> au lieu de " + res(9).kS + " avec ω* = " + virgule(TP2.omegaOpt(9), 4) + ". C'est l'erreur fréquente du TP : recalculer ω* à chaque maillage." },
+    { titre: "Le maillage fin", consigne: "Passez à <b>n = 99</b>.", ok: () => E.n === 99,
+      avantQuiz: () => "Jacobi : " + res(99).kJ.toLocaleString("fr-FR") + " itérations ; SOR optimal : " + res(99).kS + ".",
+      quiz: { q: "Pourquoi l'écart entre Jacobi et SOR optimal devient-il énorme ?", o: [["ρ_J = cos(π/(n+1)) tend vers 1 : Jacobi et Gauss-Seidel ralentissent comme n², SOR optimal seulement comme n", 1], ["Jacobi devient instable pour n grand", 0], ["SOR utilise un pas de temps plus grand", 0], ["C'est un bug : le nombre d'itérations ne devrait pas dépendre de n", 0]],
+        expl: () => "1 − ρ_J ≈ π²/(2(n+1)²) = " + expo(1 - TP2.rhoJ(99)) + " pour n = 99 : chaque itération ne réduit presque plus l'erreur. Ce n'est pas un bug, c'est le résultat attendu (indice de l'énoncé, manip. 2)." } },
+    { titre: "Direct ou itératif ?", consigne: "Question de synthèse.", ok: () => true,
+      quiz: { q: "Pour CETTE paroi 1D, faut-il préférer SOR à A\\b ?", o: [["Non : en 1D, A est tridiagonale et A\\b la résout en O(n) sans remplissage ; l'itératif devient utile pour les grands systèmes 2D ou 3D", 1], ["Oui : une méthode itérative est toujours plus rapide", 0], ["Oui, dès que n > 4", 0], ["Non, car SOR ne converge pas pour n grand", 0]],
+        expl: "C'est la question 3 de la synthèse (et le lien avec le TP1). En 2D ou en 3D, la factorisation remplit la matrice creuse (voir le TP5) : c'est là que Gauss-Seidel et SOR prennent l'avantage." } },
+  ];
+  return { ouvrir: () => {
+    if (!E.demarre) { E.demarre = true; MM = moteurMissions({ zone: $("#j2-mission"), compteur: $("#j2-compte"), jeu: "jeu-2", missions, recalculer: calculer, etoiles: n => n >= 4 ? 3 : n >= 3 ? 2 : n >= 2 ? 1 : 0 }); addEventListener("resize", () => { if (!$("#jeu-2").hidden) calculer(); }); MM.entrer(0); }
+    else { calculer(); MM.afficher(); }
+  } };
+})();
+
+/* ---------- JEU 3 : la chasse au omega* ---------- */
+const jeu3 = (() => {
+  const S = TP2.paroi(4), xex = TP2.direct(S), E = { w: 1, essais: [], theorie: false, demarre: false }, kGS = TP2.iterer(S, "gs", 1, TOL, 2000).k;
+  let anim = 0, derniers = [];
+  const meilleur = (() => { let b = [1e9, 0]; for (let c = 100; c < 200; c++) { const k = TP2.iterer(S, "sor", c / 100, TOL, 2000).k; if (k < b[0]) b = [k, c / 100]; } return b; })();
+  function courbe(inc) {
+    const kmax = Math.max(60, inc.length) * 1.05;
+    tracer($("#j3-courbe"), { hauteur: 190, x: [0, kmax], y: [-9, 3], xl: "itération k", yl: "incrément", xt: ticks(0, kmax, 6), yt: ytLog(-9, 3),
+      horiz: [{ y: -8, c: css("--red"), tir: [5, 4] }], series: [{ pts: inc.map((v, q) => [q + 1, Math.log10(Math.max(v, 1e-12))]), c: css("--violet"), l: 2.2 }] });
+  }
+  function nuage() {
+    const conv = E.essais.filter(e => e.conv), ymax = Math.max(80, ...conv.map(e => e.k * 1.1));
+    const rho = []; for (let w = 0.5; w < 1.995; w += 0.01) rho.push([w, Math.log(TOL / TP2.norme(xex)) / Math.log(TP2.rhoSOR(4, w))]);
+    tracer($("#j3-nuage"), { hauteur: 210, x: [0.5, 2], y: [0, ymax], xl: "ω", yl: "itérations", xt: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(v => [v, virgule(v, 2)]), yt: ticks(0, ymax, 5),
+      horiz: [{ y: kGS, c: css("--green"), tir: [4, 3] }], vert: E.theorie ? [{ x: TP2.omegaOpt(4), c: css("--gold"), tir: [6, 4] }] : [],
+      series: E.theorie ? [{ pts: rho, c: css("--gold"), l: 1.5, a: 0.7 }] : [],
+      points: E.essais.map(e => e.conv ? { x: e.w, y: e.k, c: e.k <= 20 ? css("--gold") : css("--violet") } : { x: e.w, y: ymax * 0.95, c: css("--red"), croix: true }) });
+  }
+  function lancer() {
+    cancelAnimationFrame(anim); const w = E.w, h = [], r = TP2.iterer(S, "sor", w, TOL, 2000, xex, { suivi: x => h.push(Float64Array.from(x)) }), n = r.k, t0 = performance.now(), duree = Math.max(600, Math.min(3500, n * 40));
+    $("#j3-go").disabled = true; $("#j3-resultat").innerHTML = "";
+    const pas = t => { const q = Math.max(0, Math.min(n - 1, Math.floor((t - t0) / duree * n)));
+      dessinerProfil($("#j3-profil"), 4, [{ pts: profil(h[q]), c: css("--violet"), l: 2.4, marques: 4 }]); courbe(r.incr.slice(0, q + 1));
+      $("#j3-k").textContent = q + 1; $("#j3-inc").textContent = expo(r.incr[q]);
+      if (q < n - 1) anim = requestAnimationFrame(pas); else fini(r, w); };
+    anim = requestAnimationFrame(pas); derniers = r.incr;
+  }
+  function fini(r, w) {
+    $("#j3-go").disabled = false; E.essais.push({ w, k: r.k, conv: r.converge });
+    let m = "", et = 0;
+    if (!r.converge) m = "💥"; else if (r.k <= 20) { m = "🥇"; et = 3; } else if (r.k <= 30) { m = "🥈"; et = 2; } else if (r.k < kGS) { m = "🥉"; et = 1; } else m = "🐢";
+    if (et) noter("jeu-3", et); if (et === 3) confettis();
+    $("#j3-resultat").innerHTML = '<div class="resultat"><span class="medaille">' + m + "</span><div><b>" + (r.converge ? r.k + " itérations avec ω = " + virgule(w, 2) : "Pas de convergence en 2000 itérations") + '</b><br><span class="aide">' +
+      (r.k < kGS ? "Vous battez Gauss-Seidel (" + kGS + ")." + (et < 3 ? " Or : 20 itérations ou moins." : " Vous êtes au creux de la courbe !") : r.k === kGS ? "Exactement Gauss-Seidel (ω = 1). Essayez ω > 1." : "Plus lent que Gauss-Seidel (" + kGS + ").") + "</span></div></div>";
+    const conv = E.essais.filter(e => e.conv);
+    $("#j3-record").textContent = conv.length ? "Record : " + Math.min(...conv.map(e => e.k)) + " itérations" : "Record : –";
+    $("#j3-theorie").disabled = E.essais.length < 3; $("#j3-theorie").textContent = E.essais.length < 3 ? "🎓 La théorie (après 3 essais)" : "🎓 La théorie : formule de Young";
+    nuage();
+  }
+  function theorie() {
+    E.theorie = true; nuage(); const wo = TP2.omegaOpt(4), e = 0.1;
+    $("#j3-explication").innerHTML = '<div class="retour-msg ok" style="margin-top:12px"><b class="t">La formule de Young</b>ρ_J = cos(π/5) = ' + virgule(TP2.rhoJ(4), 4) + ', donc <span class="formule">ω* = 2/(1 + √(1 − ρ_J²)) = ' + virgule(wo, 4) + "</span> et ρ_SOR = ω* − 1 = " + virgule(wo - 1, 4) + " : " + TP2.iterer(S, "sor", wo, TOL, 2000).k + " itérations." +
+      " Au pas de 0,01, le minimum est " + meilleur[0] + " itérations pour ω = " + virgule(meilleur[1], 2) + ". La courbe n'est <b>pas symétrique</b> : à gauche de ω*, ρ_SOR chute très vite (pente presque verticale) ; à droite, ρ_SOR = ω − 1 croît linéairement. Avec ω* − 0,1 : " +
+      TP2.iterer(S, "sor", wo - e, TOL, 2000).k + " itérations ; avec ω* + 0,1 : " + TP2.iterer(S, "sor", wo + e, TOL, 2000).k + ". Mieux vaut donc surestimer ω* que le sous-estimer.</div>";
+  }
+  return { ouvrir: () => {
+    if (!E.demarre) {
+      E.demarre = true; const ws = $("#j3-w"), regler = v => { E.w = Math.max(0.5, Math.min(1.99, +v.toFixed(2))); ws.value = E.w; $("#j3-wv").textContent = virgule(E.w, 2); };
+      ws.addEventListener("input", () => regler(+ws.value)); $("#j3-moins").addEventListener("click", () => regler(E.w - 0.01)); $("#j3-plus").addEventListener("click", () => regler(E.w + 0.01));
+      $("#j3-go").addEventListener("click", lancer); $("#j3-theorie").addEventListener("click", theorie);
+      addEventListener("resize", () => { if (!$("#jeu-3").hidden) { nuage(); courbe(derniers); } });
+    }
+    dessinerProfil($("#j3-profil"), 4, [{ pts: profil(new Float64Array(4)), c: css("--violet"), l: 2.4, marques: 4 }]); courbe(derniers); nuage();
+  } };
+})();
+
+/* ---------- JEU 4 : increment ou erreur ? ---------- */
+const jeu4 = moteurManches({ id: "jeu-4", p: "j4", nom: "Manche", bilan: "paris gagnés", suite: "Manche suivante →",
+  morale: "L'incrément ‖x(k) − x(k−1)‖ sous-estime l'erreur d'un facteur ≈ ρ/(1 − ρ). Quand ρ est proche de 1 (maillage fin, Jacobi ou Gauss-Seidel), un incrément de 1e−8 peut cacher une erreur de 1e−5. Relisez la borne du chapitre 3 avant de conclure sur la précision.",
+  manches: () => {
+    const CAS = [["jacobi", 4], ["sor", 4], ["jacobi", 99], ["gs", 99], ["sor", 99]];
+    const OPT = ["moins de 5e−9", "≈ 1e−8, comme l'incrément", "entre 5e−8 et 5e−6", "plus de 5e−6"], seau = e => e < 5e-9 ? 0 : e < 5e-8 ? 1 : e < 5e-6 ? 2 : 3;
+    return CAS.map(([m, n]) => {
+      const S = TP2.paroi(n), xex = TP2.direct(S), w = m === "sor" ? TP2.omegaOpt(n) : 1, r = TP2.iterer(S, m, w, TOL, 1e6, xex);
+      const rho = m === "jacobi" ? TP2.rhoJ(n) : m === "gs" ? TP2.rhoJ(n) ** 2 : TP2.omegaOpt(n) - 1, e = r.err[r.k - 1], pas = Math.max(1, Math.floor(r.k / 600));
+      return { gauche: zone => {
+          zone.innerHTML = '<h3 style="margin:0 0 4px">' + NOM[m] + (m === "sor" ? " optimal" : "") + ", n = " + n + "</h3><p class=\"aide\" style=\"margin:0\">ρ = " + virgule(rho, 5) + " · arrêt après " + r.k.toLocaleString("fr-FR") + " itérations</p>" +
+            '<div class="graphe"><canvas></canvas></div><div class="legende"><span><i style="background:var(--violet)"></i>incrément</span><span><i style="background:var(--orange)"></i>erreur réelle (révélée après le pari)</span><span><i style="background:var(--red)"></i>tolérance 1e−8</span></div>';
+          zone.dessin = avecErr => tracer($(".graphe", zone), { hauteur: 240, x: [0, r.k], y: [-10, 3], xl: "itération k", yl: "‖·‖ (échelle log)", xt: ticks(0, r.k, 5), yt: ytLog(-10, 3),
+            horiz: [{ y: -8, c: css("--red"), tir: [5, 4] }],
+            series: [{ pts: r.incr.filter((_, q) => q % pas === 0).map((v, q) => [q * pas + 1, Math.log10(v)]), c: css("--violet"), l: 2 }].concat(avecErr ? [{ pts: r.err.filter((_, q) => q % pas === 0).map((v, q) => [q * pas + 1, Math.log10(v)]), c: css("--orange"), l: 2 }] : []) });
+          zone.dessin(false);
+        },
+        apres: zone => zone.dessin(true),
+        q: "À l'arrêt, l'incrément vaut " + expo(r.incr[r.k - 1]) + ". L'erreur réelle ‖x − x*‖ vaut…", o: OPT.map((t, q) => [t, q === seau(e)]), ordre: true,
+        expl: "Erreur réelle : <b>" + expo(e) + "</b>, soit " + virgule(e / r.incr[r.k - 1], 1) + " fois l'incrément. Le facteur prévu ρ/(1 − ρ) vaut " + virgule(rho / (1 - rho), 1) + "." };
+    });
+  } });
+
+/* ---------- JEU 5 : detective du code ---------- */
+const jeu5 = moteurDetective({ id: "jeu-5", p: "j5",
+  morale: "Trois réflexes du TP2 : vérifier sur n = 4 les compteurs du cours (104, 53, 20), recalculer ω* à chaque maillage, et ne jamais conclure sur la précision à partir du seul incrément.",
+  dossiers: () => {
+    const S4 = TP2.paroi(4), x4 = TP2.direct(S4), S9 = TP2.paroi(9), x9 = TP2.direct(S9), S99 = TP2.paroi(99), x99 = TP2.direct(S99), col = v => Array.from(v, a => champ(+a.toFixed(4), false));
+    const jp = TP2.iterer(S4, "jacobi", 1, TOL, 2000, null, { bug: "jacobi_en_place" }), gc = TP2.iterer(S4, "gs", 1, TOL, 2000, null, { bug: "gs_copie" }), s21 = TP2.iterer(S4, "sor", 2.1, TOL, 2000);
+    const ce = TP2.iterer(S4, "jacobi", 1, TOL, 2000, x4, { critere: "erreur" }), v4 = TP2.iterer(S9, "sor", TP2.omegaOpt(4), TOL, 2000), b9 = TP2.iterer(S9, "jacobi", 1, TOL, 100, x9), j99 = TP2.iterer(S99, "jacobi", 1, TOL, 1e6, x99);
+    return [
+      { titre: "Un Jacobi trop rapide", code: ["for k = 1:nmax", "    xold = x;", "    for i = 1:n", "#        x(i) = (b(i) - A(i,[1:i-1 i+1:n])*x([1:i-1 i+1:n])) / A(i,i);", "    end"],
+        sortie: [">> [x, k] = tp2_jacobi(A, b, 1e-8, 2000);", ">> k"].concat(ans([matLigne([jp.k])], "k")),
+        q: "« Mon Jacobi converge en " + jp.k + " itérations au lieu de 104 ! » Diagnostic ?",
+        o: [["Ce n'est pas Jacobi : en lisant x lui-même, les composantes déjà mises à jour servent tout de suite, c'est Gauss-Seidel", 1], ["Bravo : c'est un Jacobi optimisé", 0], ["La tolérance est trop grande", 0], ["n vaut 2 au lieu de 4", 0]],
+        expl: "Jacobi doit lire xold (l'itération précédente) pour TOUTES les composantes. " + jp.k + " = le compteur de Gauss-Seidel : c'est le signe." },
+      { titre: "Un Gauss-Seidel trop lent", code: ["xold = x;", "for i = 1:n", "#    s = b(i) - A(i,:)*xold + A(i,i)*xold(i);", "    x(i) = s / A(i,i);"],
+        sortie: [">> [x, k] = tp2_gauss_seidel(A, b, 1e-8, 2000);", ">> k"].concat(ans([matLigne([gc.k])], "k")),
+        q: "Ce Gauss-Seidel demande " + gc.k + " itérations. Pourquoi ?",
+        o: [["Il lit xold : c'est en fait Jacobi. Gauss-Seidel doit lire x, déjà à jour pour j < i", 1], ["Gauss-Seidel est toujours plus lent que Jacobi", 0], ["Il faut inverser l'ordre des lignes", 0], ["La matrice n'est pas symétrique", 0]],
+        expl: "Même erreur, dans l'autre sens : " + gc.k + " itérations, c'est le compteur de Jacobi." },
+      { titre: "SOR s'emballe", code: ["#[x, k, incr] = tp2_sor(A, b, 2.1, 1e-8, 2000);"],
+        sortie: [">> k"].concat(ans([matLigne([s21.k])], "k"), [">> incr(end)"], ans(["   " + expo(s21.incr[s21.k - 1])])),
+        q: "SOR fait 2000 itérations et l'incrément vaut " + expo(s21.incr[s21.k - 1]) + ". Diagnostic ?",
+        o: [["ω doit rester dans ]0 ; 2[ : au-delà de 2, SOR diverge, quelle que soit la matrice", 1], ["nmax est trop petit", 0], ["La tolérance est trop sévère", 0], ["A n'est pas symétrique définie positive", 0]],
+        expl: "Pour une matrice symétrique définie positive, SOR converge pour tout 0 < ω < 2. Le bon choix ici : ω* = " + virgule(TP2.omegaOpt(4), 4) + " (20 itérations)." },
+      { titre: "Le critère qui triche", code: ["for k = 1:nmax", "    xnew = (b - R*x) ./ d;", "    x = xnew;", "#    if norm(x - xex) < tol, break; end"],
+        sortie: [">> [x, k] = tp2_jacobi(A, b, 1e-8, 2000, xex);", ">> k"].concat(ans([matLigne([ce.k])], "k")),
+        q: "Le code s'arrête quand l'erreur à la solution exacte xex passe sous 1e−8. Est-ce acceptable ?",
+        o: [["Non : en pratique on ne connaît pas la solution exacte. xex ne sert qu'à l'analyse ; le critère doit porter sur l'incrément (ou le résidu)", 1], ["Oui : c'est le critère le plus précis", 0], ["Oui, si n est petit", 0], ["Non : il faut comparer à A\\b à chaque itération", 0]],
+        expl: "C'est le commentaire de tp2_jacobi : « xex ne sert qu'à l'analyse, JAMAIS au critère d'arrêt ». Le jeu « Incrément ou erreur ? » montre l'écart entre les deux." },
+      { titre: "Le vieux ω", code: ["n = 9;", "#omega = 1.2596;                     % optimal pour n = 4", "[x, k] = tp2_sor(A, b, omega, 1e-8, 2000);"],
+        sortie: [">> k"].concat(ans([matLigne([v4.k])], "k")),
+        q: "SOR « optimal » demande " + v4.k + " itérations pour n = 9 (Gauss-Seidel en demande " + TP2.iterer(S9, "gs", 1, TOL, 2000).k + "). Pourquoi si peu de gain ?",
+        o: [["ω* dépend de n : pour n = 9, ω* = 2/(1 + sin(π/10)) ≈ 1,528, qui donne " + TP2.iterer(S9, "sor", TP2.omegaOpt(9), TOL, 2000).k + " itérations", 1], ["SOR ne marche que pour n = 4", 0], ["Il faut prendre ω = 1", 0], ["La tolérance doit changer avec n", 0]],
+        expl: "C'est l'« erreur fréquente » du corrigé (tp2_manip2) : ω* se recalcule à chaque maillage." },
+      { titre: "Le four à l'envers", code: ["b = zeros(n,1);", "#b(n) = 100;"],
+        sortie: [">> x = A \\ b"].concat(ans(col(TP2.direct(TP2.paroi(4, { bug: "bord_droit" }))), "x")),
+        q: "Le profil devrait partir de 80 °C côté four. Diagnostic ?",
+        o: [["La température imposée de 100 °C a été mise sur le dernier nœud : c'est T₁ qui touche le bord chaud, il faut b(1) = 100", 1], ["La matrice A doit être transposée", 0], ["La solution est juste, la paroi est symétrique", 0], ["Il faut b = 100*ones(n,1)", 0]],
+        expl: "Seul le premier nœud interne voit le four : −T₀ + 2T₁ − T₂ = 0 donne b₁ = T₀ = 100. Avec b(n) = 100, c'est le côté extérieur qui chauffe." },
+      { titre: "Pas de message, pas de convergence", code: ["n = 9;", "#[x, k, incr] = tp2_jacobi(A, b, 1e-8, 100);"],
+        sortie: [">> k"].concat(ans([matLigne([b9.k])], "k"), [">> incr(end)"], ans(["   " + expo(b9.incr[b9.k - 1])]), [">> x'"], ans([Array.from(b9.x, v => v.toFixed(4).padStart(10)).join("")])),
+        q: "Aucun message d'erreur, et x ressemble au profil 90, 80, …, 10. Le calcul est-il terminé ?",
+        o: [["Non : k = nmax et l'incrément vaut encore 7e−2 ; il faudrait " + TP2.iterer(S9, "jacobi", 1, TOL, 1e6).k + " itérations. Vérifiez toujours k < nmax", 1], ["Oui : x est presque linéaire", 0], ["Oui : MATLAB aurait affiché un avertissement sinon", 0], ["Non : Jacobi diverge pour n = 9", 0]],
+        expl: "tp2_jacobi s'arrête à nmax sans rien dire. Erreur réelle à l'arrêt : " + expo(b9.err[b9.k - 1]) + " °C. Testez k == nmax (ou affichez un warning, comme dans les TP suivants)." },
+      { titre: "L'incrément rassurant", code: ["n = 99;", "[x, k, incr, err] = tp2_jacobi(A, b, 1e-8, 1e6, xex);"],
+        sortie: [">> k"].concat(ans([matLigne([j99.k])], "k"), [">> format short e", ">> [incr(end)  err(end)]"], ans([matLigneE([j99.incr[j99.k - 1], j99.err[j99.k - 1]])])),
+        q: "L'incrément vaut 1e−8, l'erreur réelle 1,4e−5. Bug ?",
+        o: [["Non : l'incrément sous-estime l'erreur d'un facteur ≈ ρ/(1 − ρ) ≈ 2000 quand ρ = cos(π/100) ≈ 0,9995", 1], ["Oui : Jacobi est mal programmé", 0], ["Oui : xex est faux", 0], ["Non : c'est l'erreur d'arrondi de MATLAB", 0]],
+        expl: "ρ/(1 − ρ) = " + virgule(TP2.rhoJ(99) / (1 - TP2.rhoJ(99)), 0) + " : c'est la borne du chapitre 3. Pas de bug ici, mais une précision moins bonne qu'on ne le croit." },
+    ];
+  } });
+
+const JEUX = { "jeu-1": jeu1, "jeu-2": jeu2, "jeu-3": jeu3, "jeu-4": jeu4, "jeu-5": jeu5 };
+(function () {
+  const S = TP2.paroi(4), k = m => TP2.iterer(S, m, m === "sor" ? TP2.omegaOpt(4) : 1, TOL, 2000).k;
+  $("#verif-base").textContent = "n = 4, tolérance 1e−8 : Jacobi " + k("jacobi") + ", Gauss-Seidel " + k("gs") + ", SOR optimal " + k("sor") + " itérations (ω* = " + virgule(TP2.omegaOpt(4), 4) + "), T = (" + Array.from(TP2.direct(S), v => virgule(v, 0)).join(", ") + ") °C";
+})();
+demarrerPage();
+</script>
+</body>
+</html>

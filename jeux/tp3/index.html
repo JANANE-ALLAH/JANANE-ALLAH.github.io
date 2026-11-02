@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jeux du TP3 · Système de pompage</title>
+<meta name="description" content="Cinq jeux pour manipuler le TP3 de Méthodes numériques (FSTM, UH2C) : Newton multivarié, bassins d'attraction, descente de gradient, trois conduites, jacobienne, chasse aux bugs, calculés en direct par le code du TP.">
+<style>
+:root{
+  --bg:#F4F6FB; --surface:#FFFFFF; --surface-2:#EEF2F9; --ink:#15213B; --ink-2:#4B5875; --line:#DCE3EE;
+  --navy:#0B2545; --navy-2:#13315C; --blue:#0056D2; --violet:#6A4C93; --red:#C1121F; --green:#2E7D32;
+  --orange:#E67E22; --gold:#D99A00; --ok:#1E7B34; --ok-bg:#E7F5EA; --ko:#B3261E; --ko-bg:#FCEDEC;
+  --code-bg:#0F1B2D; --code-ink:#E4ECF7; --code-dim:#8FA3BF; --code-err:#FF8A80; --code-warn:#FFB74D;
+  --sol:#F3EEE2; --mur:#5C6680; --ombre:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.07);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0D1422; --surface:#151F33; --surface-2:#1C2942; --ink:#E7ECF5; --ink-2:#A7B3C9; --line:#2A3A57;
+    --blue:#6EA8FF; --violet:#B49AE0; --red:#FF6B6B; --green:#5CC47A; --orange:#F5A35C; --gold:#F2C14E;
+    --ok:#6BD48A; --ok-bg:#15301F; --ko:#FF8A80; --ko-bg:#3A1A1A; --code-bg:#0A1220; --sol:#232B3D; --mur:#8C97B2;
+    --ombre:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+a{color:var(--blue)}
+button{font:inherit;color:inherit}
+code,pre,.mono{font-family:ui-monospace,"Cascadia Mono",Consolas,"Liberation Mono",monospace}
+.enveloppe{max-width:1120px;margin:0 auto;padding:0 16px}
+[hidden]{display:none!important}
+
+/* En-tete */
+.entete{background:linear-gradient(120deg,var(--navy) 0%,var(--navy-2) 60%,#1B4F8A 100%);color:#fff;padding:18px 0 26px}
+.ariane{font-size:13px;opacity:.85}
+.ariane a{color:#fff}
+.entete h1{font-size:clamp(24px,4vw,36px);line-height:1.15;margin:10px 0 6px}
+.entete p{margin:0;max-width:760px;opacity:.92}
+.entete .ligne{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.total{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 14px;font-weight:600;white-space:nowrap}
+.total .etoile{color:#FFC93C}
+
+/* Accueil */
+.intro{display:grid;gap:14px;margin:22px 0 8px}
+.note{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:12px 14px;font-size:15px}
+.cartes{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin:16px 0 30px}
+.carte-jeu{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--ombre);overflow:hidden;display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
+.carte-jeu:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(16,24,40,.14)}
+.carte-jeu .vignette{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:54px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.carte-jeu .vignette img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.carte-jeu .num{z-index:2}
+.carte-jeu .num{position:absolute;top:10px;left:12px;background:rgba(255,255,255,.9);color:#15213B;font-weight:700;font-size:13px;border-radius:999px;padding:2px 10px}
+.carte-jeu .corps{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.carte-jeu h3{margin:0;font-size:19px}
+.carte-jeu .notion{color:var(--ink-2);font-size:14.5px;flex:1}
+.puces{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.puce{font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--ink-2)}
+.carte-jeu .pied{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.etoiles{color:var(--gold);letter-spacing:2px;font-size:18px}
+.etoiles .vide{color:var(--line)}
+
+/* Boutons */
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:600;padding:10px 16px;cursor:pointer;text-decoration:none;min-height:44px}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn.sec{background:transparent;color:var(--blue);border:1.5px solid var(--blue)}
+.btn.vert{background:var(--green)}
+.btn.petit{min-height:36px;padding:6px 12px;font-size:14px}
+:focus-visible{outline:3px solid #FFB000;outline-offset:2px}
+.choix-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.choix{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;min-height:52px;font-size:15.5px;line-height:1.35}
+.choix:hover:not(:disabled){border-color:var(--blue);background:var(--surface-2)}
+.choix.mono{font-size:16px;text-align:center}
+.choix.bon{border-color:var(--ok);background:var(--ok-bg)}
+.choix.faux{border-color:var(--ko);background:var(--ko-bg)}
+.choix:disabled{cursor:default}
+.choix-1col{grid-template-columns:1fr}
+.segment{display:inline-flex;flex-wrap:wrap;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.segment button{border:0;background:var(--surface);padding:8px 12px;cursor:pointer;font-size:14px;min-height:40px;border-right:1px solid var(--line)}
+.segment button:last-child{border-right:0}
+.segment button[aria-pressed="true"]{background:var(--blue);color:#fff;font-weight:600}
+
+/* Vue de jeu */
+.jeu-entete{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin:18px 0 12px}
+.jeu-entete h2{margin:0;font-size:clamp(20px,3vw,26px)}
+.jeu-entete .sous{color:var(--ink-2);font-size:14.5px;margin:2px 0 0}
+.retour{font-weight:600;text-decoration:none;font-size:14.5px}
+.compteurs{display:flex;gap:8px;flex-wrap:wrap}
+.compteur{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-weight:600;font-size:14px;white-space:nowrap}
+.barre{height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-bottom:14px}
+.barre>div{height:100%;background:linear-gradient(90deg,var(--blue),var(--violet));width:0;transition:width .3s}
+.panneau{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--ombre);padding:16px}
+.deux{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:880px){.deux{grid-template-columns:minmax(0,1fr)}}
+.deux>*{min-width:0}
+.question{font-size:19px;font-weight:650;margin:0 0 4px}
+.aide{color:var(--ink-2);font-size:14.5px;margin:0 0 12px}
+.retour-msg{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:15px}
+.retour-msg.ok{background:var(--ok-bg);border:1px solid var(--ok)}
+.retour-msg.ko{background:var(--ko-bg);border:1px solid var(--ko)}
+.retour-msg b.t{display:block;margin-bottom:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.formule{font-family:ui-monospace,Consolas,monospace;background:var(--surface-2);border-radius:8px;padding:2px 7px;white-space:nowrap}
+.niveau{background:linear-gradient(90deg,var(--violet),var(--blue));color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-weight:600}
+
+/* Grille SVG (jeux 1 et 2) */
+.salle svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.salle .noeud circle{fill:var(--surface);stroke:var(--ink-2);stroke-width:2;transition:fill .15s}
+.salle.cliquable .noeud{cursor:pointer}
+.salle.cliquable .noeud:hover circle{fill:#FFE3A3;stroke:var(--orange)}
+.salle .noeud text{font-size:15px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.salle .noeud.allume circle{fill:var(--orange);stroke:#9A4A00}
+.salle .noeud.allume text{fill:#fff}
+.salle .noeud.bon circle{fill:var(--green);stroke:#145A1E}
+.salle .noeud.bon text,.salle .noeud.faux text{fill:#fff}
+.salle .noeud.faux circle{fill:var(--red);stroke:#7A0B13}
+.salle .noeud.voisin circle{fill:#CFE0FF;stroke:var(--blue)}
+.salle .noeud.voisin text{fill:#0B2545}
+.salle .noeud.discret circle{opacity:.35}
+.salle .axe{font-size:12px;fill:var(--ink-2);text-anchor:middle;dominant-baseline:central}
+.salle .etiquette-mur{font-size:12.5px;font-weight:600;text-anchor:middle;dominant-baseline:central}
+
+/* Carte thermique (jeux 3 et 4) */
+.carte-cadre{position:relative;width:100%}
+.carte-cadre canvas{display:block;width:100%;cursor:crosshair}
+.bulle{position:absolute;transform:translate(-50%,calc(-100% - 12px));background:var(--navy);color:#fff;border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.35;pointer-events:none;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:2}
+.bulle b{font-size:15px}
+.echelle{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);margin:4px 0 0}
+.echelle .grad{flex:1;height:10px;border-radius:99px;background:linear-gradient(90deg,#313695,#4575b4,#74add1,#abd9e9,#e0f3f8,#fee090,#fdae61,#f46d43,#d73027,#a50026)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin-top:12px}
+.stat{background:var(--surface-2);border-radius:10px;padding:8px 10px}
+.stat .l{font-size:12px;color:var(--ink-2)}
+.stat .v{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat.ok .v{color:var(--ok)}
+.stat.ko .v{color:var(--ko)}
+.reglage{margin:0 0 12px}
+.reglage label{display:flex;justify-content:space-between;font-size:14.5px;font-weight:600;margin-bottom:2px}
+.reglage label span{font-variant-numeric:tabular-nums;color:var(--blue)}
+input[type=range]{width:100%;accent-color:var(--blue);height:28px}
+.groupe-titre{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);font-weight:700;margin:14px 0 8px}
+.etapes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.etapes button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer}
+.etapes button.fait{background:var(--green);border-color:var(--green);color:#fff}
+.etapes button.actuel{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,86,210,.2)}
+.mission h4{margin:0 0 4px;font-size:18px}
+.mission .obj{background:var(--surface-2);border-radius:10px;padding:8px 12px;margin:10px 0;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Course SOR */
+.chrono{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.graphe{position:relative;width:100%;margin-top:8px}
+.graphe canvas{display:block;width:100%}
+.legende{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.legende i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.medaille{font-size:40px;line-height:1}
+.resultat{display:flex;gap:12px;align-items:center;border-radius:12px;padding:12px 14px;background:var(--surface-2);margin-top:12px}
+
+/* Consoles MATLAB */
+.console{max-width:100%;background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.5;overflow-x:auto;margin:10px 0;white-space:pre}
+.console .cmd{color:#9CDCFE}
+.console .err{color:var(--code-err)}
+.console .warn{color:var(--code-warn)}
+.console .com{color:#6A9955}
+.console .bug{background:rgba(255,138,128,.16);outline:1px dashed rgba(255,138,128,.6);border-radius:3px}
+.console-titre{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:700;margin-top:10px}
+
+/* Fin de partie */
+.fin{text-align:center;padding:22px 10px}
+.fin .grandes{font-size:46px;color:var(--gold);letter-spacing:6px}
+.fin .grandes .vide{color:var(--line)}
+.fin h3{font-size:24px;margin:6px 0}
+.pied-page{border-top:1px solid var(--line);margin-top:30px;padding:20px 0 36px;color:var(--ink-2);font-size:14px}
+.pied-page a{font-weight:600}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:50;pointer-events:none;animation:tombe linear forwards}
+@keyframes tombe{to{transform:translateY(105vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}.carte-jeu{transition:none}}
+@media (max-width:520px){.chrono .v{font-size:14.5px}.choix-grille{grid-template-columns:1fr}.panneau{padding:13px}.chrono{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Ajouts communs aux pages TP4 et TP6 */
+.nb{text-transform:none;letter-spacing:0}
+.autres{font-size:13px;opacity:.9;margin-top:4px}
+.autres a{color:#fff;font-weight:600}
+.tableau{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums;margin-top:10px}
+.tableau th,.tableau td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:right}
+.tableau th{color:var(--ink-2);font-weight:600;font-size:12.5px}
+.tableau td:first-child,.tableau th:first-child{text-align:center}
+.tableau tr.neuf td{background:var(--surface-2)}
+.pari-choisi{display:inline-block;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-weight:600;margin-top:6px}
+.bacs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.bac{border:2px dashed var(--line);border-radius:14px;padding:12px;background:var(--surface);cursor:pointer;text-align:left;min-height:96px}
+.bac:hover:not(:disabled){border-color:var(--blue);background:var(--surface-2)}
+.bac b{display:block;font-size:15.5px;margin-bottom:4px}
+.bac span{font-size:13px;color:var(--ink-2)}
+.bac.bon{border-style:solid;border-color:var(--ok);background:var(--ok-bg)}
+.bac.faux{border-style:solid;border-color:var(--ko);background:var(--ko-bg)}
+@media (max-width:640px){.bacs{grid-template-columns:1fr}}
+.plan{position:relative;width:100%}
+.plan canvas{display:block;width:100%}
+.lecture{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-top:10px}
+.matrice{border-collapse:separate;border-spacing:0;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:14.5px;margin:10px auto;border-left:2px solid var(--ink);border-right:2px solid var(--ink);border-radius:6px}
+.matrice td{padding:5px 9px;text-align:right;min-width:58px;font-variant-numeric:tabular-nums}
+.matrice td.barre{border-left:2px dashed var(--ink-2)}
+.matrice tr.piv td{background:#FFE9B8;color:#15213B}
+.matrice td.col{background:rgba(0,86,210,.10)}
+.matrice tr.piv td.col{background:#FFD36B}
+.matrice td.nul{color:var(--ink-2)}
+.matrice-titre{text-align:center;font-size:13px;color:var(--ink-2);margin-top:6px}
+.banc svg{width:100%;height:auto;display:block}
+</style>
+</head>
+<body>
+<header class="entete">
+  <div class="enveloppe">
+    <div class="ariane"><a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-genie-mecanique.md">Méthodes numériques pour la mécanique</a> › Module 04 · Systèmes non linéaires › <a href="#">Jeux du TP3</a></div>
+    <div class="ligne">
+      <h1>🎮 Le TP3 en jeux : le système de pompage</h1>
+      <div class="total" id="total" aria-live="polite">★ 0 / 15</div>
+    </div>
+    <p>30 m³/h se partagent entre deux conduites (R1 = 2, R2 = 8) : F(Q1, Q2) = 0. Cinq jeux pour suivre Newton dans le plan des débits, le comparer à la descente de gradient, ajouter une conduite, écrire la jacobienne et traquer les pièges.</p>
+    <div class="autres">Autres jeux : <a href="../tp1/">TP1 · amortisseurs</a> · <a href="../tp2/">TP2 · conduction dans un four</a> · <a href="../tp4/">TP4 · refroidissement d'un four</a> · <a href="../tp5/">TP5 · salle de sport</a> · <a href="../tp6/">TP6 · Lorenz</a></div>
+  </div>
+</header>
+
+<main class="enveloppe">
+
+<section id="accueil" class="vue">
+  <div class="intro">
+    <div class="note">🧮 <b>Rien n'est recopié :</b> chaque nombre affiché est calculé en direct dans votre navigateur par le code MATLAB du TP3 (<code>pompage</code>, <code>newton_systeme</code>, <code>descente_gradient</code>, <code>jacobienne_fd</code>) porté ligne pour ligne en JavaScript. Ce sont les mêmes nombres que MATLAB : <span id="verif-base">…</span>.</div>
+  </div>
+  <div class="cartes" id="cartes"></div>
+  <div class="note" style="border-left-color:var(--green)">💡 <b>Conseil :</b> jouez <b>après</b> avoir lu l'énoncé du TP3 et <b>avant</b> d'écrire votre code MATLAB. Chaque jeu correspond à une manipulation de l'énoncé ; à la fin, comparez avec le corrigé.</div>
+</section>
+
+<!-- JEU 1 : Newton dans le plan des débits -->
+<section id="jeu-1" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🧭 Newton dans le plan des débits</h2><p class="sous">Touchez un point de départ : Newton s'y élance, itération après itération, vers une racine de F(Q1, Q2) = 0</p></div>
+    <div class="compteurs"><span class="compteur" id="j1-compte">Missions : 0 / 5</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau"><div class="plan" id="j1-plan"><canvas aria-label="Plan des débits Q1, Q2"></canvas></div><div class="legende"><span><i style="background:var(--blue)"></i>Q1 + Q2 = 30</span><span><i style="background:var(--violet)"></i>Q1 = ±2 Q2</span><span><i style="background:var(--orange)"></i>itérées de Newton</span></div><table class="tableau" id="j1-table"></table></div>
+    <div>
+      <div class="panneau mission" id="j1-mission"></div>
+      <div class="panneau" style="margin-top:16px"><div class="groupe-titre" style="margin-top:0">Départs proposés</div><div class="actions" style="margin-top:0"><button class="btn sec petit" data-d="15,15">(15, 15)</button><button class="btn sec petit" data-d="50,-20">(50, −20)</button><button class="btn sec petit" data-d="0,0">(0, 0)</button></div><p class="aide" style="margin:8px 0 0">… ou touchez directement le plan.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 2 : Newton contre le gradient -->
+<section id="jeu-2" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🐢 Newton contre le gradient</h2><p class="sous">Même problème, même départ (15, 15) : Newton en 5 itérations, la descente de gradient en… combien ?</p></div>
+    <div class="compteurs"><span class="compteur" id="j2-compte">Missions : 0 / 4</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau"><div class="plan" id="j2-plan"><canvas aria-label="Chemins de Newton et de la descente de gradient"></canvas></div><div class="legende"><span><i style="background:var(--orange)"></i>Newton</span><span><i style="background:var(--blue)"></i>descente de gradient</span><span><i style="background:var(--ink-2)"></i>Q1 + Q2 = 30</span></div><div class="stats" id="j2-stats"></div></div>
+    <div>
+      <div class="panneau mission" id="j2-mission"></div>
+      <div class="panneau" style="margin-top:16px"><div class="reglage"><label for="j2-a">Pas α <span id="j2-av"></span></label><input type="range" id="j2-a" min="1" max="6" step="0.1" value="3"></div><div class="actions" style="margin-top:0"><button class="btn sec petit" id="j2-moins">− 0,1</button><button class="btn sec petit" id="j2-plus">+ 0,1</button><button class="btn" id="j2-go">▶ Lancer la descente</button></div><p class="aide" id="j2-etat" style="margin:8px 0 0"></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 3 : Trois conduites -->
+<section id="jeu-3" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🚰 Trois conduites</h2><p class="sous">Ajoutez une conduite : trois inconnues, trois équations, une jacobienne 3 × 3, et Newton qui s'en moque</p></div>
+    <div class="compteurs"><span class="compteur" id="j3-compte">Missions : 0 / 5</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau"><div class="banc" id="j3-reseau"></div><div id="j3-console"></div></div>
+    <div>
+      <div class="panneau mission" id="j3-mission"></div>
+      <div class="panneau" style="margin-top:16px"><div class="reglage"><label for="j3-R1">Résistance R<sub>1</sub> <span id="j3-R1v"></span></label><input type="range" id="j3-R1" min="0.5" max="10" step="0.5"></div><div class="reglage"><label for="j3-R2">Résistance R<sub>2</sub> <span id="j3-R2v"></span></label><input type="range" id="j3-R2" min="0.5" max="10" step="0.5"></div><div class="reglage"><label for="j3-R3">Résistance R<sub>3</sub> <span id="j3-R3v"></span></label><input type="range" id="j3-R3" min="0.5" max="10" step="0.5"></div><div class="reglage"><label for="j3-Q">Débit total Q<sub>tot</sub> (m³/h) <span id="j3-Qv"></span></label><input type="range" id="j3-Q" min="10" max="60" step="5"></div><div class="actions"><button class="btn sec petit" id="j3-tp">↺ Cas de l'énoncé</button></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 4 : La jacobienne à la main -->
+<section id="jeu-4" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>✍️ La jacobienne à la main</h2><p class="sous">Dérivez, vérifiez par différences finies, puis voyez ce que devient Newton avec une jacobienne fausse</p></div>
+    <div class="compteurs"><span class="compteur" id="j4-q">Question 1 / 8</span><span class="compteur" id="j4-score">0 pt</span></div>
+  </div>
+  <div class="barre"><div id="j4-barre"></div></div>
+  <div id="j4-jeu" class="deux">
+    <div class="panneau"><div id="j4-dossier"></div></div>
+    <div class="panneau">
+      <p class="question" id="j4-question"></p>
+      <div id="j4-choix" class="choix-grille choix-1col"></div>
+      <div id="j4-retour" aria-live="polite"></div>
+      <div class="actions"><button class="btn" id="j4-suivant" hidden>Suivant →</button></div>
+    </div>
+  </div>
+  <div id="j4-fin" class="panneau" hidden></div>
+</section>
+
+<!-- JEU 5 : Détective du code -->
+<section id="jeu-5" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🕵️ Détective du code</h2><p class="sous">Chaque affaire : un extrait de code, la sortie de la console (MATLAB R2021a). Trouvez le piège.</p></div>
+    <div class="compteurs"><span class="compteur" id="j5-q">Affaire 1 / 8</span><span class="compteur" id="j5-score">0 pt</span></div>
+  </div>
+  <div class="barre"><div id="j5-barre"></div></div>
+  <div id="j5-jeu" class="deux">
+    <div class="panneau"><div id="j5-dossier"></div></div>
+    <div class="panneau">
+      <p class="question" id="j5-question"></p>
+      <div id="j5-choix" class="choix-grille choix-1col"></div>
+      <div id="j5-retour" aria-live="polite"></div>
+      <div class="actions"><button class="btn" id="j5-suivant" hidden>Suivant →</button></div>
+    </div>
+  </div>
+  <div id="j5-fin" class="panneau" hidden></div>
+</section>
+
+</main>
+
+<footer class="enveloppe pied-page">
+  <div>📄 <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/methodes-numeriques/Chapitre_04_Systemes_non_lineaires/4_TP3_enonce.pdf">Énoncé du TP3</a> · ✅ <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/methodes-numeriques/Chapitre_04_Systemes_non_lineaires/4_TP3_corrige_scripts_MATLAB.zip">Corrigé : scripts MATLAB</a> · 📚 <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-genie-mecanique.md">Retour au cours</a></div>
+  <div style="margin-top:6px">Pr. Mohamed JANANE ALLAH · Faculté des Sciences et Techniques de Mohammedia — Université Hassan II de Casablanca · Votre progression reste dans ce navigateur, rien n'est envoyé.</div>
+</footer>
+
+<noscript><p class="enveloppe">Ces jeux ont besoin de JavaScript.</p></noscript>
+<script src="noyau.js"></script>
+<script>window.CLE_JEUX = "tp3-jeux-v1";</script>
+<script>
+"use strict";
+/* ============================================================
+   Outils communs des pages de jeux (meme base que la page du TP5)
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const virgule = (v, d) => v.toFixed(d).replace(".", ",").replace("-", "−");
+const melanger = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const hasard = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const attendre = ms => new Promise(r => setTimeout(r, ms));
+function el(tag, attrs, ...enfants) {
+  const e = document.createElement(tag);
+  for (const [c, v] of Object.entries(attrs || {})) {
+    if (c === "html") e.innerHTML = v; else if (c === "texte") e.textContent = v;
+    else if (c.startsWith("on")) e.addEventListener(c.slice(2), v); else e.setAttribute(c, v);
+  }
+  enfants.forEach(x => e.append(x));
+  return e;
+}
+const css = nom => getComputedStyle(document.documentElement).getPropertyValue(nom).trim();
+
+// Affichage des nombres a la maniere de MATLAB (format short / short e)
+function expo(v) { return v.toExponential(4).replace(/e([+-])(\d)$/, "e$10$2"); }
+function champ(v, entiers, large) {
+  if (entiers) return String(v).padStart(large ? 12 : 6);
+  return (v === 0 ? "0" : v.toFixed(4)).padStart(10);
+}
+function matLigne(vals) {
+  const entiers = vals.every(v => Number.isInteger(v)), large = vals.some(v => Math.abs(v) >= 1000);
+  return vals.map(v => champ(v, entiers, large)).join("");
+}
+function matColonne(vals) {
+  const entiers = vals.every(v => Number.isInteger(v)), large = vals.some(v => Math.abs(v) >= 1000);
+  return vals.map(v => champ(v, entiers, large));
+}
+function matLigneE(vals) { return vals.map(v => expo(v).padStart(13)).join(""); }
+function echapper(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+// lignes : ">> " commande, "!" erreur, "?" avertissement, "#" ligne suspecte, "%..." commentaire en fin de ligne
+function console_(lignes) {
+  return '<pre class="console">' + lignes.map(l => {
+    if (l.startsWith(">> ")) return '<span class="cmd">' + echapper(l) + "</span>";
+    if (l.startsWith("!")) return '<span class="err">' + echapper(l.slice(1)) + "</span>";
+    if (l.startsWith("?")) return '<span class="warn">' + echapper(l.slice(1)) + "</span>";
+    if (l.startsWith("#")) return '<span class="bug">' + echapper(l.slice(1)) + "</span>";
+    return echapper(l).replace(/(%.*)$/, '<span class="com">$1</span>');
+  }).join("\n") + "</pre>";
+}
+// "ans =" a la MATLAB (format loose) : ["", nom + " =", "", ...lignes]
+const ans = (lignes, nom) => ["", (nom || "ans") + " =", ""].concat(lignes).concat([""]);
+
+// Progression (dans ce navigateur seulement) : window.CLE_JEUX = cle de stockage de la page
+let progres = {};
+try { progres = JSON.parse(localStorage.getItem(window.CLE_JEUX)) || {}; } catch (e) { progres = {}; }
+function noter(jeu, n) {
+  if (n > (progres[jeu] || 0)) { progres[jeu] = n; try { localStorage.setItem(window.CLE_JEUX, JSON.stringify(progres)); } catch (e) { /* stockage indisponible */ } }
+  majAccueil();
+}
+function etoilesHTML(n) { return '<span class="etoiles">' + "★".repeat(n) + '<span class="vide">' + "★".repeat(3 - n) + "</span></span>"; }
+function confettis() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cols = ["#0056D2", "#6A4C93", "#C1121F", "#2E7D32", "#E67E22", "#F2C14E"];
+  for (let q = 0; q < 70; q++) {
+    const c = el("div", { class: "confetti" });
+    c.style.left = Math.random() * 100 + "vw"; c.style.background = cols[q % cols.length];
+    c.style.animationDuration = 1.6 + Math.random() * 1.6 + "s"; c.style.animationDelay = Math.random() * 0.4 + "s";
+    document.body.append(c); setTimeout(() => c.remove(), 3800);
+  }
+}
+function ecranFin(zone, o) {
+  zone.innerHTML = '<div class="fin"><div class="grandes">' + "★".repeat(o.etoiles) + '<span class="vide">' + "★".repeat(3 - o.etoiles) +
+    "</span></div><h3>" + o.titre + '</h3><p class="aide" style="font-size:16px">' + o.detail + "</p>" + (o.extra || "") +
+    '<div class="actions" style="justify-content:center"><button class="btn" data-r>↻ Rejouer</button><a class="btn sec" href="#">Tous les jeux</a></div></div>';
+  $("[data-r]", zone).addEventListener("click", o.rejouer);
+  if (o.etoiles === 3) confettis();
+}
+function choixBoutons(zone, options, rappel, mono) {
+  zone.innerHTML = "";
+  options.forEach((o, q) => zone.append(el("button", { class: "choix" + (mono ? " mono" : ""), html: o.html, "data-q": q,
+    onclick: () => { $$("button", zone).forEach(b => b.disabled = true); rappel(o, q, $$("button", zone)); } })));
+}
+function marquerChoix(boutons, options, choisi) {
+  boutons.forEach((b, q) => { if (options[q].bon) b.classList.add("bon"); else if (q === choisi) b.classList.add("faux"); });
+}
+function retour(zone, ok, titre, html) {
+  zone.innerHTML = '<div class="retour-msg ' + (ok ? "ok" : "ko") + '"><b class="t">' + titre + "</b>" + (html || "") + "</div>";
+}
+function segment(zone, valeur, rappel) {
+  $$("button", zone).forEach(b => {
+    b.setAttribute("aria-pressed", b.dataset.v === String(valeur));
+    if (!b.dataset.lie) { b.dataset.lie = 1; b.addEventListener("click", () => rappel(b.dataset.v)); }
+  });
+}
+function graduations(min, max, n) {
+  const brut = (max - min) / (n || 5), p = Math.pow(10, Math.floor(Math.log10(brut))), m = brut / p;
+  const pas = (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p, r = [];
+  for (let v = Math.ceil(min / pas) * pas; v <= max + pas * 1e-9; v += pas) r.push(+v.toFixed(10));
+  return r;
+}
+
+/* Traceur de courbes : axes, grille, series, points, droites horizontales et verticales, textes */
+function tracer(cadre, o) {
+  const cv = $("canvas", cadre), W = cadre.clientWidth, H = o.hauteur || Math.max(180, Math.min(260, W * 0.55)), dpr = window.devicePixelRatio || 1;
+  if (!W) return null;
+  cv.style.height = H + "px"; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  const m = Object.assign({ l: 54, r: 12, t: 12, b: 36 }, o.marges || {}), ink = css("--ink-2"), ligne = css("--line");
+  const X = x => m.l + (x - o.x[0]) / (o.x[1] - o.x[0]) * (W - m.l - m.r);
+  const Y = y => H - m.b - (y - o.y[0]) / (o.y[1] - o.y[0]) * (H - m.t - m.b);
+  ctx.font = "11.5px system-ui,Segoe UI,Arial"; ctx.fillStyle = ink; ctx.strokeStyle = ligne; ctx.lineWidth = 1;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  (o.xt || []).forEach(([v, t]) => { ctx.beginPath(); ctx.moveTo(X(v), m.t); ctx.lineTo(X(v), H - m.b); ctx.stroke(); ctx.fillText(t, X(v), H - m.b + 5); });
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  (o.yt || []).forEach(([v, t]) => { ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(W - m.r, Y(v)); ctx.stroke(); ctx.fillText(t, m.l - 6, Y(v)); });
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; if (o.xl) ctx.fillText(o.xl, (m.l + W - m.r) / 2, H - 1);
+  if (o.yl) { ctx.save(); ctx.translate(9, (m.t + H - m.b) / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = "middle"; ctx.fillText(o.yl, 0, 0); ctx.restore(); }
+  ctx.save(); ctx.beginPath(); ctx.rect(m.l, m.t, W - m.l - m.r, H - m.t - m.b); ctx.clip();
+  (o.horiz || []).forEach(h => { ctx.strokeStyle = h.c; ctx.lineWidth = h.l || 1.5; ctx.setLineDash(h.tir || []); ctx.beginPath(); ctx.moveTo(m.l, Y(h.y)); ctx.lineTo(W - m.r, Y(h.y)); ctx.stroke(); });
+  (o.vert || []).forEach(h => { ctx.strokeStyle = h.c; ctx.lineWidth = h.l || 1.5; ctx.setLineDash(h.tir || []); ctx.beginPath(); ctx.moveTo(X(h.x), m.t); ctx.lineTo(X(h.x), H - m.b); ctx.stroke(); });
+  ctx.setLineDash([]);
+  (o.series || []).forEach(s => {
+    ctx.strokeStyle = s.c; ctx.lineWidth = s.l || 2; ctx.globalAlpha = s.a || 1; ctx.setLineDash(s.tir || []); ctx.lineJoin = "round"; ctx.beginPath();
+    let debut = true;
+    s.pts.forEach(([x, y]) => { if (!isFinite(y) || !isFinite(x)) { debut = true; return; } if (debut) ctx.moveTo(X(x), Y(y)); else ctx.lineTo(X(x), Y(y)); debut = false; });
+    ctx.stroke(); ctx.globalAlpha = 1; ctx.setLineDash([]);
+    if (s.marques) { ctx.fillStyle = s.c; s.pts.forEach(([x, y]) => { if (isFinite(y)) { ctx.beginPath(); ctx.arc(X(x), Y(y), s.marques, 0, 7); ctx.fill(); } }); }
+  });
+  (o.points || []).forEach(p => {
+    ctx.fillStyle = p.c; ctx.strokeStyle = p.c; ctx.lineWidth = 2;
+    if (p.croix) { ctx.beginPath(); ctx.moveTo(X(p.x) - 5, Y(p.y) - 5); ctx.lineTo(X(p.x) + 5, Y(p.y) + 5); ctx.moveTo(X(p.x) + 5, Y(p.y) - 5); ctx.lineTo(X(p.x) - 5, Y(p.y) + 5); ctx.stroke(); }
+    else if (p.anneau) { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r || 7, 0, 7); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r || 4.5, 0, 7); ctx.fill(); }
+  });
+  ctx.restore();
+  (o.textes || []).forEach(t => { ctx.fillStyle = t.c || ink; ctx.font = (t.gras ? "600 " : "") + "12px system-ui,Segoe UI,Arial"; ctx.textAlign = t.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t.t, X(t.x) + (t.dx || 0), Y(t.y) + (t.dy || 0)); });
+  return { X, Y, W, H, m, inverse: (px, py) => [o.x[0] + (px - m.l) / (W - m.l - m.r) * (o.x[1] - o.x[0]), o.y[0] + (H - m.b - py) / (H - m.t - m.b) * (o.y[1] - o.y[0])] };
+}
+
+/* ============================================================
+   Moteur de missions : etapes numerotees, pari facultatif, consigne suivie en direct,
+   action, bouton de validation, quiz final, message de reussite.
+   ============================================================ */
+function moteurMissions(o) {
+  const E = { m: 0, phase: "consigne", faites: new Set(), paris: {}, essais: 0 }, M = o.missions;
+  const val = f => typeof f === "function" ? f() : f;
+  function entrer(m) {
+    E.m = m; E.essais = 0;
+    E.phase = E.faites.has(m) ? "fini" : (M[m].pari && E.paris[m] === undefined) ? "pari" : "consigne";
+    if (M[m].entree) M[m].entree();
+    o.recalculer(); afficher();
+  }
+  function gagner() {
+    E.faites.add(E.m); const n = E.faites.size;
+    noter(o.jeu, o.etoiles(n)); if (o.compteur) o.compteur.textContent = "Missions : " + n + " / " + M.length;
+    if (n === M.length) confettis();
+  }
+  function verifier() {
+    const X = M[E.m], avant = E.phase;
+    if (E.phase === "consigne" && X.ok && X.ok()) { E.phase = X.quiz ? "quiz" : "fini"; if (!X.quiz) gagner(); }
+    if (E.phase === "consigne" || E.phase !== avant) afficher();
+  }
+  function afficher() {
+    const X = M[E.m], z = o.zone;
+    let h = '<div class="etapes">' + M.map((_, q) => '<button data-m="' + q + '" class="' + (E.faites.has(q) ? "fait " : "") + (q === E.m ? "actuel" : "") + '" aria-label="Mission ' + (q + 1) + '">' + (q + 1) + "</button>").join("") + "</div>";
+    h += "<h4>Mission " + (E.m + 1) + " · " + X.titre + '</h4><p style="margin:0">' + val(X.consigne) + "</p>";
+    if (X.pari && E.paris[E.m] !== undefined && E.phase !== "pari") h += '<span class="pari-choisi">Votre pronostic : ' + X.pari.o[E.paris[E.m]] + "</span>";
+    if (E.phase === "pari") {
+      h += '<p class="question" style="font-size:16.5px;margin-top:12px">🔮 ' + val(X.pari.q) + '</p><div class="choix-grille" id="mm-pari"></div>';
+    } else if (E.phase === "consigne") {
+      if (X.suivi) h += '<div class="obj">' + X.suivi() + "</div>";
+      if (X.action) h += '<div class="actions"><button class="btn" id="mm-action">' + X.action.label + "</button></div>";
+      if (X.valider) h += '<div class="actions"><button class="btn" id="mm-valider">' + val(X.valider.label) + '</button></div><div id="mm-vret"></div>';
+    } else if (E.phase === "quiz") {
+      h += '<div class="retour-msg ok"><b class="t">✔ Mission accomplie : une dernière question</b>' + (X.avantQuiz ? val(X.avantQuiz) : "") + "</div>";
+      h += '<p class="question" style="font-size:16.5px;margin-top:12px">' + val(X.quiz.q) + '</p><div class="choix-grille choix-1col" id="mm-quiz"></div><div id="mm-qret"></div>';
+    } else {
+      let bilan = "";
+      if (X.pari && E.paris[E.m] !== undefined) {
+        const bon = X.pari.bon();
+        bilan = "<br>" + (E.paris[E.m] === bon ? "🎯 Pronostic juste !" : "Pronostic : " + X.pari.o[E.paris[E.m]] + " · réponse : <b>" + X.pari.o[bon] + "</b>.");
+      }
+      h += '<div class="retour-msg ok"><b class="t">✔ Mission accomplie</b>' + (X.bravo ? val(X.bravo) : val(X.quiz.expl)) + bilan + "</div>";
+      h += '<div class="actions">' + (E.m < M.length - 1 ? '<button class="btn" id="mm-suite">Mission suivante →</button>' : '<a class="btn" href="#">🎉 Retour aux jeux</a>') + "</div>";
+    }
+    z.innerHTML = h;
+    $$(".etapes button", z).forEach(b => b.addEventListener("click", () => entrer(+b.dataset.m)));
+    const su = $("#mm-suite", z); if (su) su.addEventListener("click", () => entrer(E.m + 1));
+    const ac = $("#mm-action", z); if (ac) ac.addEventListener("click", () => { X.action.faire(); o.recalculer(); verifier(); });
+    const va = $("#mm-valider", z);
+    if (va) va.addEventListener("click", () => {
+      const [ok, msg] = X.valider.test();
+      if (ok) { E.phase = X.quiz ? "quiz" : "fini"; if (!X.quiz) gagner(); afficher(); }
+      else retour($("#mm-vret", z), false, "✘ Pas encore", msg);
+    });
+    if (E.phase === "pari") {
+      const L = X.pari.o.map((t, q) => ({ html: t, q }));
+      choixBoutons($("#mm-pari", z), L, c => { E.paris[E.m] = c.q; E.phase = "consigne"; if (X.apresPari) X.apresPari(); o.recalculer(); afficher(); verifier(); }, true);
+    }
+    if (E.phase === "quiz") {
+      const L = melanger(X.quiz.o.map(([t, b]) => ({ html: t, bon: !!b })));
+      choixBoutons($("#mm-quiz", z), L, (c, q, bs) => {
+        marquerChoix(bs, L, q);
+        if (c.bon) { E.phase = "fini"; gagner(); setTimeout(afficher, 900); }
+        else { retour($("#mm-qret", z), false, "✘ Non, réessayez", ""); setTimeout(afficher, 1100); }
+      });
+    }
+  }
+  return { E, entrer, verifier, afficher };
+}
+
+/* ============================================================
+   Moteur de manches : une suite de questions a choix, avec un panneau de gauche
+   (HTML ou fonction de dessin) et une explication. Le detective en est un cas particulier.
+   manches() rend [{gauche, q, o:[[texte, bon]], expl, apres?, mono?, ordre?}]
+   ============================================================ */
+function moteurManches(o) {
+  let E, A;
+  const P = s => $("#" + o.p + "-" + s), val = f => typeof f === "function" ? f() : f;
+  function demarrer() { A = o.manches(); E = { q: 0, bons: 0, score: 0 }; P("jeu").hidden = false; P("fin").hidden = true; poser(); }
+  function poser() {
+    const X = A[E.q];
+    P("q").textContent = (o.nom || "Question") + " " + (E.q + 1) + " / " + A.length; P("score").textContent = E.score + " pt";
+    P("barre").style.width = E.q / A.length * 100 + "%";
+    const g = P("dossier"); if (typeof X.gauche === "function") X.gauche(g); else g.innerHTML = X.gauche;
+    P("question").innerHTML = X.q; P("retour").innerHTML = ""; P("suivant").hidden = true;
+    const L0 = X.o.map(([t, b]) => ({ html: t, bon: !!b })), L = X.ordre ? L0 : melanger(L0);
+    choixBoutons(P("choix"), L, (c, q, bs) => {
+      marquerChoix(bs, L, q); if (c.bon) { E.bons++; E.score += 100; }
+      retour(P("retour"), c.bon, c.bon ? (o.juste || "✔ Juste ! +100 pt") : (o.faux || "✘ Non"), val(X.expl));
+      if (X.apres) X.apres(g, c.bon);
+      P("score").textContent = E.score + " pt"; P("suivant").hidden = false;
+      P("suivant").textContent = E.q === A.length - 1 ? "Voir le résultat →" : (o.suite || "Question suivante →");
+    }, X.mono);
+  }
+  function suivant() {
+    if (E.q < A.length - 1) { E.q++; poser(); window.scrollTo({ top: $("#" + o.id).offsetTop - 10, behavior: "smooth" }); return; }
+    P("barre").style.width = "100%"; P("jeu").hidden = true; const z = P("fin"); z.hidden = false;
+    const r = E.bons / A.length, et = o.etoiles ? o.etoiles(E.bons, A.length) : r >= 0.85 ? 3 : r >= 0.6 ? 2 : r >= 0.4 ? 1 : 0; noter(o.id, et);
+    ecranFin(z, { etoiles: et, titre: E.bons + " / " + A.length + " " + (o.bilan || "bonnes réponses") + " · " + E.score + " pt", rejouer: demarrer, detail: val(o.morale) });
+  }
+  P("suivant").addEventListener("click", suivant);
+  return { ouvrir: demarrer };
+}
+
+/* Detective du code : AFFAIRES = [{titre, code, sortie, q, o:[[texte, bon]], expl}] */
+function moteurDetective(o) {
+  let A = null;
+  return moteurManches({ id: o.id, p: o.p, nom: "Affaire", bilan: "affaires résolues", juste: "✔ Affaire résolue ! +100 pt", faux: "✘ Fausse piste", suite: "Affaire suivante →",
+    morale: o.morale, etoiles: (b) => b >= 7 ? 3 : b >= 5 ? 2 : b >= 3 ? 1 : 0,
+    manches: () => (A || (A = o.dossiers())).map(X => ({ gauche: '<h3 style="margin:0 0 6px">📁 ' + X.titre + '</h3><div class="console-titre">Extrait du code (ligne suspecte surlignée)</div>' + console_(X.code) +
+      '<div class="console-titre">Fenêtre de commandes</div>' + console_(X.sortie), q: X.q, o: X.o, expl: X.expl })) });
+}
+
+/* ============================================================
+   Accueil et navigation : window.FICHES (cartes) et window.JEUX (objets { ouvrir })
+   ============================================================ */
+function majAccueil() {
+  const zone = $("#cartes"); if (!zone) return; zone.innerHTML = "";
+  FICHES.forEach((f, q) => zone.append(el("a", { class: "carte-jeu", href: "#" + f.id, html:
+    '<div class="vignette" style="background:' + f.fond + '"><img src="vignettes/' + f.id + '.jpg" alt="" loading="lazy" onerror="this.remove()"><span class="num">Jeu ' + (q + 1) + "</span>" + f.emoji + "</div>" +
+    '<div class="corps"><h3>' + f.titre + '</h3><div class="notion">' + f.notion + '</div><div class="puces">' + f.puces.map(p => '<span class="puce">' + p + "</span>").join("") +
+    '</div><div class="pied">' + etoilesHTML(progres[f.id] || 0) + '<span class="btn petit">' + ((progres[f.id] || 0) ? "Rejouer" : "Jouer") + " ▶</span></div></div>" })));
+  const tot = FICHES.reduce((s, f) => s + (progres[f.id] || 0), 0);
+  $("#total").innerHTML = '<span class="etoile">★</span> ' + tot + " / " + 3 * FICHES.length;
+}
+function routeur() {
+  const id = location.hash.slice(1), vue = JEUX[id] ? id : "accueil";
+  $$(".vue").forEach(v => v.hidden = v.id !== vue);
+  majAccueil(); if (JEUX[id]) JEUX[id].ouvrir();
+  window.scrollTo(0, 0);
+}
+function demarrerPage() { addEventListener("hashchange", routeur); routeur(); }
+/* ============================================================
+   TP3 : le systeme de pompage (Newton multivarie)
+   ============================================================ */
+const P2 = TP3.pompage([2, 8], 30), F = P2.F, JF = P2.JF, TOL = 1e-10;
+const ticks = (a, b, n) => graduations(a, b, n).map(v => [v, String(v).replace(".", ",").replace("-", "−")]);
+const vg = (v, d) => isNaN(v) ? "NaN" : virgule(v, d);
+const pres = (x, r) => isFinite(x[0]) && Math.hypot(x[0] - r[0], x[1] - r[1]) < 1e-6;
+const ligneM = v => matLigne(v.map(a => +a.toFixed(10)));
+// plan (Q1, Q2) : les deux equations, les deux racines, des chemins, des points, et eventuellement les bassins
+function plan(cadre, o) {
+  const [x0, x1] = o.x, [y0, y1] = o.y;
+  const g = tracer(cadre, { hauteur: o.hauteur || Math.min(420, Math.max(280, cadre.clientWidth * 0.72)), x: o.x, y: o.y, xl: "Q1 (m³/h)", yl: "Q2 (m³/h)", xt: ticks(x0, x1, 7), yt: ticks(y0, y1, 6),
+    horiz: [{ y: 0, c: css("--line"), l: 1 }], vert: [{ x: 0, c: css("--line"), l: 1 }],
+    series: [{ pts: [[x0, 30 - x0], [x1, 30 - x1]], c: css("--blue"), l: 2 }, { pts: [[x0, x0 / 2], [x1, x1 / 2]], c: css("--violet"), l: 1.6 }, { pts: [[x0, -x0 / 2], [x1, -x1 / 2]], c: css("--violet"), l: 1.6, tir: [6, 4] }]
+      .concat((o.chemins || []).map(c => ({ pts: c.pts.filter(p => isFinite(p[0]) && isFinite(p[1])), c: c.c, l: c.l || 2.2, marques: c.marques === undefined ? 3.5 : c.marques, a: c.a }))),
+    points: [{ x: 20, y: 10, c: css("--green"), r: 6 }, { x: 60, y: -30, c: css("--red"), r: 6 }].concat(o.points || []),
+    textes: [{ t: "(20, 10)", x: 20, y: 10, dx: 9, dy: -10, gras: true, c: css("--green") }, { t: "(60, −30)", x: 60, y: -30, dx: -8, dy: 14, gras: true, c: css("--red"), align: "right" }].concat(o.textes || []) });
+  if (g && o.bassins) {
+    const ctx = $("canvas", cadre).getContext("2d"); ctx.save(); ctx.globalCompositeOperation = "destination-over";
+    o.bassins.forEach(c => { ctx.fillStyle = c.r === 1 ? "rgba(46,125,50,.18)" : c.r === 2 ? "rgba(193,18,31,.16)" : "rgba(120,120,120,.15)"; ctx.fillRect(g.X(c.x), g.Y(c.y + c.h), g.X(c.x + c.w) - g.X(c.x), g.Y(c.y) - g.Y(c.y + c.h)); });
+    ctx.restore();
+  }
+  return g;
+}
+
+const FICHES = [
+  { id: "jeu-1", emoji: "🧭", fond: "linear-gradient(135deg,#0056D2,#3D8BFF)", titre: "Newton dans le plan des débits", notion: "Touchez un départ et suivez Newton : convergence quadratique, la mauvaise racine (60, −30), les bassins, le départ singulier.", puces: ["Manip. 1 et 2", "Newton multivarié", "≈ 5 min"] },
+  { id: "jeu-2", emoji: "🐢", fond: "linear-gradient(135deg,#6A4C93,#9B7BD0)", titre: "Newton contre le gradient", notion: "5 itérations contre 295 923 : pariez, puis cherchez le plus grand pas α qui converge encore.", puces: ["Manip. 4", "descente de gradient", "≈ 4 min"] },
+  { id: "jeu-3", emoji: "🚰", fond: "linear-gradient(135deg,#2E7D32,#58B35E)", titre: "Trois conduites", notion: "Réglez les résistances, regardez les débits se répartir, égalisez-les et retrouvez la loi en 1/√R.", puces: ["Manip. 3", "système 3 × 3", "≈ 4 min"] },
+  { id: "jeu-4", emoji: "✍️", fond: "linear-gradient(135deg,#C1121F,#F46D43)", titre: "La jacobienne à la main", notion: "Dérivez F, vérifiez par différences finies, et voyez Newton tourner en rond avec un facteur 2 oublié.", puces: ["Manip. 1 et 3", "jacobienne", "≈ 3 min"] },
+  { id: "jeu-5", emoji: "🕵️", fond: "linear-gradient(135deg,#E67E22,#F5B041)", titre: "Détective du code", notion: "Signe oublié, départ singulier, paramètre capturé, NaN qui passe le test… huit affaires du TP3.", puces: ["Manip. 1 à 4", "diagnostic", "≈ 5 min"] },
+];
+
+/* ---------- JEU 1 : Newton dans le plan ---------- */
+const jeu1 = (() => {
+  const E = { depart: null, res: null, mauvais: new Set(), bassins: null, demarre: false }, X = [-15, 75], Y = [-40, 30];
+  let MM, g = null;
+  function calculer() {
+    if (E.depart) { E.res = TP3.newton(F, JF, E.depart, TOL, 20); if (E.res.converge && pres(E.res.x, [60, -30])) E.mauvais.add(E.depart.join(",")); }
+    const r = E.res;
+    g = plan($("#j1-plan"), { x: X, y: Y, bassins: E.bassins, chemins: r ? [{ pts: r.X, c: css("--orange") }] : [],
+      points: E.depart ? [{ x: E.depart[0], y: E.depart[1], c: css("--orange"), r: 6.5, anneau: true }] : [],
+      textes: E.depart ? [{ t: "départ (" + vg(E.depart[0], 1) + " ; " + vg(E.depart[1], 1) + ")", x: E.depart[0], y: E.depart[1], dx: 10, dy: 12, c: css("--orange"), gras: true }] : [] });
+    $("#j1-table").innerHTML = r ? "<tr><th>k</th><th>Q1</th><th>Q2</th><th>‖F(x)‖</th></tr>" + r.X.slice(0, 9).map((x, k) => "<tr><td>" + k + "</td><td>" + vg(x[0], 6) + "</td><td>" + vg(x[1], 6) + "</td><td>" + (isFinite(x[0]) ? expo(TP3.norme(F(x))) : "NaN") + "</td></tr>").join("") +
+      '<tr><td colspan="4" style="text-align:left">' + (r.converge ? "✔ convergé en " + r.k + " itérations vers (" + vg(r.x[0], 4) + " ; " + vg(r.x[1], 4) + ")" + (r.x.some(v => v < 0) ? " · ⚠️ débit négatif" : "") : "✘ pas de convergence" + (r.singulier ? " (jacobienne singulière)" : "")) + "</td></tr>" : '<tr><td style="text-align:left">Choisissez un départ.</td></tr>';
+    if (MM) MM.verifier();
+  }
+  const partir = (a, b) => { E.depart = [a, b]; calculer(); };
+  const est = (a, b) => E.depart && E.depart[0] === a && E.depart[1] === b;
+  function bassins() {
+    const L = [], nx = 72, ny = 56, w = (X[1] - X[0]) / nx, h = (Y[1] - Y[0]) / ny;
+    for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
+      const x = X[0] + i * w, y = Y[0] + j * h, r = TP3.newton(F, JF, [x + w / 2, y + h / 2], TOL, 40);
+      L.push({ x, y, w, h, r: !r.converge ? 0 : pres(r.x, [20, 10]) ? 1 : pres(r.x, [60, -30]) ? 2 : 0 });
+    }
+    return L;
+  }
+  const missions = [
+    { titre: "Le départ du cours", consigne: "Partez de <b>(15, 15)</b> (bouton, ou touchez le plan).", ok: () => est(15, 15),
+      bravo: () => "Newton converge en <b>" + E.res.k + " itérations</b> : " + E.res.X.slice(0, 4).map(x => "(" + vg(x[0], 4) + " ; " + vg(x[1], 4) + ")").join(" → ") + " → (20, 10). Dès le premier pas, les itérées sont sur la droite Q1 + Q2 = 30 : l'équation linéaire est résolue exactement par J δ = −F." },
+    { titre: "Quadratique ?", pari: { q: "e(k) = ‖x(k) − (20, 10)‖. Que fait le rapport e(k+1)/e(k)² au fil des itérations ?", o: ["il tend vers 0", "il se stabilise vers une constante", "il augmente sans limite", "il vaut toujours 1"], bon: () => 1 },
+      consigne: "Le calcul est fait depuis (15, 15), avec tol = 1e−10.", ok: () => true,
+      bravo: () => { const r = TP3.newton(F, JF, [15, 15], TOL, 20), e = r.X.map(x => Math.hypot(x[0] - 20, x[1] - 10)), rap = e.slice(1, 5).map((v, q) => v / (e[q] * e[q]));
+        return "e = " + e.slice(0, 5).map(expo).join(" ; ") + "<br>e(k+1)/e(k)² = " + rap.map(v => virgule(v, 4)).join(" ; ") + " → ≈ 0,0175 : le nombre de chiffres exacts double à chaque itération. C'est la convergence <b>quadratique</b> de Newton (pente log-log 1,9994 dans le corrigé)."; } },
+    { titre: "Le départ piège", pari: { q: "Et depuis (50, −20) ?", o: ["Newton converge vers (20, 10)", "Newton converge vers (60, −30)", "Newton diverge"], bon: () => { const r = TP3.newton(F, JF, [50, -20], TOL, 20); return !r.converge ? 2 : pres(r.x, [20, 10]) ? 0 : 1; } },
+      consigne: "Partez de <b>(50, −20)</b>.", ok: () => est(50, -20),
+      avantQuiz: () => "Newton converge en " + E.res.k + " itérations vers (" + vg(E.res.x[0], 4) + " ; " + vg(E.res.x[1], 4) + "), et F(60, −30) = 0 exactement.",
+      quiz: { q: "Cette solution est-elle acceptable pour le système de pompage ?", o: [["Non : Q2 < 0, l'eau circulerait à l'envers dans la conduite 2. Il faut contrôler any(x < 0) après coup", 1], ["Oui : F(x) = 0, c'est une solution", 0], ["Oui, si on change le signe de R2", 0], ["Non : Newton a fait une erreur de calcul", 0]],
+        expl: "La seconde équation se factorise en Q1 = ±2 Q2 : deux racines, une seule physique. Newton converge vers celle du bassin où il démarre." } },
+    { titre: "La frontière", consigne: "Touchez le plan : trouvez <b>trois départs différents</b> qui mènent à (60, −30).",
+      suivi: () => "Départs menant à (60, −30) : " + E.mauvais.size + " / 3", ok: () => E.mauvais.size >= 3,
+      bravo: () => { E.bassins = E.bassins || bassins(); setTimeout(calculer, 0);
+        return "Les couleurs montrent maintenant les <b>bassins</b> : vert vers (20, 10), rouge vers (60, −30). La frontière suit pour l'essentiel la droite Q1 + 4 Q2 = 0, où det(J) = −4(Q1 + 4 Q2) s'annule. Règle pratique : partir de débits positifs, par exemple Q = Qtot/n pour chaque conduite."; } },
+    { titre: "Le départ singulier", consigne: "Partez de <b>(0, 0)</b>.", ok: () => est(0, 0),
+      avantQuiz: () => "Newton ne rend que des NaN" + (E.res.singulier ? " (MATLAB affiche « Matrix is singular to working precision »)" : "") + ".",
+      quiz: { q: "Pourquoi Newton échoue-t-il dès le départ (0, 0) ?", o: [["J(0, 0) = [1 1 ; 0 0] est singulière : det J = −4(Q1 + 4 Q2) = 0, le système J δ = −F n'a pas de solution unique", 1], ["Parce que F(0, 0) = 0", 0], ["Parce que la tolérance est trop petite", 0], ["Newton ne marche qu'avec des débits entiers", 0]],
+        expl: "La seconde ligne de J vaut (2 R1 Q1, −2 R2 Q2) = (0, 0) en l'origine. Un départ sur la frontière des bassins est un départ dangereux." } },
+  ];
+  return { ouvrir: () => {
+    if (!E.demarre) {
+      E.demarre = true;
+      MM = moteurMissions({ zone: $("#j1-mission"), compteur: $("#j1-compte"), jeu: "jeu-1", missions, recalculer: calculer, etoiles: n => n >= 5 ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0 });
+      $$("#jeu-1 [data-d]").forEach(b => b.addEventListener("click", () => partir(...b.dataset.d.split(",").map(Number))));
+      $("#j1-plan canvas").addEventListener("click", e => { if (!g) return; const r = e.target.getBoundingClientRect(), p = g.inverse(e.clientX - r.left, e.clientY - r.top); partir(Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10); });
+      addEventListener("resize", () => { if (!$("#jeu-1").hidden) calculer(); });
+      MM.entrer(0);
+    } else { calculer(); MM.afficher(); }
+  } };
+})();
+
+/* ---------- JEU 2 : Newton contre le gradient ---------- */
+const jeu2 = (() => {
+  const E = { a: 3, run: null, calcul: false, demarre: false }, NW = TP3.newton(F, JF, [15, 15], TOL, 20), CACHE = {};
+  let MM;
+  const descendre = a => { const c = a.toFixed(1); if (CACHE[c]) return CACHE[c]; const ch = [[15, 15]];
+    const r = TP3.gradient(F, JF, [15, 15], a * 1e-5, 1e-6, 5e5, (x, k) => { if (k <= 60 || k % 400 === 0) ch.push(x.slice()); }); r.chemin = ch; r.a = a; return (CACHE[c] = r); };
+  function dessiner() {
+    const r = E.run;
+    plan($("#j2-plan"), { x: [14, 24], y: [-14, 16], hauteur: 330,
+      chemins: [{ pts: NW.X, c: css("--orange"), l: 2.4, marques: 4 }].concat(r ? [{ pts: r.chemin, c: css("--blue"), l: 1.4, marques: 0, a: 0.85 }] : []),
+      points: r ? [{ x: r.x[0], y: r.x[1], c: css("--blue"), r: 5 }] : [], textes: r && !r.converge ? [{ t: "oscille entre deux points", x: r.x[0], y: r.x[1], dx: 8, dy: 14, c: css("--blue"), gras: true }] : [] });
+    $("#j2-stats").innerHTML = [["Newton", NW.k + " itérations"], ["Gradient, α", r ? virgule(r.a, 1) + "×10⁻⁵" : "—"], ["Itérations", r ? r.k.toLocaleString("fr-FR") + (r.converge ? "" : " (max)") : "—", r && !r.converge ? "ko" : ""],
+      ["x final", r ? vg(r.x[0], 4) + " ; " + vg(r.x[1], 4) : "—"], ["‖F(x)‖", r ? expo(TP3.norme(F(r.x))) : "—"]]
+      .map(([l, v, c]) => '<div class="stat ' + (c || "") + '"><div class="l">' + l + '</div><div class="v" style="font-size:15px">' + v + "</div></div>").join("");
+    $("#j2-a").value = E.a; $("#j2-av").textContent = virgule(E.a, 1) + "×10⁻⁵";
+  }
+  function calculer() { dessiner(); if (MM) MM.verifier(); }
+  function lancer() {
+    if (E.calcul) return; E.calcul = true; $("#j2-go").disabled = true; $("#j2-etat").textContent = "⏳ Calcul en cours (jusqu'à 500 000 itérations)…";
+    setTimeout(() => { E.run = descendre(E.a); E.calcul = false; $("#j2-go").disabled = false; $("#j2-etat").textContent = E.run.converge ? "✔ ‖∇G‖ < 1e−6 atteint." : "✘ Pas de convergence en 500 000 itérations."; calculer(); }, 40);
+  }
+  const seau = k => [5, 300, 30000, 300000].reduce((b, v, q, a) => Math.abs(Math.log(v) - Math.log(k)) < Math.abs(Math.log(a[b]) - Math.log(k)) ? q : b, 0);
+  const missions = [
+    { titre: "La course", pari: { q: "Avec α = 3×10⁻⁵, combien d'itérations de descente de gradient pour ‖∇G‖ < 10⁻⁶ ? (Newton : 5)", o: ["≈ 5", "≈ 300", "≈ 30 000", "≈ 300 000"], bon: () => seau(descendre(3).k) },
+      consigne: "Réglez <b>α = 3×10⁻⁵</b> et lancez la descente.", ok: () => E.run && E.run.a === 3,
+      bravo: () => "<b>" + E.run.k.toLocaleString("fr-FR") + " itérations</b> contre " + NW.k + " pour Newton : un facteur ≈ 10⁵. Premier pas : (" + vg(E.run.chemin[1][0], 2) + " ; " + vg(E.run.chemin[1][1], 2) + ") : la descente quitte la droite Q1 + Q2 = 30, qu'elle ne « connaît » pas." },
+    { titre: "À peine plus grand", pari: { q: "Et avec α = 5×10⁻⁵ (à peine plus grand) ?", o: ["converge plus vite", "converge à peu près pareil", "ne converge plus"], bon: () => { const r = descendre(5); return !r.converge ? 2 : r.k < 0.8 * descendre(3).k ? 0 : 1; } },
+      consigne: "Réglez <b>α = 5×10⁻⁵</b> et lancez.", ok: () => E.run && E.run.a === 5,
+      bravo: () => "Plus de convergence : l'itération <b>alterne entre deux points</b>, x = (" + vg(E.run.x[0], 4) + " ; " + vg(E.run.x[1], 4) + "), ‖F‖ = " + vg(TP3.norme(F(E.run.x)), 4) + ". Le pas dépasse la limite de stabilité (≈ 2 divisé par la plus grande valeur propre de JᵀJ)." },
+    { titre: "Le pas maximal", consigne: "Trouvez le <b>plus grand α</b> (au 0,1×10⁻⁵ près) pour lequel la descente converge encore.",
+      suivi: () => "α = " + virgule(E.a, 1) + "×10⁻⁵",
+      valider: { label: () => "Je valide α = " + virgule(E.a, 1) + "×10⁻⁵", test: () => {
+        const r = descendre(E.a); if (!r.converge) return [false, "Avec α = " + virgule(E.a, 1) + "×10⁻⁵, la descente ne converge pas."];
+        if (descendre(+(E.a + 0.1).toFixed(1)).converge) return [false, "Ça converge (" + r.k.toLocaleString("fr-FR") + " itérations), mais α = " + virgule(E.a + 0.1, 1) + "×10⁻⁵ converge aussi : montez encore."];
+        return [true]; } },
+      bravo: () => "α = " + virgule(E.a, 1) + "×10⁻⁵ converge (" + descendre(E.a).k.toLocaleString("fr-FR") + " itérations), " + virgule(E.a + 0.1, 1) + "×10⁻⁵ non. La marge est étroite : le pas optimal est juste sous la limite d'instabilité, et il change avec le problème." },
+    { titre: "Le compromis", consigne: "Dernière question.", ok: () => true,
+      quiz: { q: "En une phrase, le compromis entre Newton et la descente de gradient ?", o: [["Newton : très peu d'itérations, mais une jacobienne et un système linéaire à chaque pas ; le gradient : des itérations très simples, mais très nombreuses et un pas délicat à régler", 1], ["Le gradient est toujours préférable car il ne demande pas de dérivées", 0], ["Newton est toujours préférable car il converge partout", 0], ["Les deux sont équivalents à coût égal", 0]],
+        expl: "Newton converge quadratiquement, mais seulement près de la racine et à condition d'avoir J. Le gradient converge lentement, et diverge si le pas est trop grand." } },
+  ];
+  return { ouvrir: () => {
+    if (!E.demarre) {
+      E.demarre = true;
+      MM = moteurMissions({ zone: $("#j2-mission"), compteur: $("#j2-compte"), jeu: "jeu-2", missions, recalculer: calculer, etoiles: n => n >= 4 ? 3 : n >= 3 ? 2 : n >= 2 ? 1 : 0 });
+      const regler = v => { E.a = Math.max(1, Math.min(6, +v.toFixed(1))); dessiner(); if (MM) MM.verifier(); };
+      $("#j2-a").addEventListener("input", e => regler(+e.target.value));
+      $("#j2-moins").addEventListener("click", () => regler(E.a - 0.1)); $("#j2-plus").addEventListener("click", () => regler(E.a + 0.1));
+      $("#j2-go").addEventListener("click", lancer);
+      addEventListener("resize", () => { if (!$("#jeu-2").hidden) dessiner(); });
+      MM.entrer(0);
+    } else { calculer(); MM.afficher(); }
+  } };
+})();
+
+/* ---------- JEU 3 : trois conduites ---------- */
+const jeu3 = (() => {
+  const E = { R: [4, 4, 4], Q: 30, demarre: false };
+  let MM, R3;
+  const formule = (R, Q) => { const s = R.reduce((a, r) => a + 1 / Math.sqrt(r), 0); return R.map(r => Q * (1 / Math.sqrt(r)) / s); };
+  function calculer() {
+    const P = TP3.pompage(E.R, E.Q), x0 = [E.Q / 3, E.Q / 3, E.Q / 3], r = TP3.newton(P.F, P.JF, x0, TOL, 20);
+    R3 = { P, x0, r };
+    ["R1", "R2", "R3", "Q"].forEach((k, q) => { const v = q < 3 ? E.R[q] : E.Q; $("#j3-" + k).value = v; $("#j3-" + k + "v").textContent = virgule(v, q < 3 ? 1 : 0) + (q === 3 ? " m³/h" : ""); });
+    const ys = [55, 130, 205], col = [css("--blue"), css("--violet"), css("--green")];
+    let h = '<svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Trois conduites en parallèle">';
+    ys.forEach((y, i) => { const q = r.x[i], ep = Math.max(2, Math.min(30, 2 + q * 0.75));
+      h += '<path d="M90,130 C130,130 120,' + y + " 170," + y + " L470," + y + " C520," + y + " 510,130 550,130\" fill=\"none\" stroke=\"" + col[i] + "\" stroke-width=\"" + ep + "\" stroke-linecap=\"round\" opacity=\".85\"/>" +
+        '<text x="320" y="' + (y - ep / 2 - 8) + '" text-anchor="middle" font-size="14" font-weight="700" fill="' + col[i] + '">R' + (i + 1) + " = " + virgule(E.R[i], 1) + " · Q" + (i + 1) + " = " + vg(q, 2) + " m³/h</text>"; });
+    h += '<circle cx="90" cy="130" r="11" fill="' + css("--ink") + '"/><text x="90" y="135" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">A</text><circle cx="550" cy="130" r="11" fill="' + css("--ink") + '"/><text x="550" y="135" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">B</text>' +
+      '<line x1="10" y1="130" x2="76" y2="130" stroke="' + css("--orange") + '" stroke-width="4"/><text x="12" y="118" font-size="13" font-weight="700" fill="' + css("--orange") + '">Qtot = ' + E.Q + "</text></svg>";
+    $("#j3-reseau").innerHTML = h;
+    const J0 = P.JF(x0);
+    $("#j3-console").innerHTML = console_([">> R = [" + E.R.map(v => String(v)).join(" ") + "];", ">> [F3, JF3] = pompage(R, " + E.Q + ");", ">> x0 = (" + E.Q + "/3) * ones(3, 1);", ">> JF3(x0)"].concat(ans(J0.map(l => matLigne(l.map(v => +v.toFixed(10))))),
+      [">> [x, k] = newton_systeme(F3, JF3, x0, 1e-10, 20);", ">> x'"], ans([matLigne(r.x)]), [">> k"], ans([matLigne([r.k])], "k"), [">> " + E.Q + " * (1./sqrt(R)) / sum(1./sqrt(R))"], ans([matLigne(formule(E.R, E.Q))])));
+    if (MM) MM.verifier();
+  }
+  const tp = () => E.R[0] === 2 && E.R[1] === 8 && E.R[2] === 4 && E.Q === 30;
+  const missions = [
+    { titre: "Le cas de l'énoncé", consigne: "Réglez R = (2, 8, 4) et Q<sub>tot</sub> = 30 m³/h (ou bouton ↺).", ok: tp,
+      bravo: () => "Newton, parti de (10, 10, 10), converge en <b>" + R3.r.k + " itérations</b> vers Q = (" + R3.r.x.map(v => vg(v, 4)).join(" ; ") + ") m³/h. La formule Qᵢ = Qtot (1/√Rᵢ) / Σ (1/√Rⱼ) donne exactement les mêmes valeurs." },
+    { titre: "Qui transporte le plus ?", pari: { q: "Dans le cas de l'énoncé, quelle conduite transporte le plus grand débit ?", o: ["la plus résistante (R = 8)", "la moins résistante (R = 2)", "elles transportent toutes 10 m³/h"], bon: () => 1 },
+      consigne: "Même perte de charge pour toutes : Rᵢ Qᵢ² est le même dans les trois conduites.", ok: () => true,
+      bravo: () => { const q = formule([2, 8, 4], 30); return "Q1 = " + vg(q[0], 4) + " (R = 2) > Q3 = " + vg(q[2], 4) + " (R = 4) > Q2 = " + vg(q[1], 4) + " (R = 8). Comme Rᵢ Qᵢ² est commun, Qᵢ ∝ 1/√Rᵢ : quatre fois plus de résistance, deux fois moins de débit."; } },
+    { titre: "Égaliser", consigne: "Réglez les résistances pour que les trois conduites transportent <b>le même débit</b> (à 0,1 m³/h près).",
+      suivi: () => "Débits : " + R3.r.x.map(v => vg(v, 2)).join(" ; "), ok: () => R3.r.converge && Math.max(...R3.r.x) - Math.min(...R3.r.x) < 0.1,
+      bravo: () => "Il faut R1 = R2 = R3 : chaque conduite prend alors Qtot/3 = " + vg(E.Q / 3, 2) + " m³/h. C'est aussi le départ x0 = (Qtot/3) ones(3, 1) : Newton y est déjà, en " + R3.r.k + " itération." },
+    { titre: "Le double", consigne: "Avec R2 = R3 = 8, réglez R1 pour que la conduite 1 transporte <b>deux fois</b> le débit de la conduite 2 (à 0,05 près).",
+      suivi: () => "Q1 / Q2 = " + vg(R3.r.x[0] / R3.r.x[1], 3) + (E.R[1] === 8 && E.R[2] === 8 ? "" : " · réglez R2 = R3 = 8"),
+      ok: () => E.R[1] === 8 && E.R[2] === 8 && Math.abs(R3.r.x[0] / R3.r.x[1] - 2) < 0.05,
+      bravo: () => "R1 = " + virgule(E.R[0], 1) + " : Q1/Q2 = √(R2/R1) = √(8/" + virgule(E.R[0], 1) + ") = " + vg(Math.sqrt(8 / E.R[0]), 3) + ". Pour doubler un débit, il faut diviser la résistance par 4." },
+    { titre: "La jacobienne 3 × 3", consigne: "Dernière question.", ok: () => true,
+      quiz: { q: "La jacobienne JF3 contient des zéros (par exemple JF3(2, 3) = 0). Pourquoi ?", o: [["La 2e équation, R1 Q1² − R2 Q2² = 0, ne fait pas intervenir Q3 : sa dérivée par rapport à Q3 est nulle", 1], ["Parce que Q3 = 0 au départ", 0], ["C'est une approximation de Newton", 0], ["Parce que la matrice est symétrique", 0]],
+        expl: "Première ligne : des 1 (conservation). Puis chaque ligne i ne dépend que de Q1 et de Qᵢ : 2 R1 Q1 en colonne 1, −2 Rᵢ Qᵢ en colonne i, et 0 ailleurs (fonction jacobienne_pompage du corrigé)." } },
+  ];
+  return { ouvrir: () => {
+    if (!E.demarre) {
+      E.demarre = true;
+      MM = moteurMissions({ zone: $("#j3-mission"), compteur: $("#j3-compte"), jeu: "jeu-3", missions, recalculer: calculer, etoiles: n => n >= 5 ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0 });
+      ["R1", "R2", "R3", "Q"].forEach((k, q) => $("#j3-" + k).addEventListener("input", e => { if (q < 3) E.R[q] = +e.target.value; else E.Q = +e.target.value; calculer(); }));
+      $("#j3-tp").addEventListener("click", () => { E.R = [2, 8, 4]; E.Q = 30; calculer(); });
+      MM.entrer(0);
+    } else { calculer(); MM.afficher(); }
+  } };
+})();
+
+/* ---------- JEU 4 : la jacobienne a la main ---------- */
+const jeu4 = moteurManches({ id: "jeu-4", p: "j4", nom: "Question", bilan: "bonnes réponses", suite: "Question suivante →",
+  morale: "Une jacobienne écrite à la main se vérifie toujours : norm(JF(x) − jacobienne_fd(F, x)) doit être minuscule (≈ 1e−8). Un facteur 2 oublié ne provoque aucune erreur… Newton tourne simplement en rond.",
+  manches: () => {
+    const x = [15, 15], fd = TP3.jacobienneFD(F, x), J = JF(x), Pf = TP3.pompage([2, 8], 30, { facteur2: false }), Jf = Pf.JF(x);
+    const d1 = TP3.norme2(J.map((l, i) => l.map((a, j) => a - fd[i][j]))), d2 = TP3.norme2(Jf.map((l, i) => l.map((a, j) => a - fd[i][j]))), rf = TP3.newton(F, Pf.JF, x, TOL, 200);
+    const P3 = TP3.pompage([2, 8, 4], 30), J3 = P3.JF([10, 10, 10]);
+    const sys = '<div class="console-titre">Le système (R1 = 2, R2 = 8, Qtot = 30)</div>' + console_(["F(Q1, Q2) = [ Q1 + Q2 - 30          ;", "              R1*Q1^2 - R2*Q2^2    ]"]);
+    const sys3 = '<div class="console-titre">Trois conduites (R = [2 8 4])</div>' + console_(["F3(Q) = [ Q1 + Q2 + Q3 - 30   ;", "          R1*Q1^2 - R2*Q2^2   ;", "          R1*Q1^2 - R3*Q3^2   ]"]);
+    const seau = v => v < 1e-6 ? 0 : v < 10 ? 1 : v < 1000 ? 2 : 3;
+    return [
+      { gauche: sys + '<p class="aide">Point : x = (15, 15).</p>', q: "∂F₂/∂Q1 en (15, 15) vaut…", o: [["60", 1], ["30", 0], ["15", 0], ["120", 0]], mono: true, expl: "∂(R1 Q1²)/∂Q1 = 2 R1 Q1 = 2 × 2 × 15 = <b>60</b>." },
+      { gauche: sys + '<p class="aide">Point : x = (15, 15).</p>', q: "∂F₂/∂Q2 en (15, 15) vaut…", o: [["−240", 1], ["−120", 0], ["240", 0], ["−16", 0]], mono: true, expl: "∂(−R2 Q2²)/∂Q2 = −2 R2 Q2 = −2 × 8 × 15 = <b>−240</b>." },
+      { gauche: sys, q: "La première ligne de JF (dérivées de F₁ = Q1 + Q2 − 30) vaut…", o: [["[1 1]", 1], ["[0 0]", 0], ["[15 15]", 0], ["[2 2]", 0]], mono: true,
+        expl: "F₁ est linéaire : ses dérivées valent 1 et 1, partout." + console_([">> JF([15; 15])"].concat(ans(J.map(l => matLigne(l))))) },
+      { gauche: sys3 + '<p class="aide">Point : x0 = (10, 10, 10).</p>', q: "La troisième ligne de JF3 (dérivées de R1 Q1² − R3 Q3²) vaut…", o: [["[40 0 −80]", 1], ["[40 −80 0]", 0], ["[20 0 −40]", 0], ["[1 1 1]", 0]], mono: true,
+        expl: "2 R1 Q1 = 40, rien en Q2, −2 R3 Q3 = −80." + console_([">> JF3(x0)"].concat(ans(J3.map(l => matLigne(l))))) },
+      { gauche: sys + console_([">> J = JF([15; 15]);", ">> Jfd = jacobienne_fd(F, [15; 15]);   % differences finies centrees"]), q: "norm(J − Jfd) vaut…", o: [["≈ 1e−8", 1], ["≈ 1", 0], ["≈ 124", 0], ["exactement 0", 0]].map((o, q) => [o[0], q === seau(d1)]), ordre: true, mono: true,
+        expl: "norm(JF(x) − jacobienne_fd(F, x)) = <b>" + expo(d1) + "</b> : l'écart vient seulement de l'arrondi des différences finies. La jacobienne est juste." },
+      { gauche: sys + console_([">> JFfaux = @(x) [1, 1; R1*x(1), -R2*x(2)];     % facteur 2 oublie", ">> norm(JFfaux([15; 15]) - Jfd)"]), q: "Et avec le facteur 2 oublié ?", o: [["≈ 1e−8", 0], ["≈ 1", 0], ["≈ 124", 1], ["exactement 0", 0]].map((o, q) => [o[0], q === seau(d2)]), ordre: true, mono: true,
+        expl: "norm = <b>" + expo(d2) + "</b> : le test démasque immédiatement l'erreur." },
+      { gauche: sys + console_([">> [xf, kf, Xf] = newton_systeme(F, JFfaux, [15; 15], 1e-10, 200);"]), q: "Avec cette jacobienne fausse, Newton depuis (15, 15)…",
+        o: [["converge lentement vers (20, 10)", rf.converge && pres(rf.x, [20, 10])], ["alterne entre (15, 15) et (24, 6) sans converger", !rf.converge], ["converge en 5 itérations", false], ["part à l'infini", false]], ordre: true,
+        expl: "Les itérées : " + rf.X.slice(0, 4).map(v => "(" + vg(v[0], 0) + ", " + vg(v[1], 0) + ")").join(" → ") + "… : un cycle de période 2, et le warning « Pas de convergence. »" + console_([">> Xf(:, 1:4)'"].concat(ans(rf.X.slice(0, 4).map(v => matLigne(v.map(a => +a.toFixed(8))))))) },
+      { gauche: console_(["function J = jacobienne_fd(F, x)", "  ...", "    h = 1e-6 * max(1, abs(x(j)));", "    J(:, j) = (F(x + e) - F(x - e)) / (2*h);"]), q: "Quel pas h utilise jacobienne_fd pour la composante Q1 = 15 ?", o: [["1,5e−5", 1], ["1e−6", 0], ["1e−3", 0], ["15", 0]], mono: true,
+        expl: "h = 10⁻⁶ × max(1, |15|) = 1,5×10⁻⁵ : un pas relatif à la taille de la variable, assez petit pour la précision, assez grand pour ne pas être noyé dans l'arrondi." },
+    ];
+  } });
+
+/* ---------- JEU 5 : detective du code ---------- */
+const jeu5 = moteurDetective({ id: "jeu-5", p: "j5",
+  morale: "Newton est une suite de systèmes linéaires J δ = −F : surveillez le signe, testez la jacobienne par différences finies, choisissez un départ physique, et recréez F quand un paramètre change. Et testez ~(err < tol) plutôt que err >= tol : NaN passe entre les mailles.",
+  dossiers: () => {
+    const Pf = TP3.pompage([2, 8], 30, { facteur2: false }), rf = TP3.newton(F, Pf.JF, [15, 15], TOL, 200), rs = TP3.newton(F, JF, [15, 15], TOL, 20, 1), rz = TP3.newton(F, JF, [0, 0], TOL, 5);
+    const P24 = TP3.pompage([2, 4], 30), r24 = TP3.newton(P24.F, P24.JF, [15, 15], TOL, 20), r2 = TP3.newton(F, JF, [50, -20], TOL, 20), g5 = TP3.gradient(F, JF, [15, 15], 5e-5, 1e-6, 5e5), rn = TP3.newton(F, JF, [15, 15], TOL, 20);
+    const nan = [NaN < 1e-10, NaN >= 1e-10, !(NaN < 1e-10)].map(Number);
+    return [
+      { titre: "Newton qui tourne en rond", code: ["#JF = @(x) [1, 1; R1*x(1), -R2*x(2)];", "[x, k, X] = newton_systeme(F, JF, [15; 15], 1e-10, 200);"],
+        sortie: [">> [x, k, X] = newton_systeme(F, JF, [15; 15], 1e-10, 200);", "?[Warning: Pas de convergence.]", ">> X(:, 1:4)'"].concat(ans(rf.X.slice(0, 4).map(v => matLigne(v.map(a => +a.toFixed(8)))))),
+        q: "Newton alterne entre (15, 15) et (24, 6). Diagnostic ?",
+        o: [["Le facteur 2 des dérivées est oublié : la vraie jacobienne a 2*R1*x(1) et −2*R2*x(2)", 1], ["Le départ est trop loin de la solution", 0], ["Il faut plus de 200 itérations", 0], ["La tolérance est trop petite", 0]],
+        expl: "La dérivée de R1 Q1² est 2 R1 Q1. Le test norm(JF(x) − jacobienne_fd(F, x)) l'aurait signalé (124 au lieu de 7e−9)." },
+      { titre: "Newton qui s'enfuit", code: ["for k = 1:nmax", "#    delta = JF(x) \\ F(x);", "    x = x + delta;"],
+        sortie: [">> [xs, ks, Xs] = newton_signe_faux(F, JF, [15; 15], 1e-10, 20);", "?[Warning: Pas de convergence.]", ">> norm(F(Xs(:, 3)))"].concat(ans(["   " + expo(TP3.norme(F(rs.X[2])))]), [">> norm(F(Xs(:, end)))"], ans(["   " + expo(TP3.norme(F(rs.X[rs.X.length - 1])))])),
+        q: "‖F‖ grandit à chaque itération. Où est l'erreur ?",
+        o: [["Le signe : Newton résout J δ = −F ; ici on résout J δ = +F, et chaque pas éloigne de la racine", 1], ["La jacobienne est fausse", 0], ["Il faut utiliser inv(JF)", 0], ["Le départ (15, 15) est dans le mauvais bassin", 0]],
+        expl: "delta = −JF(x) \\ F(x). Sans le signe, on fait exactement le pas inverse de celui de Newton : ‖F‖ passe de 1350 à 1,2e10." },
+      { titre: "Le départ (0, 0)", code: ["#xz = newton_systeme(F, JF, [0; 0], 1e-10, 5);"],
+        sortie: ["?[Warning: Matrix is singular to working precision.]", "?[Warning: Matrix is singular, close to singular or badly scaled. Results may be inaccurate. RCOND = NaN.]", "?[Warning: Pas de convergence.]", ">> xz'"].concat(ans([rz.x.map(v => (isNaN(v) ? "NaN" : v.toFixed(4)).padStart(6)).join("")])),
+        q: "Newton ne rend que des NaN. Pourquoi ?",
+        o: [["J(0, 0) = [1 1 ; 0 0] est singulière : la deuxième ligne 2 R1 Q1, −2 R2 Q2 est nulle à l'origine", 1], ["F(0, 0) vaut zéro", 0], ["Il faut plus de 5 itérations", 0], ["MATLAB n'accepte pas les vecteurs nuls", 0]],
+        expl: "Avertissements réels de MATLAB R2021a (sortie video_consoles.txt du corrigé). Le départ (0, 0) est sur la frontière des bassins, là où det J = −4(Q1 + 4 Q2) = 0." },
+      { titre: "Le paramètre capturé", code: ["[F, JF] = pompage([2 8], 30);", "#R2 = 4;", "x = newton_systeme(F, JF, [15; 15], 1e-10, 20);"],
+        sortie: [">> x'"].concat(ans([matLigne(rn.x.map(v => +v.toFixed(10)))]), [">> [F, JF] = pompage([2 4], 30);", ">> x = newton_systeme(F, JF, [15; 15], 1e-10, 20);", ">> x'"], ans([matLigne(r24.x)])),
+        q: "Après R2 = 4, Newton rend toujours (20, 10). Pourquoi ?",
+        o: [["Une fonction anonyme capture les valeurs au moment où elle est créée : F garde R2 = 8 ; il faut recréer F et JF", 1], ["R2 n'intervient pas dans le système", 0], ["Newton converge toujours vers (20, 10)", 0], ["Il faut écrire R(2) = 4", 0]],
+        expl: "Une fois recréé avec pompage([2 4], 30), le système donne (17,5736 ; 12,4264) : Q1/Q2 = √(R2/R1) = √2." },
+      { titre: "La solution qui coule à l'envers", code: ["#[x2, k2] = newton_systeme(F, JF, [50; -20], 1e-10, 20);"],
+        sortie: [">> x2'"].concat(ans([matLigne(r2.x)]), [">> F([60; -30])'"], ans([matLigne(F([60, -30]))]), [">> any(x2 < 0)"], ans(["  logical", "", "   1"])),
+        q: "Newton a convergé, F(x2) = 0. Problème ?",
+        o: [["Oui : c'est la racine non physique (Q2 < 0). Le code est juste ; c'est le départ qu'il faut choisir avec des débits positifs", 1], ["Non : F(x2) = 0, donc la solution est la bonne", 0], ["Oui : Newton a un bug de signe", 0], ["Non : on peut prendre la valeur absolue de Q2", 0]],
+        expl: "Deux racines : (20, 10) et (60, −30). Règle pratique du corrigé : partir de x0 = (Qtot/n) ones(n, 1) et contrôler any(x < 0)." },
+      { titre: "Le gradient qui oscille", code: ["#[xg, kg] = descente_gradient(F, JF, [15; 15], 5e-5, 1e-6, 5e5);"],
+        sortie: ["?[Warning: Pas de convergence.]", ">> xg'"].concat(ans([matLigne(g5.x)]), [">> norm(F(xg))"], ans([matLigne([TP3.norme(F(g5.x))])])),
+        q: "Avec α = 5×10⁻⁵, la descente ne converge plus. Diagnostic ?",
+        o: [["Le pas est trop grand : l'itération alterne entre deux points. Avec α = 3×10⁻⁵, elle converge (en ≈ 300 000 itérations)", 1], ["Il faut plus d'itérations", 0], ["La jacobienne est fausse", 0], ["Le gradient de G est mal calculé", 0]],
+        expl: "La limite de stabilité se situe entre 4,6×10⁻⁵ (converge) et 4,7×10⁻⁵ (non) : voir le jeu « Newton contre le gradient »." },
+      { titre: "Le test qui ne voit pas NaN", code: ["if norm(delta) >= tol          % ne jamais ecrire ce test ainsi", "#    warning('Pas de convergence.');", "end"],
+        sortie: [">> double([NaN < 1e-10, NaN >= 1e-10, ~(NaN < 1e-10)])"].concat(ans([matLigne(nan)])),
+        q: "Avec un départ singulier, delta vaut NaN et… aucun avertissement. Pourquoi ?",
+        o: [["Toute comparaison avec NaN est fausse : NaN >= tol vaut 0. Il faut tester ~(norm(delta) < tol), qui vaut 1 pour NaN", 1], ["MATLAB désactive les avertissements pour NaN", 0], ["norm(NaN) vaut 0", 0], ["Il faut écrire norm(delta) > tol", 0]],
+        expl: "C'est pourquoi newton_systeme écrit if ~(norm(delta) < tol), warning(…) : NaN y est traité comme « pas convergé »." },
+      { titre: "L'inverse de la jacobienne", code: ["#delta = -inv(JF(x)) * F(x);"],
+        sortie: [">> x'"].concat(ans([matLigne(rn.x.map(v => +v.toFixed(10)))]), [">> k"], ans([matLigne([rn.k])], "k")),
+        q: "Avec inv, Newton donne le même résultat en 5 itérations. Faut-il corriger ?",
+        o: [["Le résultat est juste, mais on n'écrit jamais inv(JF) : delta = −JF(x) \\ F(x) résout le système sans calculer l'inverse, plus vite et plus précisément", 1], ["Oui : inv donne toujours un résultat faux", 0], ["Non : inv est la méthode recommandée", 0], ["Oui : il faut F(x) * inv(JF(x))", 0]],
+        expl: "Le corrigé le rappelle : Newton multivarié = une suite de systèmes linéaires (chapitre 2). Pour n conduites, inv coûte ≈ 3 fois plus qu'une élimination." },
+    ];
+  } });
+
+const JEUX = { "jeu-1": jeu1, "jeu-2": jeu2, "jeu-3": jeu3, "jeu-4": jeu4, "jeu-5": jeu5 };
+(function () {
+  const r = TP3.newton(F, JF, [15, 15], TOL, 20);
+  $("#verif-base").textContent = "Newton depuis (15, 15) : (" + r.x.map(v => virgule(v, 4)).join(" ; ") + ") en " + r.k + " itérations ; trois conduites R = (2, 8, 4) : (" + TP3.newton(...(p => [p.F, p.JF])(TP3.pompage([2, 8, 4], 30)), [10, 10, 10], TOL, 20).x.map(v => virgule(v, 4)).join(" ; ") + ")";
+})();
+demarrerPage();
+</script>
+</body>
+</html>

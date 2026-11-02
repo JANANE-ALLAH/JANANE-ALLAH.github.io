@@ -197,6 +197,15 @@ input[type=range]{width:100%;accent-color:var(--blue);height:28px}
 .plan{position:relative;width:100%}
 .plan canvas{display:block;width:100%}
 .lecture{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-top:10px}
+.matrice{border-collapse:separate;border-spacing:0;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:14.5px;margin:10px auto;border-left:2px solid var(--ink);border-right:2px solid var(--ink);border-radius:6px}
+.matrice td{padding:5px 9px;text-align:right;min-width:58px;font-variant-numeric:tabular-nums}
+.matrice td.barre{border-left:2px dashed var(--ink-2)}
+.matrice tr.piv td{background:#FFE9B8;color:#15213B}
+.matrice td.col{background:rgba(0,86,210,.10)}
+.matrice tr.piv td.col{background:#FFD36B}
+.matrice td.nul{color:var(--ink-2)}
+.matrice-titre{text-align:center;font-size:13px;color:var(--ink-2);margin-top:6px}
+.banc svg{width:100%;height:auto;display:block}
 </style>
 </head>
 <body>
@@ -208,7 +217,7 @@ input[type=range]{width:100%;accent-color:var(--blue);height:28px}
       <div class="total" id="total" aria-live="polite">★ 0 / 15</div>
     </div>
     <p>Une paroi à 1200 K refroidit dans un atelier à 293 K, par convection et par rayonnement : C dT/dt = −hA (T − T<sub>amb</sub>) − εA (T⁴ − T<sub>amb</sub>⁴). Cinq jeux pour manipuler Euler explicite, RK4 et Euler implicite avec Newton.</p>
-    <div class="autres">Autres jeux : <a href="../tp5/">TP5 · salle de sport</a> · <a href="../tp6/">TP6 · attracteur de Lorenz</a></div>
+    <div class="autres">Autres jeux : <a href="../tp1/">TP1 · amortisseurs</a> · <a href="../tp2/">TP2 · conduction dans un four</a> · <a href="../tp3/">TP3 · pompage</a> · <a href="../tp5/">TP5 · salle de sport</a> · <a href="../tp6/">TP6 · Lorenz</a></div>
   </div>
 </header>
 
@@ -557,37 +566,46 @@ function moteurMissions(o) {
 }
 
 /* ============================================================
-   Moteur du detective : AFFAIRES = [{titre, code, sortie, q, o:[[texte, bon]], expl}]
+   Moteur de manches : une suite de questions a choix, avec un panneau de gauche
+   (HTML ou fonction de dessin) et une explication. Le detective en est un cas particulier.
+   manches() rend [{gauche, q, o:[[texte, bon]], expl, apres?, mono?, ordre?}]
    ============================================================ */
-function moteurDetective(o) {
+function moteurManches(o) {
   let E, A;
-  function demarrer() {
-    if (!A) A = o.dossiers();
-    E = { q: 0, bons: 0, score: 0 }; $("#" + o.p + "-jeu").hidden = false; $("#" + o.p + "-fin").hidden = true; poser();
-  }
+  const P = s => $("#" + o.p + "-" + s), val = f => typeof f === "function" ? f() : f;
+  function demarrer() { A = o.manches(); E = { q: 0, bons: 0, score: 0 }; P("jeu").hidden = false; P("fin").hidden = true; poser(); }
   function poser() {
     const X = A[E.q];
-    $("#" + o.p + "-q").textContent = "Affaire " + (E.q + 1) + " / " + A.length; $("#" + o.p + "-score").textContent = E.score + " pt";
-    $("#" + o.p + "-barre").style.width = E.q / A.length * 100 + "%";
-    $("#" + o.p + "-dossier").innerHTML = '<h3 style="margin:0 0 6px">📁 ' + X.titre + '</h3><div class="console-titre">Extrait du code (ligne suspecte surlignée)</div>' + console_(X.code) +
-      '<div class="console-titre">Fenêtre de commandes</div>' + console_(X.sortie);
-    $("#" + o.p + "-question").textContent = X.q; $("#" + o.p + "-retour").innerHTML = ""; $("#" + o.p + "-suivant").hidden = true;
-    const L = melanger(X.o.map(([t, b]) => ({ html: t, bon: !!b })));
-    choixBoutons($("#" + o.p + "-choix"), L, (c, q, bs) => {
+    P("q").textContent = (o.nom || "Question") + " " + (E.q + 1) + " / " + A.length; P("score").textContent = E.score + " pt";
+    P("barre").style.width = E.q / A.length * 100 + "%";
+    const g = P("dossier"); if (typeof X.gauche === "function") X.gauche(g); else g.innerHTML = X.gauche;
+    P("question").innerHTML = X.q; P("retour").innerHTML = ""; P("suivant").hidden = true;
+    const L0 = X.o.map(([t, b]) => ({ html: t, bon: !!b })), L = X.ordre ? L0 : melanger(L0);
+    choixBoutons(P("choix"), L, (c, q, bs) => {
       marquerChoix(bs, L, q); if (c.bon) { E.bons++; E.score += 100; }
-      retour($("#" + o.p + "-retour"), c.bon, c.bon ? "✔ Affaire résolue ! +100 pt" : "✘ Fausse piste", X.expl);
-      $("#" + o.p + "-score").textContent = E.score + " pt"; $("#" + o.p + "-suivant").hidden = false;
-      $("#" + o.p + "-suivant").textContent = E.q === A.length - 1 ? "Voir le résultat →" : "Affaire suivante →";
-    });
+      retour(P("retour"), c.bon, c.bon ? (o.juste || "✔ Juste ! +100 pt") : (o.faux || "✘ Non"), val(X.expl));
+      if (X.apres) X.apres(g, c.bon);
+      P("score").textContent = E.score + " pt"; P("suivant").hidden = false;
+      P("suivant").textContent = E.q === A.length - 1 ? "Voir le résultat →" : (o.suite || "Question suivante →");
+    }, X.mono);
   }
   function suivant() {
     if (E.q < A.length - 1) { E.q++; poser(); window.scrollTo({ top: $("#" + o.id).offsetTop - 10, behavior: "smooth" }); return; }
-    $("#" + o.p + "-barre").style.width = "100%"; $("#" + o.p + "-jeu").hidden = true; const z = $("#" + o.p + "-fin"); z.hidden = false;
-    const et = E.bons >= 7 ? 3 : E.bons >= 5 ? 2 : E.bons >= 3 ? 1 : 0; noter(o.id, et);
-    ecranFin(z, { etoiles: et, titre: E.bons + " / " + A.length + " affaires résolues · " + E.score + " pt", rejouer: demarrer, detail: o.morale });
+    P("barre").style.width = "100%"; P("jeu").hidden = true; const z = P("fin"); z.hidden = false;
+    const r = E.bons / A.length, et = o.etoiles ? o.etoiles(E.bons, A.length) : r >= 0.85 ? 3 : r >= 0.6 ? 2 : r >= 0.4 ? 1 : 0; noter(o.id, et);
+    ecranFin(z, { etoiles: et, titre: E.bons + " / " + A.length + " " + (o.bilan || "bonnes réponses") + " · " + E.score + " pt", rejouer: demarrer, detail: val(o.morale) });
   }
-  $("#" + o.p + "-suivant").addEventListener("click", suivant);
+  P("suivant").addEventListener("click", suivant);
   return { ouvrir: demarrer };
+}
+
+/* Detective du code : AFFAIRES = [{titre, code, sortie, q, o:[[texte, bon]], expl}] */
+function moteurDetective(o) {
+  let A = null;
+  return moteurManches({ id: o.id, p: o.p, nom: "Affaire", bilan: "affaires résolues", juste: "✔ Affaire résolue ! +100 pt", faux: "✘ Fausse piste", suite: "Affaire suivante →",
+    morale: o.morale, etoiles: (b) => b >= 7 ? 3 : b >= 5 ? 2 : b >= 3 ? 1 : 0,
+    manches: () => (A || (A = o.dossiers())).map(X => ({ gauche: '<h3 style="margin:0 0 6px">📁 ' + X.titre + '</h3><div class="console-titre">Extrait du code (ligne suspecte surlignée)</div>' + console_(X.code) +
+      '<div class="console-titre">Fenêtre de commandes</div>' + console_(X.sortie), q: X.q, o: X.o, expl: X.expl })) });
 }
 
 /* ============================================================
