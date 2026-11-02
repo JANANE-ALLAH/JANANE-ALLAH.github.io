@@ -1,0 +1,1187 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jeux du TP5 · Poisson 2D</title>
+<meta name="description" content="Cinq jeux pour manipuler le TP5 de Méthodes numériques (FSTM, UH2C) : numérotation, assemblage, résolution, mur isolé, SOR et chasse aux bugs, calculés en direct par le code du TP.">
+<style>
+:root{
+  --bg:#F4F6FB; --surface:#FFFFFF; --surface-2:#EEF2F9; --ink:#15213B; --ink-2:#4B5875; --line:#DCE3EE;
+  --navy:#0B2545; --navy-2:#13315C; --blue:#0056D2; --violet:#6A4C93; --red:#C1121F; --green:#2E7D32;
+  --orange:#E67E22; --gold:#D99A00; --ok:#1E7B34; --ok-bg:#E7F5EA; --ko:#B3261E; --ko-bg:#FCEDEC;
+  --code-bg:#0F1B2D; --code-ink:#E4ECF7; --code-dim:#8FA3BF; --code-err:#FF8A80; --code-warn:#FFB74D;
+  --sol:#F3EEE2; --mur:#5C6680; --ombre:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.07);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0D1422; --surface:#151F33; --surface-2:#1C2942; --ink:#E7ECF5; --ink-2:#A7B3C9; --line:#2A3A57;
+    --blue:#6EA8FF; --violet:#B49AE0; --red:#FF6B6B; --green:#5CC47A; --orange:#F5A35C; --gold:#F2C14E;
+    --ok:#6BD48A; --ok-bg:#15301F; --ko:#FF8A80; --ko-bg:#3A1A1A; --code-bg:#0A1220; --sol:#232B3D; --mur:#8C97B2;
+    --ombre:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+a{color:var(--blue)}
+button{font:inherit;color:inherit}
+code,pre,.mono{font-family:ui-monospace,"Cascadia Mono",Consolas,"Liberation Mono",monospace}
+.enveloppe{max-width:1120px;margin:0 auto;padding:0 16px}
+[hidden]{display:none!important}
+
+/* En-tete */
+.entete{background:linear-gradient(120deg,var(--navy) 0%,var(--navy-2) 60%,#1B4F8A 100%);color:#fff;padding:18px 0 26px}
+.ariane{font-size:13px;opacity:.85}
+.ariane a{color:#fff}
+.entete h1{font-size:clamp(24px,4vw,36px);line-height:1.15;margin:10px 0 6px}
+.entete p{margin:0;max-width:760px;opacity:.92}
+.entete .ligne{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.total{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 14px;font-weight:600;white-space:nowrap}
+.total .etoile{color:#FFC93C}
+
+/* Accueil */
+.intro{display:grid;gap:14px;margin:22px 0 8px}
+.note{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:12px 14px;font-size:15px}
+.cartes{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin:16px 0 30px}
+.carte-jeu{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--ombre);overflow:hidden;display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
+.carte-jeu:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(16,24,40,.14)}
+.carte-jeu .vignette{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:54px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.carte-jeu .vignette img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.carte-jeu .num{z-index:2}
+.carte-jeu .num{position:absolute;top:10px;left:12px;background:rgba(255,255,255,.9);color:#15213B;font-weight:700;font-size:13px;border-radius:999px;padding:2px 10px}
+.carte-jeu .corps{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.carte-jeu h3{margin:0;font-size:19px}
+.carte-jeu .notion{color:var(--ink-2);font-size:14.5px;flex:1}
+.puces{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.puce{font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--ink-2)}
+.carte-jeu .pied{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.etoiles{color:var(--gold);letter-spacing:2px;font-size:18px}
+.etoiles .vide{color:var(--line)}
+
+/* Boutons */
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:600;padding:10px 16px;cursor:pointer;text-decoration:none;min-height:44px}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn.sec{background:transparent;color:var(--blue);border:1.5px solid var(--blue)}
+.btn.vert{background:var(--green)}
+.btn.petit{min-height:36px;padding:6px 12px;font-size:14px}
+:focus-visible{outline:3px solid #FFB000;outline-offset:2px}
+.choix-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.choix{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;min-height:52px;font-size:15.5px;line-height:1.35}
+.choix:hover:not(:disabled){border-color:var(--blue);background:var(--surface-2)}
+.choix.mono{font-size:16px;text-align:center}
+.choix.bon{border-color:var(--ok);background:var(--ok-bg)}
+.choix.faux{border-color:var(--ko);background:var(--ko-bg)}
+.choix:disabled{cursor:default}
+.choix-1col{grid-template-columns:1fr}
+.segment{display:inline-flex;flex-wrap:wrap;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.segment button{border:0;background:var(--surface);padding:8px 12px;cursor:pointer;font-size:14px;min-height:40px;border-right:1px solid var(--line)}
+.segment button:last-child{border-right:0}
+.segment button[aria-pressed="true"]{background:var(--blue);color:#fff;font-weight:600}
+
+/* Vue de jeu */
+.jeu-entete{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin:18px 0 12px}
+.jeu-entete h2{margin:0;font-size:clamp(20px,3vw,26px)}
+.jeu-entete .sous{color:var(--ink-2);font-size:14.5px;margin:2px 0 0}
+.retour{font-weight:600;text-decoration:none;font-size:14.5px}
+.compteurs{display:flex;gap:8px;flex-wrap:wrap}
+.compteur{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-weight:600;font-size:14px;white-space:nowrap}
+.barre{height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-bottom:14px}
+.barre>div{height:100%;background:linear-gradient(90deg,var(--blue),var(--violet));width:0;transition:width .3s}
+.panneau{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--ombre);padding:16px}
+.deux{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:880px){.deux{grid-template-columns:minmax(0,1fr)}}
+.deux>*{min-width:0}
+.question{font-size:19px;font-weight:650;margin:0 0 4px}
+.aide{color:var(--ink-2);font-size:14.5px;margin:0 0 12px}
+.retour-msg{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:15px}
+.retour-msg.ok{background:var(--ok-bg);border:1px solid var(--ok)}
+.retour-msg.ko{background:var(--ko-bg);border:1px solid var(--ko)}
+.retour-msg b.t{display:block;margin-bottom:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.formule{font-family:ui-monospace,Consolas,monospace;background:var(--surface-2);border-radius:8px;padding:2px 7px;white-space:nowrap}
+.niveau{background:linear-gradient(90deg,var(--violet),var(--blue));color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-weight:600}
+
+/* Grille SVG (jeux 1 et 2) */
+.salle svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.salle .noeud circle{fill:var(--surface);stroke:var(--ink-2);stroke-width:2;transition:fill .15s}
+.salle.cliquable .noeud{cursor:pointer}
+.salle.cliquable .noeud:hover circle{fill:#FFE3A3;stroke:var(--orange)}
+.salle .noeud text{font-size:15px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.salle .noeud.allume circle{fill:var(--orange);stroke:#9A4A00}
+.salle .noeud.allume text{fill:#fff}
+.salle .noeud.bon circle{fill:var(--green);stroke:#145A1E}
+.salle .noeud.bon text,.salle .noeud.faux text{fill:#fff}
+.salle .noeud.faux circle{fill:var(--red);stroke:#7A0B13}
+.salle .noeud.voisin circle{fill:#CFE0FF;stroke:var(--blue)}
+.salle .noeud.voisin text{fill:#0B2545}
+.salle .noeud.discret circle{opacity:.35}
+.salle .axe{font-size:12px;fill:var(--ink-2);text-anchor:middle;dominant-baseline:central}
+.salle .etiquette-mur{font-size:12.5px;font-weight:600;text-anchor:middle;dominant-baseline:central}
+
+/* Carte thermique (jeux 3 et 4) */
+.carte-cadre{position:relative;width:100%}
+.carte-cadre canvas{display:block;width:100%;cursor:crosshair}
+.bulle{position:absolute;transform:translate(-50%,calc(-100% - 12px));background:var(--navy);color:#fff;border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.35;pointer-events:none;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:2}
+.bulle b{font-size:15px}
+.echelle{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);margin:4px 0 0}
+.echelle .grad{flex:1;height:10px;border-radius:99px;background:linear-gradient(90deg,#313695,#4575b4,#74add1,#abd9e9,#e0f3f8,#fee090,#fdae61,#f46d43,#d73027,#a50026)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin-top:12px}
+.stat{background:var(--surface-2);border-radius:10px;padding:8px 10px}
+.stat .l{font-size:12px;color:var(--ink-2)}
+.stat .v{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat.ok .v{color:var(--ok)}
+.stat.ko .v{color:var(--ko)}
+.reglage{margin:0 0 12px}
+.reglage label{display:flex;justify-content:space-between;font-size:14.5px;font-weight:600;margin-bottom:2px}
+.reglage label span{font-variant-numeric:tabular-nums;color:var(--blue)}
+input[type=range]{width:100%;accent-color:var(--blue);height:28px}
+.groupe-titre{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);font-weight:700;margin:14px 0 8px}
+.etapes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.etapes button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer}
+.etapes button.fait{background:var(--green);border-color:var(--green);color:#fff}
+.etapes button.actuel{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,86,210,.2)}
+.mission h4{margin:0 0 4px;font-size:18px}
+.mission .obj{background:var(--surface-2);border-radius:10px;padding:8px 12px;margin:10px 0;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Course SOR */
+.chrono{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.graphe{position:relative;width:100%;margin-top:8px}
+.graphe canvas{display:block;width:100%}
+.legende{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.legende i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.medaille{font-size:40px;line-height:1}
+.resultat{display:flex;gap:12px;align-items:center;border-radius:12px;padding:12px 14px;background:var(--surface-2);margin-top:12px}
+
+/* Consoles MATLAB */
+.console{max-width:100%;background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.5;overflow-x:auto;margin:10px 0;white-space:pre}
+.console .cmd{color:#9CDCFE}
+.console .err{color:var(--code-err)}
+.console .warn{color:var(--code-warn)}
+.console .com{color:#6A9955}
+.console .bug{background:rgba(255,138,128,.16);outline:1px dashed rgba(255,138,128,.6);border-radius:3px}
+.console-titre{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:700;margin-top:10px}
+
+/* Fin de partie */
+.fin{text-align:center;padding:22px 10px}
+.fin .grandes{font-size:46px;color:var(--gold);letter-spacing:6px}
+.fin .grandes .vide{color:var(--line)}
+.fin h3{font-size:24px;margin:6px 0}
+.pied-page{border-top:1px solid var(--line);margin-top:30px;padding:20px 0 36px;color:var(--ink-2);font-size:14px}
+.pied-page a{font-weight:600}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:50;pointer-events:none;animation:tombe linear forwards}
+@keyframes tombe{to{transform:translateY(105vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}.carte-jeu{transition:none}}
+@media (max-width:520px){.chrono .v{font-size:14.5px}.choix-grille{grid-template-columns:1fr}.panneau{padding:13px}.chrono{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header class="entete">
+  <div class="enveloppe">
+    <div class="ariane"><a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-genie-mecanique.md">Méthodes numériques pour la mécanique</a> › Module 09 · Laplace-Poisson › <a href="#">Jeux du TP5</a></div>
+    <div class="ligne">
+      <h1>🎮 Le TP5 en jeux : la salle de sport</h1>
+      <div class="total" id="total" aria-live="polite">★ 0 / 15</div>
+    </div>
+    <p>Salle de 4 m × 3 m, mur chauffant à 25 °C, trois murs à 10 °C : cinq jeux pour manipuler, à la main, chaque brique du TP5, de la numérotation des nœuds jusqu'au ω optimal de SOR.</p>
+  </div>
+</header>
+
+<main class="enveloppe">
+
+<!-- ======================= ACCUEIL ======================= -->
+<section id="accueil" class="vue">
+  <div class="intro">
+    <div class="note">🧮 <b>Rien n'est recopié :</b> chaque nombre affiché est calculé en direct dans votre navigateur par le code MATLAB du TP5 (<code>poisson2d</code>, <code>poisson2d_isole</code>, <code>sor</code>…) porté ligne pour ligne en JavaScript. Ce sont les mêmes nombres que MATLAB : cas de base <span id="verif-base">…</span>.</div>
+  </div>
+  <div class="cartes" id="cartes"></div>
+  <div class="note" style="border-left-color:var(--green)">💡 <b>Conseil :</b> jouez <b>après</b> avoir lu l'énoncé du TP5 et <b>avant</b> d'écrire votre code MATLAB. Chaque jeu correspond à une manipulation de l'énoncé ; à la fin, comparez avec le corrigé.</div>
+</section>
+
+<!-- ======================= JEU 1 ======================= -->
+<section id="jeu-1" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🔢 Numéro, s'il vous plaît !</h2><p class="sous">La numérotation des inconnues : k = (j − 1)·nx + i</p></div>
+    <div class="compteurs"><span class="compteur" id="j1-q">Question 1 / 10</span><span class="compteur" id="j1-serie">🔥 0</span><span class="compteur" id="j1-score">0 pt</span></div>
+  </div>
+  <div class="barre"><div id="j1-barre"></div></div>
+  <div id="j1-jeu" class="deux">
+    <div class="panneau"><div id="j1-salle" class="salle"></div></div>
+    <div class="panneau">
+      <div id="j1-niveau"></div>
+      <p class="question" id="j1-question"></p>
+      <p class="aide" id="j1-aide"></p>
+      <div id="j1-choix" class="choix-grille"></div>
+      <div id="j1-retour" aria-live="polite"></div>
+      <div class="actions"><button class="btn sec petit" id="j1-indice">💡 Indice (−30 pt)</button><button class="btn" id="j1-suivant" hidden>Suivant →</button></div>
+    </div>
+  </div>
+  <div id="j1-fin" class="panneau" hidden></div>
+</section>
+
+<!-- ======================= JEU 2 ======================= -->
+<section id="jeu-2" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>✚ Le pochoir à 5 points</h2><p class="sous">Assembler une ligne de A et de b : les voisins inconnus vont dans A, les murs dans b</p></div>
+    <div class="compteurs"><span class="compteur" id="j2-q">Nœud 1 / 6</span><span class="compteur" id="j2-score">0 pt</span></div>
+  </div>
+  <div class="barre"><div id="j2-barre"></div></div>
+  <div id="j2-jeu" class="deux">
+    <div class="panneau"><div id="j2-salle" class="salle"></div><p class="aide" id="j2-legende" style="margin:8px 0 0"></p></div>
+    <div class="panneau">
+      <div id="j2-niveau"></div>
+      <p class="question" id="j2-question"></p>
+      <p class="aide" id="j2-aide"></p>
+      <div id="j2-choix" class="choix-grille"></div>
+      <div id="j2-retour" aria-live="polite"></div>
+      <div class="actions"><button class="btn" id="j2-suivant" hidden>Continuer →</button></div>
+    </div>
+  </div>
+  <div id="j2-fin" class="panneau" hidden></div>
+</section>
+
+<!-- ======================= JEU 3 ======================= -->
+<section id="jeu-3" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🌡️ Thermostat de la salle de sport</h2><p class="sous">Réglez les murs, la carte se recalcule (T = A \ b) : six missions, du cas de base au mur isolé</p></div>
+    <div class="compteurs"><span class="compteur" id="j3-compte">Missions : 0 / 6</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau">
+      <div class="carte-cadre" id="j3-cadre"><canvas aria-label="Carte de température de la salle"></canvas><div class="bulle" hidden></div></div>
+      <div class="echelle"><span id="j3-min">10</span><div class="grad"></div><span id="j3-max">25</span><span>°C</span></div>
+      <div class="stats" id="j3-stats"></div>
+      <p class="aide" style="margin:10px 0 0">👆 Touchez un nœud de la carte pour lire sa température et son numéro k.</p>
+    </div>
+    <div>
+      <div class="panneau mission" id="j3-mission"></div>
+      <div class="panneau" style="margin-top:16px">
+        <div class="groupe-titre" style="margin-top:0">Températures des murs</div>
+        <div id="j3-murs"></div>
+        <div class="groupe-titre">Mur du bas (sol)</div>
+        <div class="segment" id="j3-mode"><button data-v="dirichlet">Température imposée</button><button data-v="isole">Isolé (Neumann)</button><button data-v="faux">Isolé, code piégé</button></div>
+        <div class="groupe-titre">Grille (Nx × Ny)</div>
+        <div class="segment" id="j3-grille"><button data-v="8">8 × 6</button><button data-v="16">16 × 12</button><button data-v="32">32 × 24</button></div>
+        <div class="actions"><button class="btn sec petit" id="j3-base">↺ Cas de base du TP</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= JEU 4 ======================= -->
+<section id="jeu-4" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🏁 Course SOR</h2><p class="sous">Choisissez ω, lancez : la salle part de 0 °C et se réchauffe balayage après balayage. Battez Gauss-Seidel !</p></div>
+    <div class="compteurs"><span class="compteur" id="j4-record">Record : –</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau">
+      <div class="carte-cadre" id="j4-cadre"><canvas aria-label="Carte de température pendant les itérations"></canvas><div class="bulle" hidden></div></div>
+      <div class="echelle"><span>0</span><div class="grad"></div><span>25</span><span>°C</span></div>
+      <div class="chrono">
+        <div class="stat"><div class="l">Balayage k</div><div class="v" id="j4-k">0</div></div>
+        <div class="stat"><div class="l">‖x − x<sub>ancien</sub>‖</div><div class="v" id="j4-ecart">–</div></div>
+        <div class="stat"><div class="l">Arrêt si &lt;</div><div class="v">1e−8</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="panneau">
+        <div class="groupe-titre" style="margin-top:0">Grille</div>
+        <div class="segment" id="j4-grille"><button data-v="8">8 × 6 · 35 inconnues</button><button data-v="16">16 × 12 · 165 inconnues</button></div>
+        <div class="reglage" style="margin-top:14px"><label for="j4-w">Facteur de relaxation ω <span id="j4-wv">1,00</span></label><input type="range" id="j4-w" min="0.2" max="2.1" step="0.01" value="1"></div>
+        <p class="aide" style="margin-top:-6px">ω = 1 : Gauss-Seidel · ω &gt; 1 : sur-relaxation · ω &lt; 1 : sous-relaxation</p>
+        <div class="actions" style="margin-top:4px"><button class="btn" id="j4-go">▶ Lancer SOR</button><div class="segment" id="j4-vitesse"><button data-v="1">×1</button><button data-v="4">×4</button></div></div>
+        <div id="j4-resultat" aria-live="polite"></div>
+      </div>
+      <div class="panneau" style="margin-top:16px">
+        <div class="groupe-titre" style="margin-top:0">Convergence de la course</div>
+        <div class="graphe" id="j4-courbe"><canvas></canvas></div>
+        <div class="legende"><span><i style="background:var(--blue)"></i>votre course</span><span><i style="background:var(--ink-2);opacity:.6"></i>Gauss-Seidel (ω = 1)</span><span><i style="background:var(--red)"></i>tolérance 1e−8</span></div>
+        <div class="groupe-titre">Vos essais : balayages en fonction de ω</div>
+        <div class="graphe" id="j4-nuage"><canvas></canvas></div>
+        <div class="actions"><button class="btn sec petit" id="j4-theorie" disabled>🎓 La théorie (après 3 essais)</button></div>
+        <div id="j4-explication"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= JEU 5 ======================= -->
+<section id="jeu-5" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🕵️ Détective du code</h2><p class="sous">Chaque affaire : un extrait de code, la sortie de la console. Trouvez le bug… ou prouvez qu'il n'y en a pas.</p></div>
+    <div class="compteurs"><span class="compteur" id="j5-q">Affaire 1 / 8</span><span class="compteur" id="j5-score">0 pt</span></div>
+  </div>
+  <div class="barre"><div id="j5-barre"></div></div>
+  <div id="j5-jeu" class="deux">
+    <div class="panneau"><div id="j5-dossier"></div></div>
+    <div class="panneau">
+      <p class="question" id="j5-question"></p>
+      <div id="j5-choix" class="choix-grille choix-1col"></div>
+      <div id="j5-retour" aria-live="polite"></div>
+      <div class="actions"><button class="btn" id="j5-suivant" hidden>Affaire suivante →</button></div>
+    </div>
+  </div>
+  <div id="j5-fin" class="panneau" hidden></div>
+</section>
+
+</main>
+
+<footer class="enveloppe pied-page">
+  <div>📄 <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/methodes-numeriques/Chapitre_09_Laplace_Poisson_advection/4_TP5_enonce.pdf">Énoncé du TP5</a> · ✅ <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/methodes-numeriques/Chapitre_09_Laplace_Poisson_advection/4_TP5_corrige_scripts_MATLAB.zip">Corrigé : scripts MATLAB</a> · 📚 <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-genie-mecanique.md">Retour au cours</a></div>
+  <div style="margin-top:6px">Pr. Mohamed JANANE ALLAH · Faculté des Sciences et Techniques de Mohammedia — Université Hassan II de Casablanca · Votre progression reste dans ce navigateur, rien n'est envoyé.</div>
+</footer>
+
+<noscript><p class="enveloppe">Ces jeux ont besoin de JavaScript.</p></noscript>
+<script src="noyau.js"></script>
+<script>
+"use strict";
+/* ============================================================
+   Outils communs
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const BC = [25, 10, 10, 10];
+const virgule = (v, d) => v.toFixed(d).replace(".", ",").replace("-", "−");
+const melanger = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const hasard = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+function el(tag, attrs, ...enfants) {
+  const e = document.createElement(tag);
+  for (const [c, v] of Object.entries(attrs || {})) {
+    if (c === "html") e.innerHTML = v; else if (c === "texte") e.textContent = v;
+    else if (c.startsWith("on")) e.addEventListener(c.slice(2), v); else e.setAttribute(c, v);
+  }
+  enfants.forEach(x => e.append(x));
+  return e;
+}
+function svgEl(tag, attrs) {
+  const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [c, v] of Object.entries(attrs || {})) e.setAttribute(c, v);
+  return e;
+}
+const css = nom => getComputedStyle(document.documentElement).getPropertyValue(nom).trim();
+
+// Affichage des nombres a la maniere de MATLAB (format short / short e)
+function expo(v) { return v.toExponential(4).replace(/e([+-])(\d)$/, "e$10$2"); }
+function matLigne(vals) {
+  const entiers = vals.every(v => Number.isInteger(v));
+  return vals.map(v => entiers ? String(v).padStart(6) : v.toFixed(4).padStart(10)).join("");
+}
+function matLigneE(vals) { return vals.map(v => expo(v).padStart(13)).join(""); }
+function echapper(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+// lignes : chaines ; ">> " = commande, "!" = erreur, "?" = avertissement, "%" = commentaire, "#" = ligne du bug
+function console_(lignes) {
+  return '<pre class="console">' + lignes.map(l => {
+    if (l.startsWith(">> ")) return '<span class="cmd">' + echapper(l) + "</span>";
+    if (l.startsWith("!")) return '<span class="err">' + echapper(l.slice(1)) + "</span>";
+    if (l.startsWith("?")) return '<span class="warn">' + echapper(l.slice(1)) + "</span>";
+    if (l.startsWith("#")) return '<span class="bug">' + echapper(l.slice(1)) + "</span>";
+    return echapper(l).replace(/(%.*)$/, '<span class="com">$1</span>');
+  }).join("\n") + "</pre>";
+}
+
+// Palette froid -> chaud (RdYlBu inversee)
+const PALETTE = ["#313695", "#4575b4", "#74add1", "#abd9e9", "#e0f3f8", "#fee090", "#fdae61", "#f46d43", "#d73027", "#a50026"];
+const RGB = PALETTE.map(c => [1, 3, 5].map(p => parseInt(c.substr(p, 2), 16)));
+function couleur(t) {
+  t = Math.max(0, Math.min(1, isFinite(t) ? t : 0));
+  const x = t * (RGB.length - 1), i = Math.min(RGB.length - 2, Math.floor(x)), f = x - i;
+  return RGB[i].map((v, q) => Math.round(v + f * (RGB[i + 1][q] - v)));
+}
+const rgb = c => "rgb(" + c.join(",") + ")";
+const clair = c => 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2] > 150;
+
+// Progression (dans ce navigateur seulement)
+const CLE = "tp5-jeux-v1";
+let progres = {};
+try { progres = JSON.parse(localStorage.getItem(CLE)) || {}; } catch (e) { progres = {}; }
+function noter(jeu, n) {
+  if (n > (progres[jeu] || 0)) { progres[jeu] = n; try { localStorage.setItem(CLE, JSON.stringify(progres)); } catch (e) { /* stockage indisponible */ } }
+  majAccueil();
+}
+function etoilesHTML(n, cls) {
+  return '<span class="' + (cls || "etoiles") + '">' + "★".repeat(n) + '<span class="vide">' + "★".repeat(3 - n) + "</span></span>";
+}
+function confettis() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cols = ["#0056D2", "#6A4C93", "#C1121F", "#2E7D32", "#E67E22", "#F2C14E"];
+  for (let q = 0; q < 70; q++) {
+    const c = el("div", { class: "confetti" });
+    c.style.left = Math.random() * 100 + "vw"; c.style.background = cols[q % cols.length];
+    c.style.animationDuration = 1.6 + Math.random() * 1.6 + "s"; c.style.animationDelay = Math.random() * 0.4 + "s";
+    document.body.append(c); setTimeout(() => c.remove(), 3800);
+  }
+}
+function ecranFin(zone, o) {
+  zone.innerHTML = '<div class="fin"><div class="grandes">' + "★".repeat(o.etoiles) + '<span class="vide">' + "★".repeat(3 - o.etoiles) +
+    "</span></div><h3>" + o.titre + '</h3><p class="aide" style="font-size:16px">' + o.detail + "</p>" + (o.extra || "") +
+    '<div class="actions" style="justify-content:center"><button class="btn" data-r>↻ Rejouer</button><a class="btn sec" href="#">Tous les jeux</a></div></div>';
+  $("[data-r]", zone).addEventListener("click", o.rejouer);
+  if (o.etoiles === 3) confettis();
+}
+function choixBoutons(zone, options, rappel, mono) {
+  zone.innerHTML = "";
+  options.forEach((o, q) => zone.append(el("button", { class: "choix" + (mono ? " mono" : ""), html: o.html, "data-q": q,
+    onclick: () => { $$("button", zone).forEach(b => b.disabled = true); rappel(o, q, $$("button", zone)); } })));
+}
+function marquerChoix(boutons, options, choisi) {
+  boutons.forEach((b, q) => { if (options[q].bon) b.classList.add("bon"); else if (q === choisi) b.classList.add("faux"); });
+}
+function retour(zone, ok, titre, html) {
+  zone.innerHTML = '<div class="retour-msg ' + (ok ? "ok" : "ko") + '"><b class="t">' + titre + "</b>" + html + "</div>";
+}
+
+/* ============================================================
+   Salle de sport en SVG (jeux 1 et 2) : murs, axes i et j, noeuds
+   ============================================================ */
+function salleSVG(zone, nx, ny, o) {
+  o = o || {};
+  const u = 60, W = (nx + 1) * u, H = (ny + 1) * u, m = 46;
+  const svg = svgEl("svg", { viewBox: (-m) + " " + (-m + 6) + " " + (W + 2 * m) + " " + (H + 2 * m - 6), role: "img",
+    "aria-label": "Salle de sport : " + nx + " × " + ny + " nœuds intérieurs" });
+  const bc = o.bc || BC, cmin = Math.min(...bc), cmax = Math.max(...bc);
+  const cm = T => rgb(couleur(cmax === cmin ? 0.5 : (T - cmin) / (cmax - cmin) * 0.84 + 0.08));
+  svg.append(svgEl("rect", { x: 0, y: 0, width: W, height: H, fill: css("--sol"), rx: 3 }));
+  for (let i = 1; i <= nx; i++) svg.append(svgEl("line", { x1: i * u, y1: 0, x2: i * u, y2: H, stroke: css("--line"), "stroke-dasharray": "4 5" }));
+  for (let j = 1; j <= ny; j++) svg.append(svgEl("line", { x1: 0, y1: H - j * u, x2: W, y2: H - j * u, stroke: css("--line"), "stroke-dasharray": "4 5" }));
+  const murs = { g: [0, 0, 0, H, bc[0]], d: [W, 0, W, H, bc[1]], b: [0, H, W, H, bc[2]], h: [0, 0, W, 0, bc[3]] };
+  const traits = {};
+  for (const [c, [x1, y1, x2, y2, T]] of Object.entries(murs)) {
+    traits[c] = svgEl("line", { x1, y1, x2, y2, stroke: cm(T), "stroke-width": 9, "stroke-linecap": "round" });
+    svg.append(traits[c]);
+  }
+  const lab = (x, y, t, rot) => { const e = svgEl("text", { x, y, class: "etiquette-mur", fill: css("--ink-2") }); if (rot) e.setAttribute("transform", "rotate(" + rot + " " + x + " " + y + ")"); e.textContent = t; svg.append(e); };
+  lab(W / 2, -18, "haut · " + bc[3] + " °C");
+  lab(-22, H / 2, "gauche · " + bc[0] + " °C", -90);
+  lab(W + 22, H / 2, "droite · " + bc[1] + " °C", 90);
+  lab(W / 2, H + 38, "bas · " + bc[2] + " °C   (i →)");
+  for (let i = 1; i <= nx; i++) { const t = svgEl("text", { x: i * u, y: H + 17, class: "axe" }); t.textContent = "i=" + i; svg.append(t); }
+  for (let j = 1; j <= ny; j++) { const t = svgEl("text", { x: 24, y: H - j * u, class: "axe" }); t.textContent = "j=" + j; svg.append(t); }
+  const noeuds = {};
+  for (let j = 1; j <= ny; j++) for (let i = 1; i <= nx; i++) {
+    const k = TP5.numero(i, j, nx), g = svgEl("g", { class: "noeud", "data-k": k, tabindex: o.cliquable ? 0 : -1 });
+    g.append(svgEl("circle", { cx: i * u, cy: H - j * u, r: 20 }));
+    const t = svgEl("text", { x: i * u, y: H - j * u }); g.append(t);
+    if (o.surClic) {
+      g.addEventListener("click", () => o.surClic(k, i, j));
+      g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.surClic(k, i, j); } });
+    }
+    svg.append(g); noeuds[k] = { g, t, i, j };
+  }
+  zone.innerHTML = ""; zone.append(svg);
+  zone.classList.toggle("cliquable", !!o.cliquable);
+  return { noeuds, traits, ecrire: (k, txt) => { noeuds[k].t.textContent = txt; } };
+}
+
+/* ============================================================
+   Carte thermique sur canvas (jeux 3 et 4)
+   ============================================================ */
+class Carte {
+  constructor(cadre, o) {
+    this.cadre = cadre; this.cv = $("canvas", cadre); this.ctx = this.cv.getContext("2d");
+    this.bulle = $(".bulle", cadre); this.o = o || {}; this.sc = null; this.sel = null; this.larg = 0;
+    this.img = document.createElement("canvas");
+    this.cv.addEventListener("click", e => this.clic(e));
+    const rs = () => { if (this.cadre.clientWidth !== this.larg) this.redessiner(); };
+    if (window.ResizeObserver) new ResizeObserver(rs).observe(cadre); else addEventListener("resize", rs);
+  }
+  // numero k (base 1) de l'inconnue au noeud physique (i, jy), jy = 0 au sol ; 0 si ce n'est pas une inconnue
+  k(i, jy) {
+    const { Nx, Ny, mode } = this.sc, nx = Nx - 1;
+    if (i < 1 || i > Nx - 1) return 0;
+    if (mode === "isole") return jy >= 0 && jy <= Ny - 1 ? jy * nx + i : 0;
+    return jy >= 1 && jy <= Ny - 1 ? (jy - 1) * nx + i : 0;
+  }
+  champ() {
+    const { Nx, Ny, mode, bc, T } = this.sc, F = new Float64Array((Nx + 1) * (Ny + 1)), at = (i, jy) => jy * (Nx + 1) + i;
+    for (let jy = 0; jy <= Ny; jy++) for (let i = 0; i <= Nx; i++) {
+      const k = this.k(i, jy);
+      F[at(i, jy)] = k ? T[k - 1] : i === 0 ? bc[0] : i === Nx ? bc[1] : jy === Ny ? bc[3] : bc[2];
+    }
+    if (mode === "faux") for (let i = 1; i < Nx; i++) F[at(i, 0)] = F[at(i, Math.min(2, Ny - 1))];
+    if (mode === "dirichlet") { F[at(0, 0)] = (bc[0] + bc[2]) / 2; F[at(Nx, 0)] = (bc[1] + bc[2]) / 2; }
+    F[at(0, Ny)] = (bc[0] + bc[3]) / 2; F[at(Nx, Ny)] = (bc[1] + bc[3]) / 2;
+    return F;
+  }
+  dessiner(sc) { this.sc = sc; this.redessiner(); }
+  geo() {
+    const W = this.cadre.clientWidth, pad = W < 420 ? 30 : 38, w = W - 2 * pad, h = w * this.sc.Ny / this.sc.Nx;
+    return { W, H: h + 2 * pad, x0: pad, y0: pad, w, h, cw: w / this.sc.Nx, ch: h / this.sc.Ny };
+  }
+  redessiner() {
+    if (!this.sc || !this.cadre.clientWidth) return;
+    const sc = this.sc, g = this.geo(), dpr = window.devicePixelRatio || 1, cv = this.cv, ctx = this.ctx;
+    this.larg = g.W;
+    cv.style.height = g.H + "px"; cv.width = Math.round(g.W * dpr); cv.height = Math.round(g.H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, g.W, g.H);
+    const { Nx, Ny, vmin, vmax } = sc, F = this.champ(), norm = v => (v - vmin) / (vmax - vmin || 1);
+    // champ : une image d'un pixel par noeud, agrandie avec lissage (interpolation entre les noeuds)
+    this.img.width = Nx + 1; this.img.height = Ny + 1;
+    const ic = this.img.getContext("2d"), data = ic.createImageData(Nx + 1, Ny + 1);
+    for (let jy = 0; jy <= Ny; jy++) for (let i = 0; i <= Nx; i++) {
+      const c = couleur(norm(F[jy * (Nx + 1) + i])), p = ((Ny - jy) * (Nx + 1) + i) * 4;
+      data.data[p] = c[0]; data.data[p + 1] = c[1]; data.data[p + 2] = c[2]; data.data[p + 3] = 255;
+    }
+    ic.putImageData(data, 0, 0);
+    ctx.save(); ctx.beginPath(); ctx.rect(g.x0, g.y0, g.w, g.h); ctx.clip();
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(this.img, g.x0 - g.cw / 2, g.y0 - g.ch / 2, g.w + g.cw, g.h + g.ch);
+    if (Nx <= 16) {
+      ctx.strokeStyle = "rgba(255,255,255,.28)"; ctx.lineWidth = 1; ctx.beginPath();
+      for (let i = 1; i < Nx; i++) { ctx.moveTo(g.x0 + i * g.cw, g.y0); ctx.lineTo(g.x0 + i * g.cw, g.y0 + g.h); }
+      for (let j = 1; j < Ny; j++) { ctx.moveTo(g.x0, g.y0 + j * g.ch); ctx.lineTo(g.x0 + g.w, g.y0 + j * g.ch); }
+      ctx.stroke();
+    }
+    ctx.restore();
+    // murs
+    const ink = css("--ink-2"), X = i => g.x0 + i * g.cw, Y = jy => g.y0 + g.h - jy * g.ch;
+    const mur = (x1, y1, x2, y2, T) => { ctx.strokeStyle = rgb(couleur(norm(T))); ctx.lineWidth = 7; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); };
+    mur(g.x0, g.y0, g.x0, g.y0 + g.h, sc.bc[0]); mur(g.x0 + g.w, g.y0, g.x0 + g.w, g.y0 + g.h, sc.bc[1]);
+    mur(g.x0, g.y0, g.x0 + g.w, g.y0, sc.bc[3]);
+    if (sc.mode === "dirichlet") mur(g.x0, g.y0 + g.h, g.x0 + g.w, g.y0 + g.h, sc.bc[2]);
+    else {
+      ctx.strokeStyle = css("--mur"); ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(g.x0, g.y0 + g.h + 2); ctx.lineTo(g.x0 + g.w, g.y0 + g.h + 2); ctx.stroke();
+      ctx.lineWidth = 1.5; ctx.beginPath();
+      for (let x = g.x0 + 4; x < g.x0 + g.w; x += 10) { ctx.moveTo(x, g.y0 + g.h + 4); ctx.lineTo(x - 7, g.y0 + g.h + 13); }
+      ctx.stroke();
+    }
+    // etiquettes des murs
+    ctx.fillStyle = ink; ctx.font = "600 12px system-ui,Segoe UI,Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const f = v => virgule(v, Number.isInteger(v) ? 0 : 1);
+    ctx.fillText("haut · " + f(sc.bc[3]) + " °C", g.x0 + g.w / 2, g.y0 - 14);
+    ctx.fillText(sc.mode === "dirichlet" ? "bas (sol) · " + f(sc.bc[2]) + " °C" : sc.mode === "isole" ? "bas (sol) · isolé, ∂T/∂n = 0" : "bas (sol) · « isolé » (code piégé)", g.x0 + g.w / 2, g.y0 + g.h + 23);
+    ctx.save(); ctx.translate(g.x0 - 15, g.y0 + g.h / 2); ctx.rotate(-Math.PI / 2); ctx.fillText("gauche (mur chauffant) · " + f(sc.bc[0]) + " °C", 0, 0); ctx.restore();
+    ctx.save(); ctx.translate(g.x0 + g.w + 15, g.y0 + g.h / 2); ctx.rotate(Math.PI / 2); ctx.fillText("droite (fenêtres) · " + f(sc.bc[1]) + " °C", 0, 0); ctx.restore();
+    // noeuds et valeurs
+    const jy0 = sc.mode === "isole" ? 0 : 1, petit = g.cw < 46;
+    for (let jy = jy0; jy <= Ny - 1; jy++) for (let i = 1; i <= Nx - 1; i++) {
+      const v = sc.T[this.k(i, jy) - 1], c = couleur(norm(v)), x = X(i), y = Y(jy);
+      if (Nx <= 8) {
+        ctx.fillStyle = clair(c) ? "rgba(21,33,59,.85)" : "rgba(255,255,255,.95)";
+        ctx.beginPath(); ctx.arc(x, y, 2.6, 0, 7); ctx.fill();
+        if (sc.valeurs !== false) { ctx.font = (petit ? "600 10px" : "600 12px") + " system-ui,Segoe UI,Arial"; ctx.fillText(virgule(v, 1), x, y - (petit ? 9 : 11)); }
+      } else if (Nx <= 16) { ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.beginPath(); ctx.arc(x, y, 1.4, 0, 7); ctx.fill(); }
+    }
+    if (sc.marque) {
+      const x = X(sc.marque[0]), y = Y(sc.marque[1]);
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.moveTo(x - 13, y); ctx.lineTo(x + 13, y); ctx.moveTo(x, y - 13); ctx.lineTo(x, y + 13); ctx.stroke();
+      ctx.strokeStyle = "#15213B"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.stroke();
+    }
+    if (this.sel && this.k(this.sel[0], this.sel[1])) {
+      const x = X(this.sel[0]), y = Y(this.sel[1]);
+      ctx.strokeStyle = "#FFB000"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.stroke();
+      this.majBulle(x, y);
+    } else this.bulle.hidden = true;
+  }
+  majBulle(x, y) {
+    const [i, jy] = this.sel, k = this.k(i, jy), v = this.sc.T[k - 1], j = this.sc.mode === "isole" ? jy + 1 : jy, h = 4 / this.sc.Nx;
+    this.bulle.innerHTML = "<b>" + virgule(v, 4) + " °C</b><br>nœud (i, j) = (" + i + ", " + j + ") · k = " + k + "<br>x = " + virgule(i * h, 3) + " m, y = " + virgule(jy * h, 3) + " m";
+    this.bulle.hidden = false;
+    const l = Math.max(80, Math.min(this.larg - 80, x));
+    this.bulle.style.left = l + "px"; this.bulle.style.top = y + "px";
+  }
+  clic(e) {
+    if (!this.sc) return;
+    const r = this.cv.getBoundingClientRect(), g = this.geo();
+    const i = Math.round((e.clientX - r.left - g.x0) / g.cw), jy = Math.round((g.y0 + g.h - (e.clientY - r.top)) / g.ch);
+    this.sel = this.k(i, jy) ? [i, jy] : null;
+    this.redessiner();
+  }
+}
+
+/* Petit traceur de courbes (axes, grille, series, points) */
+function tracer(cadre, o) {
+  const cv = $("canvas", cadre), W = cadre.clientWidth, H = o.hauteur || Math.max(170, Math.min(240, W * 0.5)), dpr = window.devicePixelRatio || 1;
+  cv.style.height = H + "px"; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  const m = { l: 54, r: 10, t: 10, b: 34 }, ink = css("--ink-2"), ligne = css("--line");
+  const X = x => m.l + (x - o.x[0]) / (o.x[1] - o.x[0]) * (W - m.l - m.r);
+  const Y = y => H - m.b - (y - o.y[0]) / (o.y[1] - o.y[0]) * (H - m.t - m.b);
+  ctx.font = "11.5px system-ui,Segoe UI,Arial"; ctx.fillStyle = ink; ctx.strokeStyle = ligne; ctx.lineWidth = 1;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  o.xt.forEach(([v, t]) => { ctx.beginPath(); ctx.moveTo(X(v), m.t); ctx.lineTo(X(v), H - m.b); ctx.stroke(); ctx.fillText(t, X(v), H - m.b + 5); });
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  o.yt.forEach(([v, t]) => { ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(W - m.r, Y(v)); ctx.stroke(); ctx.fillText(t, m.l - 6, Y(v)); });
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillText(o.xl, (m.l + W - m.r) / 2, H - 1);
+  ctx.save(); ctx.translate(9, (m.t + H - m.b) / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = "middle"; ctx.fillText(o.yl, 0, 0); ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.rect(m.l, m.t, W - m.l - m.r, H - m.t - m.b); ctx.clip();
+  (o.horiz || []).forEach(h => { ctx.strokeStyle = h.c; ctx.lineWidth = 1.5; ctx.setLineDash(h.tir || []); ctx.beginPath(); ctx.moveTo(m.l, Y(h.y)); ctx.lineTo(W - m.r, Y(h.y)); ctx.stroke(); });
+  (o.vert || []).forEach(h => { ctx.strokeStyle = h.c; ctx.lineWidth = 1.5; ctx.setLineDash(h.tir || []); ctx.beginPath(); ctx.moveTo(X(h.x), m.t); ctx.lineTo(X(h.x), H - m.b); ctx.stroke(); });
+  ctx.setLineDash([]);
+  (o.series || []).forEach(s => {
+    ctx.strokeStyle = s.c; ctx.lineWidth = s.l || 2; ctx.globalAlpha = s.a || 1; ctx.setLineDash(s.tir || []); ctx.beginPath();
+    s.pts.forEach(([x, y], q) => q ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y))); ctx.stroke(); ctx.globalAlpha = 1; ctx.setLineDash([]);
+  });
+  (o.points || []).forEach(p => {
+    ctx.fillStyle = p.c; ctx.strokeStyle = p.c; ctx.lineWidth = 2;
+    if (p.croix) { ctx.beginPath(); ctx.moveTo(X(p.x) - 5, Y(p.y) - 5); ctx.lineTo(X(p.x) + 5, Y(p.y) + 5); ctx.moveTo(X(p.x) + 5, Y(p.y) - 5); ctx.lineTo(X(p.x) - 5, Y(p.y) + 5); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r || 4.5, 0, 7); ctx.fill(); }
+  });
+  ctx.restore();
+}
+
+/* ============================================================
+   ACCUEIL
+   ============================================================ */
+const FICHES = [
+  { id: "jeu-1", emoji: "🔢", fond: "linear-gradient(135deg,#0056D2,#3D8BFF)", titre: "Numéro, s'il vous plaît !", notion: "Retrouver le numéro k d'un nœud, et le nœud d'un numéro : la numérotation k = (j − 1)·nx + i.", puces: ["Manip. 1", "numérotation", "≈ 2 min"] },
+  { id: "jeu-2", emoji: "✚", fond: "linear-gradient(135deg,#6A4C93,#9B7BD0)", titre: "Le pochoir à 5 points", notion: "Assembler une ligne de A et de b : la diagonale, les colonnes des voisins, la part des murs au second membre.", puces: ["Manip. 1", "assemblage", "≈ 4 min"] },
+  { id: "jeu-3", emoji: "🌡️", fond: "linear-gradient(135deg,#C1121F,#F46D43)", titre: "Thermostat de la salle", notion: "Régler les murs et voir T = A \\ b se recalculer : principe du maximum, mur isolé, piège du doublement, raffinement.", puces: ["Manip. 1 et 3", "6 missions", "≈ 6 min"] },
+  { id: "jeu-4", emoji: "🏁", fond: "linear-gradient(135deg,#2E7D32,#58B35E)", titre: "Course SOR", notion: "Choisir ω, regarder la salle se réchauffer balayage après balayage, battre Gauss-Seidel et trouver le ω optimal.", puces: ["Manip. 4", "SOR · ω optimal", "≈ 4 min"] },
+  { id: "jeu-5", emoji: "🕵️", fond: "linear-gradient(135deg,#E67E22,#F5B041)", titre: "Détective du code", notion: "Huit affaires : un extrait de code, la sortie de la console, et un bug à identifier… s'il y en a un.", puces: ["Manip. 1 à 4", "diagnostic", "≈ 5 min"] },
+];
+function majAccueil() {
+  const zone = $("#cartes"); zone.innerHTML = "";
+  FICHES.forEach((f, q) => zone.append(el("a", { class: "carte-jeu", href: "#" + f.id, html:
+    '<div class="vignette" style="background:' + f.fond + '"><img src="vignettes/' + f.id + '.jpg" alt="" loading="lazy" onerror="this.remove()"><span class="num">Jeu ' + (q + 1) + "</span>" + f.emoji + "</div>" +
+    '<div class="corps"><h3>' + f.titre + '</h3><div class="notion">' + f.notion + '</div><div class="puces">' + f.puces.map(p => '<span class="puce">' + p + "</span>").join("") +
+    '</div><div class="pied">' + etoilesHTML(progres[f.id] || 0) + '<span class="btn petit">' + ((progres[f.id] || 0) ? "Rejouer" : "Jouer") + " ▶</span></div></div>" })));
+  const tot = FICHES.reduce((s, f) => s + (progres[f.id] || 0), 0);
+  $("#total").innerHTML = '<span class="etoile">★</span> ' + tot + " / 15";
+}
+
+/* ============================================================
+   JEU 1 — Numero, s'il vous plait !
+   ============================================================ */
+const jeu1 = (() => {
+  let E;
+  const TYPES = ["clic", "choix", "clic", "ij", "choix", "clic", "choix", "ij", "clic", "choix"];
+  function demarrer() {
+    const l2 = melanger([[9, 4], [5, 6], [8, 3], [6, 6], [4, 7]])[0];
+    E = { q: 0, score: 0, bons: 0, serie: 0, deja: new Set(), Q: TYPES.map((t, q) => ({ type: t, nx: q < 5 ? 7 : l2[0], ny: q < 5 ? 5 : l2[1] })) };
+    $("#j1-jeu").hidden = false; $("#j1-fin").hidden = true; poser();
+  }
+  function poser() {
+    const Q = E.Q[E.q], n = Q.nx * Q.ny;
+    do { Q.k = hasard(1, n); } while (E.deja.has(Q.nx + ":" + Q.k) && E.deja.size < n);
+    E.deja.add(Q.nx + ":" + Q.k);
+    Q.j = Math.floor((Q.k - 1) / Q.nx) + 1; Q.i = Q.k - (Q.j - 1) * Q.nx; Q.indice = false;
+    $("#j1-q").textContent = "Question " + (E.q + 1) + " / 10"; $("#j1-barre").style.width = E.q * 10 + "%";
+    $("#j1-serie").textContent = "🔥 " + E.serie; $("#j1-score").textContent = E.score + " pt";
+    $("#j1-retour").innerHTML = ""; $("#j1-suivant").hidden = true; $("#j1-indice").disabled = false; $("#j1-choix").innerHTML = "";
+    $("#j1-niveau").innerHTML = E.q === 5 ? '<div class="niveau">🚀 Niveau 2 : nouvelle salle, nx = ' + Q.nx + ", ny = " + Q.ny + ". La formule ne change pas !</div>" : "";
+    E.salle = salleSVG($("#j1-salle"), Q.nx, Q.ny, { cliquable: Q.type === "clic", surClic: Q.type === "clic" ? k => repondre(k === Q.k, k) : null });
+    $("#j1-aide").innerHTML = "Grille : <b>nx = " + Q.nx + "</b> nœuds par rangée, <b>ny = " + Q.ny + "</b> rangées, n = " + n + " inconnues. On numérote les rangées de gauche à droite, de bas en haut.";
+    if (Q.type === "clic") {
+      $("#j1-question").textContent = "Touchez le nœud k = " + Q.k;
+    } else if (Q.type === "choix") {
+      $("#j1-question").textContent = "Quel est le numéro k du nœud orange ?";
+      E.salle.noeuds[Q.k].g.classList.add("allume"); E.salle.ecrire(Q.k, "?");
+      const cand = [(Q.i - 1) * Q.ny + Q.j, Q.j * Q.nx + Q.i, (Q.j - 1) * Q.ny + Q.i, Q.i * Q.j, Q.k + 1, Q.k - 1, Q.k + Q.nx];
+      const opts = [Q.k]; cand.forEach(c => { if (c > 0 && opts.length < 4 && !opts.includes(c)) opts.push(c); });
+      const L = melanger(opts).map(v => ({ html: "k = " + v, bon: v === Q.k }));
+      choixBoutons($("#j1-choix"), L, (o, q, bs) => { marquerChoix(bs, L, q); repondre(o.bon); }, true);
+    } else {
+      $("#j1-question").textContent = "Où est le nœud k = " + Q.k + " ? Donnez (i, j).";
+      const ok = (i, j) => i >= 1 && i <= Q.nx && j >= 1 && j <= Q.ny;
+      const cand = [[Q.j, Q.i], [Q.i, Q.j + 1], [Q.i + 1, Q.j], [Q.i - 1, Q.j], [Q.i, Q.j - 1], [Q.i + 1, Q.j - 1]];
+      const opts = [[Q.i, Q.j]];
+      cand.forEach(([i, j]) => { if (ok(i, j) && opts.length < 4 && !opts.some(o => o[0] === i && o[1] === j)) opts.push([i, j]); });
+      while (opts.length < 4) { const i = hasard(1, Q.nx), j = hasard(1, Q.ny); if (!opts.some(o => o[0] === i && o[1] === j)) opts.push([i, j]); }
+      const L = melanger(opts).map(([i, j]) => ({ html: "(i, j) = (" + i + ", " + j + ")", bon: i === Q.i && j === Q.j }));
+      choixBoutons($("#j1-choix"), L, (o, q, bs) => { marquerChoix(bs, L, q); repondre(o.bon); }, true);
+    }
+    E.t0 = performance.now();
+  }
+  function repondre(ok, kClic) {
+    const Q = E.Q[E.q], dt = (performance.now() - E.t0) / 1000;
+    E.salle.noeuds && Object.values(E.salle.noeuds).forEach(N => N.g.style.pointerEvents = "none");
+    $("#j1-indice").disabled = true;
+    const calc = "k = (j − 1)·nx + i = (" + Q.j + " − 1) × " + Q.nx + " + " + Q.i + " = <b>" + Q.k + "</b>";
+    const N = E.salle.noeuds[Q.k]; N.g.classList.remove("allume"); N.g.classList.add("bon"); E.salle.ecrire(Q.k, Q.k);
+    if (kClic && !ok) { E.salle.noeuds[kClic].g.classList.add("faux"); E.salle.ecrire(kClic, kClic); }
+    if (ok) {
+      const bonus = Math.max(0, Math.round(50 * (1 - dt / 8))); E.serie++; E.bons++;
+      const pts = 100 + bonus + (E.serie >= 3 ? 20 : 0) - (Q.indice ? 30 : 0); E.score += pts;
+      retour($("#j1-retour"), true, "✔ Bravo ! +" + pts + " pt" + (E.serie >= 3 ? " · série 🔥 " + E.serie : ""), calc + (bonus ? " · rapidité +" + bonus : ""));
+      setTimeout(suivant, 1500);
+    } else {
+      E.serie = 0;
+      retour($("#j1-retour"), false, "✘ Pas tout à fait", "Le nœud cherché est en vert : " + calc + (kClic ? "<br>Vous avez touché k = " + kClic + "." : ""));
+      $("#j1-suivant").hidden = false;
+    }
+    $("#j1-serie").textContent = "🔥 " + E.serie; $("#j1-score").textContent = E.score + " pt";
+  }
+  function suivant() {
+    if (E.q === 9) return fin();
+    E.q++; poser();
+  }
+  function fin() {
+    $("#j1-barre").style.width = "100%"; $("#j1-jeu").hidden = true; const z = $("#j1-fin"); z.hidden = false;
+    const et = E.bons >= 9 ? 3 : E.bons >= 7 ? 2 : E.bons >= 5 ? 1 : 0; noter("jeu-1", et);
+    ecranFin(z, { etoiles: et, titre: E.bons + " / 10 bonnes réponses · " + E.score + " pt", rejouer: demarrer,
+      detail: et === 3 ? "La numérotation n'a plus de secret pour vous." : "Visez 9 / 10 pour les trois étoiles.",
+      extra: '<p class="aide" style="max-width:560px;margin:8px auto">La même vérification dans MATLAB (sortie de <code>video_consoles.m</code>) :</p><div style="max-width:560px;margin:0 auto;text-align:left">' +
+        console_([">> nx = 7;  ny = 5;", ">> idx = @(i, j) (j - 1)*nx + i;", ">> [idx(1,1)  idx(7,1)  idx(1,2)  idx(7,5)]", "", "ans =", "", matLigne([[1, 1], [7, 1], [1, 2], [7, 5]].map(([i, j]) => TP5.numero(i, j, 7)))]) + "</div>" });
+  }
+  $("#j1-suivant").addEventListener("click", suivant);
+  $("#j1-indice").addEventListener("click", () => {
+    const Q = E.Q[E.q]; Q.indice = true; $("#j1-indice").disabled = true;
+    Object.values(E.salle.noeuds).forEach(N => { if (N.j === 1 || N.i === 1) E.salle.ecrire(+N.g.dataset.k, N.g.dataset.k); });
+    $("#j1-aide").innerHTML += "<br>💡 Les numéros de la première rangée et de la première colonne sont affichés : chaque rangée ajoute nx = " + Q.nx + ".";
+    if (Q.type === "choix") E.salle.ecrire(Q.k, "?");
+  });
+  return { ouvrir: demarrer };
+})();
+
+/* ============================================================
+   JEU 2 — Le pochoir a 5 points
+   ============================================================ */
+const jeu2 = (() => {
+  let E;
+  const SALLE2 = [[30, 20, 15, 5], [18, 12, 6, 24], [22, 8, 16, 12]];
+  function noeudsDeLaPartie() {
+    const coins = [1, 7, 29, 35], bords = { bas: [2, 3, 4, 5, 6], gauche: [8, 15, 22], droite: [14, 21, 28], haut: [30, 31, 32, 33, 34] };
+    const cotes = melanger(Object.keys(bords)).slice(0, 2);
+    const inter = TP5.numero(hasard(2, 6), hasard(2, 4), 7);
+    const base = melanger([coins[hasard(0, 3)], bords[cotes[0]][hasard(0, bords[cotes[0]].length - 1)], bords[cotes[1]][hasard(0, bords[cotes[1]].length - 1)], inter])
+      .map(k => ({ Nx: 8, Ny: 6, h: 0.5, bc: BC, k }));
+    const bc2 = SALLE2[hasard(0, 2)], k2 = melanger([1, 2, 3, 4, 5, 6]).slice(0, 2);
+    return base.concat(k2.map(k => ({ Nx: 4, Ny: 3, h: 1, bc: bc2, k })));
+  }
+  function demarrer() {
+    E = { liste: noeudsDeLaPartie(), q: 0, etape: 0, score: 0, bons: 0, total: 0 };
+    $("#j2-jeu").hidden = false; $("#j2-fin").hidden = true; preparer();
+  }
+  // Tout ce qu'il faut savoir du noeud courant, calcule par l'assemblage du TP
+  function preparer() {
+    const N = E.liste[E.q], S = TP5.assembler(N.Nx, N.Ny, N.h, N.h, N.bc), nx = N.Nx - 1, ny = N.Ny - 1;
+    const j = Math.floor((N.k - 1) / nx) + 1, i = N.k - (j - 1) * nx, L = S.lignes[N.k - 1], a = 1 / (N.h * N.h);
+    const voisins = [["ouest", i - 1, j, 0], ["est", i + 1, j, 1], ["sud", i, j - 1, 2], ["nord", i, j + 1, 3]].map(([nom, vi, vj, m]) => {
+      const mur = vi < 1 || vi > nx || vj < 1 || vj > ny;
+      return { nom, mur, k: mur ? 0 : TP5.numero(vi, vj, nx), T: N.bc[m] };
+    });
+    E.N = Object.assign({}, N, { S, nx, ny, i, j, L, a, voisins, b: S.b[N.k - 1] });
+    $("#j2-niveau").innerHTML = E.q === 4 ? '<div class="niveau">🚀 Niveau 2 : une autre salle, pas h = 1 m (Nx = 4, Ny = 3) et d\'autres murs. Attention à 1/h² !</div>' : "";
+    E.etape = 0; poserEtape();
+  }
+  function dessinerSalle(montrerVoisins) {
+    const N = E.N, s = salleSVG($("#j2-salle"), N.nx, N.ny, { bc: N.bc });
+    Object.values(s.noeuds).forEach(X => X.g.classList.add("discret"));
+    const c = s.noeuds[N.k]; c.g.classList.remove("discret"); c.g.classList.add("allume"); s.ecrire(N.k, N.k);
+    N.voisins.forEach(v => {
+      if (!v.mur) { const X = s.noeuds[v.k]; X.g.classList.remove("discret"); X.g.classList.add("voisin"); s.ecrire(v.k, montrerVoisins ? v.k : "?"); }
+    });
+    const murs = N.voisins.filter(v => v.mur).map(v => v.nom === "ouest" ? "g" : v.nom === "est" ? "d" : v.nom === "sud" ? "b" : "h");
+    Object.entries(s.traits).forEach(([c, t]) => { if (!murs.includes(c)) t.setAttribute("opacity", ".25"); });
+    $("#j2-legende").innerHTML = "🟠 nœud k = " + N.k + " (i = " + N.i + ", j = " + N.j + ") · 🔵 voisins inconnus · murs voisins en couleur · h = " + virgule(N.h, 1) + " m, nx = " + N.nx;
+  }
+  function poserEtape() {
+    const N = E.N, x = E.etape;
+    $("#j2-q").textContent = "Nœud " + (E.q + 1) + " / " + E.liste.length; $("#j2-score").textContent = E.score + " pt";
+    $("#j2-barre").style.width = ((E.q * 3 + x) / (E.liste.length * 3 + 1) * 100) + "%";
+    $("#j2-retour").innerHTML = ""; $("#j2-suivant").hidden = true;
+    dessinerSalle(x > 1);
+    let opts, question, aide;
+    if (x === 0) {
+      const d = 2 * N.a + 2 * N.a;
+      question = "Diagonale : A(" + N.k + ", " + N.k + ") = ?";
+      aide = "h = " + virgule(N.h, 1) + " m, donc 1/h² = " + N.a + ". Rappel : −(T<sub>i−1,j</sub> − 2T<sub>i,j</sub> + T<sub>i+1,j</sub>)/hx² − (T<sub>i,j−1</sub> − 2T<sub>i,j</sub> + T<sub>i,j+1</sub>)/hy².";
+      opts = [d, N.a, 2 * N.a, -d].map(v => ({ html: String(v).replace("-", "−"), bon: v === d }));
+      E.expl = "2/hx² + 2/hy² = 2 × " + N.a + " + 2 × " + N.a + " = <b>" + d + "</b>, quel que soit le nœud.";
+    } else if (x === 1) {
+      const vrai = N.voisins.filter(v => !v.mur).map(v => v.k).sort((p, q) => p - q), n = N.S.n, k = N.k;
+      const dans = a => a.filter(c => c >= 1 && c <= n && c !== k).sort((p, q) => p - q);
+      const cands = [dans([k - 1, k + 1, k - N.nx, k + N.nx]), dans([k - 1, k + 1, k - N.ny, k + N.ny]), dans([k - N.nx - 1, k - N.nx + 1, k + N.nx - 1, k + N.nx + 1]), dans([k - 2, k - 1, k + 1, k + 2]), vrai.concat([k]).sort((p, q) => p - q)];
+      const L = [vrai]; cands.forEach(c => { if (c.length && L.length < 4 && !L.some(z => z.join() === c.join())) L.push(c); });
+      question = "Quelles colonnes de la ligne " + k + " contiennent −1/h² = −" + N.a + " ?";
+      aide = "Seuls les voisins qui sont des inconnues entrent dans A. Les murs n'ont pas de colonne.";
+      opts = L.map(c => ({ html: c.join(", "), bon: c.join() === vrai.join() }));
+      E.expl = N.voisins.map(v => v.nom + " : " + (v.mur ? "mur (" + v.T + " °C), pas dans A" : "k = " + v.k)).join(" · ") +
+        (N.i === 1 && k > 1 ? "<br>⚠️ Le piège : k − 1 = " + (k - 1) + " est le dernier nœud de la rangée du dessous, pas un voisin." : "") +
+        (N.i === N.nx && k < n ? "<br>⚠️ Le piège : k + 1 = " + (k + 1) + " est le premier nœud de la rangée du dessus, pas un voisin." : "");
+    } else {
+      const murs = N.voisins.filter(v => v.mur), somme = murs.reduce((s, v) => s + v.T, 0), vrai = N.b;
+      question = "Second membre : b(" + N.k + ") = ?";
+      aide = "Chaque mur voisin passe au second membre avec le coefficient 1/h² = " + N.a + ". Pas de source : g = 0.";
+      const cands = [somme, somme / N.h, N.a * (somme + 10), N.a * 10, 2 * N.a * somme, N.a * 25, 0, N.a * 20, N.a * 35, 4 * N.a * 10];
+      const L = [vrai]; cands.forEach(c => { if (L.length < 4 && !L.includes(c)) L.push(c); });
+      opts = L.map(v => ({ html: String(v), bon: v === vrai }));
+      E.expl = murs.length ? murs.map(v => v.T + " × " + N.a).join(" + ") + " = <b>" + vrai + "</b> (" + murs.map(v => "mur " + v.nom).join(", ") + ")" :
+        "Aucun voisin n'est un mur : <b>b(" + N.k + ") = 0</b> (équation de Laplace, pas de source).";
+    }
+    $("#j2-question").textContent = question; $("#j2-aide").innerHTML = aide;
+    const L = melanger(opts);
+    choixBoutons($("#j2-choix"), L, (o, q, bs) => { marquerChoix(bs, L, q); juger(o.bon); }, true);
+  }
+  function juger(ok) {
+    E.total++; if (ok) { E.bons++; E.score += 50; }
+    let html = E.expl;
+    if (E.etape === 2) {
+      const N = E.N, cols = N.L.c.slice().sort((p, q) => p - q), vals = cols.map(c => N.L.v[N.L.c.indexOf(c)]);
+      html += console_([">> format compact", ">> full(A(" + N.k + ", [" + cols.join(" ") + "]))", "ans =", matLigne(vals), ">> b(" + N.k + ")", "ans =", matLigne([N.b])]);
+    }
+    retour($("#j2-retour"), ok, ok ? "✔ Juste ! +50 pt" : "✘ Non", html);
+    $("#j2-score").textContent = E.score + " pt"; $("#j2-suivant").hidden = false; $("#j2-suivant").focus({ preventScroll: true });
+  }
+  function suivant() {
+    if (E.bonus) return fin();
+    if (E.etape < 2) { E.etape++; return poserEtape(); }
+    if (E.q < E.liste.length - 1) { E.q++; return preparer(); }
+    bonus();
+  }
+  function bonus() {
+    E.bonus = true; const S = TP5.assembler(8, 6, 0.5, 0.5, BC), vrai = TP5.nnz(S);
+    $("#j2-niveau").innerHTML = '<div class="niveau">🏆 Question bonus</div>'; $("#j2-retour").innerHTML = ""; $("#j2-suivant").hidden = true;
+    salleSVG($("#j2-salle"), 7, 5, {}); $("#j2-legende").textContent = "La salle du TP : 35 inconnues.";
+    $("#j2-question").textContent = "Combien de coefficients non nuls dans A (nnz(A)) ?";
+    $("#j2-aide").innerHTML = "35 lignes, une diagonale par ligne, et un −4 par couple de voisins inconnus (dans les deux sens).";
+    const L = melanger([vrai, 35 * 5, 155, 35 * 35].map(v => ({ html: String(v), bon: v === vrai })));
+    choixBoutons($("#j2-choix"), L, (o, q, bs) => {
+      marquerChoix(bs, L, q); E.total++; if (o.bon) { E.bons++; E.score += 100; }
+      retour($("#j2-retour"), o.bon, o.bon ? "✔ Exact ! +100 pt" : "✘ Non",
+        "35 diagonales + 2 × (6 × 5 liaisons horizontales + 7 × 4 liaisons verticales) = 35 + 2 × 58 = <b>" + vrai + "</b>. Bien moins que 35 × 35 = 1225 : A est <b>creuse</b>." +
+        console_([">> nnz(A)", "", "ans =", "", matLigne([vrai]), "", ">> norm(A - A', 1)", "", "ans =", "", matLigne([TP5.asymetrie(S)])]));
+      $("#j2-score").textContent = E.score + " pt"; $("#j2-suivant").hidden = false; $("#j2-suivant").textContent = "Voir le résultat →";
+    }, true);
+  }
+  function fin() {
+    $("#j2-barre").style.width = "100%"; $("#j2-jeu").hidden = true; $("#j2-suivant").textContent = "Continuer →";
+    const z = $("#j2-fin"); z.hidden = false; const r = E.bons / E.total;
+    const et = r >= 0.9 ? 3 : r >= 0.7 ? 2 : r >= 0.5 ? 1 : 0; noter("jeu-2", et);
+    ecranFin(z, { etoiles: et, titre: E.bons + " / " + E.total + " bonnes réponses · " + E.score + " pt", rejouer: demarrer,
+      detail: "À retenir : un nœud intérieur = une équation à cinq termes, 16 sur la diagonale et −4 par voisin inconnu (h = 0,5 m). Les murs voisins vont au second membre : b(k) += T<sub>mur</sub>/h²." });
+  }
+  $("#j2-suivant").addEventListener("click", suivant);
+  return { ouvrir: demarrer };
+})();
+
+/* ============================================================
+   JEU 3 — Thermostat de la salle de sport
+   ============================================================ */
+const jeu3 = (() => {
+  const E = { bc: [18, 18, 18, 18], mode: "dirichlet", N: 8, m: 0, phase: "consigne", faites: new Set(), essais: 0, pronostic: 13, demarre: false };
+  let carte, R;
+  const NOMS = ["Mur gauche (chauffant)", "Mur droit (fenêtres)", "Mur du bas (sol)", "Mur du haut"];
+  const base = () => E.bc[0] === 25 && E.bc[1] === 10 && E.bc[3] === 10 && (E.mode !== "dirichlet" || E.bc[2] === 10);
+  const moyBase = () => TP5.stats(TP5.resoudre(TP5.assembler(8, 6, 0.5, 0.5, BC))).moy;
+  const MISSIONS = [
+    { titre: "Le cas du TP", consigne: "Reproduisez le cas de base de l'énoncé : mur chauffant à <b>25 °C</b>, les trois autres murs à <b>10 °C</b>, sol à température imposée, grille 8 × 6.",
+      ok: () => base() && E.mode === "dirichlet" && E.N === 8,
+      bravo: () => "T<sub>min</sub> = <b>" + virgule(R.st.min, 4) + " °C</b> et T<sub>max</sub> = <b>" + virgule(R.st.max, 4) + " °C</b> : exactement les valeurs de MATLAB. Le nœud le plus chaud est contre le mur chauffant, à mi-hauteur ; les plus froids sont dans les coins de droite." },
+    { titre: "Plancher chauffant", consigne: "Les fenêtres (mur droit) et le plafond (mur du haut) restent à <b>10 °C</b>. En réglant le mur chauffant et le sol, amenez le centre de la salle ⊕ à <b>18,0 ± 0,3 °C</b>.",
+      suivi: () => "Centre ⊕ : " + virgule(R.centre, 2) + " °C (objectif 18,0 ± 0,3)" + (E.bc[1] !== 10 || E.bc[3] !== 10 ? " · remettez droite et haut à 10 °C" : ""),
+      ok: () => E.mode === "dirichlet" && E.bc[1] === 10 && E.bc[3] === 10 && Math.abs(R.centre - 18) <= 0.3,
+      bravo: () => { const c = bc => { const S = TP5.assembler(8, 6, 0.5, 0.5, bc); return TP5.resoudre(S)[TP5.numero(4, 3, 7) - 1]; };
+        return "Grâce à la linéarité, chaque mur a son « poids » au centre : 1 °C de plus au sol donne <b>+" + virgule(c([0, 0, 1, 0]), 2) + " °C</b> au centre, 1 °C de plus au mur gauche seulement <b>+" + virgule(c([1, 0, 0, 0]), 2) + " °C</b>. Le centre est à 1,5 m du sol mais à 2 m du mur : le plancher chauffant est plus efficace. Les quatre poids font 1 au total."; } },
+    { titre: "Battre le principe du maximum", consigne: "Défi : réglez les murs comme vous voulez, et faites monter <b>un nœud intérieur</b> au-dessus du mur le plus chaud (ou descendre sous le plus froid).",
+      suivi: () => "Écart au record : T<sub>max</sub> intérieur − mur le plus chaud = " + virgule(R.st.max - R.murMax, 2) + " °C · essais : " + E.essais,
+      ok: () => R.st.max > R.murMax + 1e-9 || R.st.min < R.murMin - 1e-9,
+      seche: true,
+      quiz: { q: "Où se trouve toujours la température la plus élevée de la salle ?", o: [["Sur un des murs : aucun nœud intérieur ne dépasse le mur le plus chaud", 1], ["Au centre de la salle", 0], ["Au nœud le plus proche du mur chauffant", 0], ["Ça dépend de la grille choisie", 0]],
+        expl: "C'est le <b>principe du maximum</b> : chaque nœud intérieur vaut la moyenne de ses quatre voisins (16 T<sub>k</sub> = 4 × somme des voisins), donc il ne peut pas dépasser le plus grand d'entre eux. Dans le TP, une valeur hors de [10 ; 25] signale à coup sûr une <b>erreur d'assemblage</b>." } },
+    { titre: "Isoler le sol", consigne: "On isole parfaitement le sol (condition de Neumann ∂T/∂n = 0, nœud fictif). <b>Pronostic :</b> quelle sera la température moyenne de la salle ? Elle vaut " + virgule(moyBase(), 2) + " °C dans le cas de base.",
+      pronostic: true,
+      action: { label: "🧱 Isoler le sol et vérifier", faire: () => { E.bc = BC.slice(); E.mode = "isole"; E.N = 8; } },
+      ok: () => E.mode === "isole" && E.N === 8 && base() && E.aPronostique,
+      bravo: () => { const mb = moyBase(), e = Math.abs(E.pronostic - R.st.moy);
+        return "Moyenne : " + virgule(mb, 4) + " → <b>" + virgule(R.st.moy, 4) + " °C</b> (+" + virgule(R.st.moy - mb, 2) + " °C) ; votre pronostic : " + virgule(E.pronostic, 1) + " °C, à " + virgule(e, 2) + " °C près" + (e < 0.5 ? " 🎯" : "") +
+        ". Un mur isolé n'évacue plus de chaleur. Le système passe de 35 à <b>" + R.S.n + " inconnues</b> : la rangée du sol devient inconnue, et le coefficient du voisin du dessus y est doublé (−2/h² = −8)."; } },
+    { titre: "Le piège du doublement", consigne: "Un camarade a programmé le sol isolé autrement : il a doublé le coefficient sur la <b>première rangée intérieure</b>, sans agrandir le système. Lancez son code.",
+      action: { label: "🪤 Lancer le code piégé", faire: () => { E.bc = BC.slice(); E.mode = "faux"; E.N = 8; } },
+      ok: () => E.mode === "faux" && E.N === 8 && base(),
+      quiz: { q: () => "Deux codes, deux moyennes : " + virgule(TP5.stats(TP5.resoudre(TP5.assembler(8, 6, 0.5, 0.5, BC, "isole"))).moy, 4) + " °C (42 inconnues) et " + virgule(R.st.moy, 4) + " °C (35 inconnues). Lequel modélise vraiment un sol isolé ?",
+        o: [["Le code à 42 inconnues : la rangée du sol doit devenir inconnue", 1], ["Le code à 35 inconnues : un mur n'est jamais une inconnue", 0], ["Les deux : l'écart vient des arrondis", 0], ["Aucun : il faudrait doubler le voisin du dessous", 0]],
+        expl: "Le code piégé place le mur isolé <b>un pas de maillage trop haut</b> (à y = h au lieu de y = 0) : la salle est amputée d'une rangée et le schéma tombe à l'<b>ordre 1</b>. Rien ne prévient : le système garde 35 inconnues et MATLAB ne signale aucune erreur." } },
+    { titre: "Raffiner la grille", consigne: "Revenez au cas de base (sol à 10 °C) et passez à la grille <b>32 × 24</b>. Comparez T<sub>max</sub> avec celui de la grille 8 × 6.",
+      ok: () => base() && E.mode === "dirichlet" && E.N === 32,
+      quiz: { q: () => "T<sub>max</sub> passe de 20,08 °C (8 × 6) à " + virgule(R.st.max, 2) + " °C (32 × 24). Pourquoi ?",
+        o: [["Le nœud le plus chaud se rapproche du mur chauffant : h passe de 0,5 m à 0,125 m", 1], ["Le schéma devient instable sur une grille fine", 0], ["La salle reçoit plus de chaleur avec plus de nœuds", 0], ["C'est une erreur d'arrondi de la résolution", 0]],
+        expl: () => "Le nœud le plus chaud est toujours le premier à côté du mur chauffant, à mi-hauteur : plus h est petit, plus il est proche du mur à 25 °C. La grille 32 × 24 compte <b>" + R.S.n + " inconnues</b> et nnz(A) = " + R.nnz + " : A reste très creuse." } },
+  ];
+  function calculer() {
+    const Nx = E.N, Ny = 3 * Nx / 4, h = 4 / Nx, S = TP5.assembler(Nx, Ny, h, h, E.bc, E.mode), T = TP5.resoudre(S), st = TP5.stats(T);
+    const murs = E.mode === "dirichlet" ? E.bc : [E.bc[0], E.bc[1], E.bc[3]];
+    const ic = Nx / 2, jc = Ny / 2, kc = E.mode === "isole" ? jc * (Nx - 1) + ic : (jc - 1) * (Nx - 1) + ic;
+    R = { S, T, st, nnz: TP5.nnz(S), murMax: Math.max(...murs), murMin: Math.min(...murs), centre: T[kc - 1] };
+    let vmin = R.murMin, vmax = R.murMax; if (vmax - vmin < 1) { vmin -= 1; vmax += 1; }
+    carte.dessiner({ Nx, Ny, mode: E.mode, bc: E.bc, T, vmin, vmax, marque: E.m === 1 ? [ic, jc] : null });
+    $("#j3-min").textContent = virgule(vmin, 1); $("#j3-max").textContent = virgule(vmax, 1);
+    const pm = st.max <= R.murMax + 1e-9 && st.min >= R.murMin - 1e-9;
+    $("#j3-stats").innerHTML = [["Inconnues n", R.S.n], ["nnz(A)", R.nnz], ["T min", virgule(st.min, 4)], ["T max", virgule(st.max, 4)], ["T moyenne", virgule(st.moy, 4)],
+      ["Principe du max.", pm ? "✓ respecté" : "✗ violé", pm ? "ok" : "ko"]].map(([l, v, c]) => '<div class="stat ' + (c || "") + '"><div class="l">' + l + '</div><div class="v">' + v + "</div></div>").join("");
+    $$("#j3-mode button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === E.mode));
+    $$("#j3-grille button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.v === E.N));
+    $$("#j3-murs input").forEach((inp, q) => { inp.value = E.bc[q]; $("#j3-v" + q).textContent = (q === 2 && E.mode !== "dirichlet") ? "isolé" : virgule(E.bc[q], 1) + " °C"; inp.disabled = q === 2 && E.mode !== "dirichlet"; });
+    verifier();
+  }
+  function verifier() {
+    const M = MISSIONS[E.m], avant = E.phase;
+    if (E.phase === "consigne" && M.ok()) { E.phase = M.quiz ? "quiz" : "fini"; if (!M.quiz) gagner(); }
+    if (E.phase === "consigne" || E.phase !== avant) afficherMission();
+  }
+  function gagner() {
+    E.faites.add(E.m); const n = E.faites.size, et = n >= 6 ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0;
+    noter("jeu-3", et); $("#j3-compte").textContent = "Missions : " + n + " / 6";
+    if (n === 6) confettis();
+  }
+  function afficherMission() {
+    const M = MISSIONS[E.m], z = $("#j3-mission"), val = f => typeof f === "function" ? f() : f;
+    let h = '<div class="etapes">' + MISSIONS.map((_, q) => '<button data-m="' + q + '" class="' + (E.faites.has(q) ? "fait " : "") + (q === E.m ? "actuel" : "") + '" aria-label="Mission ' + (q + 1) + '">' + (q + 1) + "</button>").join("") + "</div>";
+    h += "<h4>Mission " + (E.m + 1) + " · " + M.titre + '</h4><p style="margin:0">' + M.consigne + "</p>";
+    if (E.phase === "consigne") {
+      if (M.suivi) h += '<div class="obj">' + M.suivi() + "</div>";
+      if (M.pronostic) h += '<div class="reglage" style="margin-top:12px"><label for="j3-pro">Mon pronostic de moyenne <span id="j3-prov">' + virgule(E.pronostic, 1) + ' °C</span></label><input type="range" id="j3-pro" min="10" max="25" step="0.1" value="' + E.pronostic + '"></div>';
+      if (M.action) h += '<div class="actions"><button class="btn" id="j3-action">' + M.action.label + "</button></div>";
+      if (M.seche && E.essais >= 4) h += '<div class="actions"><button class="btn sec" id="j3-seche">🤔 Je sèche : pourquoi ça ne marche pas ?</button></div>';
+    } else if (E.phase === "quiz") {
+      h += '<div class="retour-msg ok"><b class="t">' + (M.seche ? "Personne n'y arrive… et c'est normal." : "✔ Mission accomplie : une dernière question") + "</b></div>";
+      h += '<p class="question" style="font-size:16.5px;margin-top:12px">' + val(M.quiz.q) + '</p><div class="choix-grille choix-1col" id="j3-quiz"></div><div id="j3-qret"></div>';
+    } else {
+      h += '<div class="retour-msg ok"><b class="t">✔ Mission accomplie</b>' + (M.bravo ? val(M.bravo) : val(M.quiz.expl)) + "</div>";
+      h += '<div class="actions">' + (E.m < 5 ? '<button class="btn" id="j3-suite">Mission suivante →</button>' : '<a class="btn" href="#">🎉 Toutes les missions sont faites : retour aux jeux</a>') + "</div>";
+    }
+    z.innerHTML = h;
+    $$(".etapes button", z).forEach(b => b.addEventListener("click", () => aller(+b.dataset.m)));
+    const pro = $("#j3-pro", z); if (pro) pro.addEventListener("input", () => { E.pronostic = +pro.value; $("#j3-prov").textContent = virgule(E.pronostic, 1) + " °C"; });
+    const ac = $("#j3-action", z); if (ac) ac.addEventListener("click", () => { E.aPronostique = true; M.action.faire(); calculer(); });
+    const se = $("#j3-seche", z); if (se) se.addEventListener("click", () => { E.phase = "quiz"; afficherMission(); });
+    const su = $("#j3-suite", z); if (su) su.addEventListener("click", () => aller(E.m + 1));
+    if (E.phase === "quiz") {
+      const L = melanger(M.quiz.o.map(([t, b]) => ({ html: t, bon: !!b })));
+      choixBoutons($("#j3-quiz", z), L, (o, q, bs) => {
+        marquerChoix(bs, L, q);
+        if (o.bon) { E.phase = "fini"; gagner(); setTimeout(afficherMission, 900); }
+        else { retour($("#j3-qret", z), false, "✘ Non, réessayez", ""); setTimeout(() => afficherMission(), 1100); }
+      });
+    }
+  }
+  function aller(m) {
+    E.m = m; E.phase = E.faites.has(m) ? "fini" : "consigne"; E.essais = 0; E.aPronostique = false;
+    calculer(); if (E.phase !== "consigne") afficherMission();
+  }
+  function construire() {
+    carte = new Carte($("#j3-cadre"));
+    const z = $("#j3-murs");
+    NOMS.forEach((nom, q) => {
+      const r = el("div", { class: "reglage", html: '<label for="j3-m' + q + '">' + nom + ' <span id="j3-v' + q + '"></span></label><input type="range" id="j3-m' + q + '" min="0" max="40" step="0.5">' });
+      z.append(r);
+      const inp = $("input", r);
+      inp.addEventListener("input", () => { E.bc[q] = +inp.value; calculer(); });
+      inp.addEventListener("change", () => { if (E.m === 2) { E.essais++; afficherMission(); } });
+    });
+    $$("#j3-mode button").forEach(b => b.addEventListener("click", () => { E.mode = b.dataset.v; calculer(); }));
+    $$("#j3-grille button").forEach(b => b.addEventListener("click", () => { E.N = +b.dataset.v; carte.sel = null; calculer(); }));
+    $("#j3-base").addEventListener("click", () => { E.bc = BC.slice(); E.mode = "dirichlet"; calculer(); });
+  }
+  return { ouvrir: () => { if (!E.demarre) { construire(); E.demarre = true; } calculer(); afficherMission(); } };
+})();
+
+/* ============================================================
+   JEU 4 — Course SOR
+   ============================================================ */
+const jeu4 = (() => {
+  const E = { N: 8, w: 1, vitesse: 1, essais: { 8: [], 16: [] }, theorie: { 8: false, 16: false }, anim: 0, demarre: false };
+  const SYS = {};
+  let carte;
+  function sys(N) {
+    if (SYS[N]) return SYS[N];
+    const S = TP5.assembler(N, 3 * N / 4, 4 / N, 4 / N, BC), gs = [];
+    const rGS = TP5.sor(S, 1, 1e-8, 2000, (x, k, e) => { gs.push(e); });
+    const rho = TP5.rhoJacobi(N, 3 * N / 4), wopt = TP5.omegaOptimal(rho), kopt = TP5.sor(S, wopt, 1e-8, 2000).k;
+    return (SYS[N] = { S, gs, kGS: rGS.k, rho, wopt, kopt, argent: Math.round(kopt * 1.25) });
+  }
+  const sc = T => ({ Nx: E.N, Ny: 3 * E.N / 4, mode: "dirichlet", bc: BC, T, vmin: 0, vmax: 25, valeurs: E.N === 8 });
+  function courbe(ecarts) {
+    const Y = sys(E.N), kmax = Math.max(Y.kGS, ecarts.length) * 1.05;
+    const lg = e => Math.max(-10.5, Math.min(3, Math.log10(e)));
+    tracer($("#j4-courbe"), { x: [0, kmax], y: [-10.5, 3], xl: "balayage k", yl: "‖x − x_ancien‖",
+      xt: graduations(kmax).map(v => [v, String(v)]), yt: [2, 0, -2, -4, -6, -8, -10].map(v => [v, "1e" + v]),
+      horiz: [{ y: -8, c: css("--red"), tir: [5, 4] }],
+      series: [{ pts: Y.gs.map((e, q) => [q + 1, lg(e)]), c: css("--ink-2"), a: 0.55, l: 1.6, tir: [4, 3] }, { pts: ecarts.map((e, q) => [q + 1, lg(e)]), c: css("--blue"), l: 2.4 }] });
+  }
+  function graduations(max) {
+    const pas = [5, 10, 20, 25, 50, 100, 200, 250, 500, 1000].find(p => max / p <= 6) || 1000, r = [];
+    for (let v = 0; v <= max; v += pas) r.push(v); return r;
+  }
+  function nuage() {
+    const Y = sys(E.N), L = E.essais[E.N], conv = L.filter(e => e.conv).map(e => e.k);
+    const ymax = Math.max(Y.kGS * 1.6, ...conv.map(k => k * 1.1));
+    tracer($("#j4-nuage"), { x: [0.2, 2.1], y: [0, ymax], xl: "ω", yl: "balayages",
+      xt: [0.2, 0.6, 1, 1.4, 1.8, 2].map(v => [v, virgule(v, 1)]), yt: graduations(ymax).map(v => [v, String(v)]),
+      horiz: [{ y: Y.kGS, c: css("--ink-2"), tir: [4, 3] }], vert: E.theorie[E.N] ? [{ x: Y.wopt, c: css("--gold"), tir: [6, 4] }, { x: 2, c: css("--red"), tir: [2, 3] }] : [],
+      points: L.map(e => e.conv ? { x: e.w, y: e.k, c: e.k <= Y.kopt ? css("--gold") : css("--blue") } : { x: e.w, y: ymax * 0.95, c: css("--red"), croix: true }) });
+  }
+  function lancer() {
+    cancelAnimationFrame(E.anim);
+    const Y = sys(E.N), w = E.w, hist = [], ecarts = [];
+    const r = TP5.sor(Y.S, w, 1e-8, 2000, (x, k, e) => { hist.push(Float64Array.from(x)); ecarts.push(e); return !(e > 1e8); });
+    const n = hist.length, duree = Math.max(700, Math.min(4500, n * 45)) / E.vitesse, t0 = performance.now();
+    $("#j4-go").disabled = true; $("#j4-resultat").innerHTML = "";
+    const pas = t => {
+      const q = Math.max(0, Math.min(n - 1, Math.floor((t - t0) / duree * n)));  // t (debut de l'image) peut preceder t0
+      carte.dessiner(sc(hist[q])); courbe(ecarts.slice(0, q + 1));
+      $("#j4-k").textContent = q + 1; $("#j4-ecart").textContent = expo(ecarts[q]); E.ecarts = ecarts.slice(0, q + 1);
+      if (q < n - 1) E.anim = requestAnimationFrame(pas); else terminer(r, w, n);
+    };
+    E.anim = requestAnimationFrame(pas);
+  }
+  function terminer(r, w, n) {
+    const Y = sys(E.N); $("#j4-go").disabled = false;
+    E.essais[E.N].push({ w, k: r.k, conv: r.converge });
+    let medaille = "", titre, texte, et = 0;
+    if (!r.converge) {
+      titre = "Pas de convergence."; medaille = "💥";
+      texte = n < 2000 ? "L'écart explose (" + expo(r.ecart) + " au balayage " + n + ") : avec ω ≥ 2, SOR diverge toujours." : "2000 balayages sans atteindre la tolérance : ω est trop " + (w < 1 ? "petit" : "proche de 2") + ".";
+    } else {
+      const k = r.k;
+      if (k <= Y.kopt) { medaille = "🥇"; et = 3; } else if (k <= Y.argent) { medaille = "🥈"; et = 2; } else if (k < Y.kGS) { medaille = "🥉"; et = 1; } else medaille = "🐢";
+      titre = k + " balayages avec ω = " + virgule(w, 2);
+      texte = k < Y.kGS ? "Vous battez Gauss-Seidel (" + Y.kGS + " balayages) de " + (Y.kGS - k) + " balayages." + (et < 3 ? " Or : " + Y.kopt + " balayages ou moins." : " Vous êtes à l'optimum !") :
+        k === Y.kGS ? "Exactement Gauss-Seidel (ω = 1) : " + Y.kGS + " balayages, comme dans MATLAB. Essayez ω > 1." : "Plus lent que Gauss-Seidel (" + Y.kGS + ") : " + (w < 1 ? "la sous-relaxation freine." : "trop de sur-relaxation, la solution oscille.");
+    }
+    if (et) noter("jeu-4", et);
+    if (et === 3) confettis();
+    $("#j4-resultat").innerHTML = '<div class="resultat"><span class="medaille">' + medaille + '</span><div><b>' + titre + '</b><br><span class="aide">' + texte + "</span></div></div>";
+    const conv = E.essais[E.N].filter(e => e.conv);
+    $("#j4-record").textContent = conv.length ? "Record " + E.N + " × " + (3 * E.N / 4) + " : " + Math.min(...conv.map(e => e.k)) + " balayages" : "Record : –";
+    $("#j4-theorie").disabled = E.essais[E.N].length < 3;
+    $("#j4-theorie").textContent = E.essais[E.N].length < 3 ? "🎓 La théorie (après 3 essais)" : "🎓 La théorie : le ω optimal";
+    nuage();
+  }
+  function theorie() {
+    const Y = sys(E.N), Ny = 3 * E.N / 4; E.theorie[E.N] = true; nuage();
+    const meilleur = [];
+    for (let c = 100; c < 200; c++) { const r = TP5.sor(Y.S, c / 100, 1e-8, 2000); if (r.converge) meilleur.push([c / 100, r.k]); }
+    const b = meilleur.reduce((a, c) => c[1] < a[1] ? c : a);
+    $("#j4-explication").innerHTML = '<div class="retour-msg ok" style="margin-top:12px"><b class="t">Le ω optimal de Young</b>' +
+      "Pour ce problème, le rayon spectral de la matrice de Jacobi B<sub>J</sub> = −D⁻¹(A − D) est connu : ρ = (cos(π/Nx) + cos(π/Ny))/2 = <b>" + virgule(Y.rho, 4) + "</b>. Le meilleur ω vaut alors " +
+      '<span class="formule">ω_opt = 2 / (1 + √(1 − ρ²)) = ' + virgule(Y.wopt, 4) + "</span>, soit <b>" + Y.kopt + " balayages</b> (ligne pointillée dorée)." +
+      (E.N === 8 ? console_([">> rho = max(abs(eig(BJ)))", "", "rho =", "", matLigne([+Y.rho.toFixed(4)]), "", ">> wopt = 2 / (1 + sqrt(1 - rho^2))", "", "wopt =", "", matLigne([+Y.wopt.toFixed(4)]), "", ">> kopt", "", "kopt =", "", matLigne([Y.kopt])]) : "") +
+      "Au pas de 0,01, le minimum est " + b[1] + " balayages pour ω = " + virgule(b[0], 2) + " : ω_opt minimise le taux de convergence asymptotique, pas exactement le nombre de balayages avec ce critère d'arrêt." +
+      (E.N === 8 ? "<br><br>⏱️ Mais pour 35 inconnues, <code>A \\ b</code> (creux) reste imbattable : 23 µs contre 22 ms pour SOR en boucles MATLAB ; sur 64 × 48 (2961 inconnues) : 3,4 ms contre 40 s (mesures de <code>video_chrono.m</code>, corrigé du TP5)." :
+        "<br><br>Sur la grille 16 × 12, ω_opt monte à " + virgule(Y.wopt, 3) + " et Gauss-Seidel demande " + Y.kGS + " balayages : plus la grille est fine, plus ρ est proche de 1 et plus le bon ω rapporte.") + "</div>";
+  }
+  function changerGrille(N) {
+    cancelAnimationFrame(E.anim); E.N = N; $("#j4-go").disabled = false;
+    $$("#j4-grille button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.v === N));
+    carte.sel = null; carte.dessiner(sc(new Float64Array(sys(N).S.n)));
+    $("#j4-k").textContent = 0; $("#j4-ecart").textContent = "–"; $("#j4-resultat").innerHTML = ""; $("#j4-explication").innerHTML = "";
+    E.ecarts = []; courbe([]); nuage();
+    $("#j4-theorie").disabled = E.essais[N].length < 3;
+    const conv = E.essais[N].filter(e => e.conv);
+    $("#j4-record").textContent = conv.length ? "Record " + N + " × " + (3 * N / 4) + " : " + Math.min(...conv.map(e => e.k)) + " balayages" : "Record : –";
+  }
+  function construire() {
+    carte = new Carte($("#j4-cadre"));
+    const w = $("#j4-w");
+    w.addEventListener("input", () => { E.w = +(+w.value).toFixed(2); $("#j4-wv").textContent = virgule(E.w, 2); });
+    $("#j4-go").addEventListener("click", lancer);
+    $("#j4-theorie").addEventListener("click", theorie);
+    $$("#j4-grille button").forEach(b => b.addEventListener("click", () => changerGrille(+b.dataset.v)));
+    $$("#j4-vitesse button").forEach(b => b.addEventListener("click", () => { E.vitesse = +b.dataset.v; $$("#j4-vitesse button").forEach(x => x.setAttribute("aria-pressed", x === b)); }));
+    $("#j4-vitesse button").setAttribute("aria-pressed", "true");
+    addEventListener("resize", () => { if (!$("#jeu-4").hidden) { nuage(); courbe(E.ecarts || []); } });
+  }
+  return { ouvrir: () => { if (!E.demarre) { construire(); E.demarre = true; } changerGrille(E.N); } };
+})();
+
+/* ============================================================
+   JEU 5 — Detective du code (sorties calculees par le noyau)
+   ============================================================ */
+const jeu5 = (() => {
+  let E, AFFAIRES;
+  function dossiers() {
+    const S = TP5.assembler(8, 6, 0.5, 0.5, BC), T = TP5.resoudre(S);
+    const st = b => TP5.stats(TP5.resoudre(TP5.assembler(8, 6, 0.5, 0.5, BC, "dirichlet", null, { bug: b })));
+    const oubli = st("mur_oublie"), signe = st("signe_mur");
+    const Tg = (i, j) => T[TP5.numero(i, j, 7) - 1], Tf = (r, c) => T[(c - 1) * 5 + r - 1];
+    const Ns = [10, 20, 40, 80], err = Ns.map(N => TP5.erreurManufacturee(N, { decalage: 1 }));
+    const rap = err.slice(0, -1).map((e, q) => e / err[q + 1]), p = TP5.pente(Ns.map(N => 2 / N), err);
+    const Sf = TP5.assembler(8, 6, 0.5, 0.5, BC, "faux"), mf = TP5.stats(TP5.resoudre(Sf)).moy;
+    const S3 = TP5.assembler(8, 6, 0.5, 0.5, BC, "isole"), lig = (S_, k, cols) => cols.map(c => { const L = S_.lignes[k - 1], q = L.c.indexOf(c); return q < 0 ? 0 : L.v[q]; });
+    const r2 = TP5.sor(S, 2.05, 1e-8, 2000), xmax = Math.max(...Array.from(r2.x, Math.abs));
+    return [
+      { titre: "L'assemblage qui plante", code: ["for j = 1:ny", "  for i = 1:nx", "    k = idx(i, j);", "    A(k, k) = 2*ax + 2*ay;", "#    A(k, idx(i-1, j)) = -ax;          % voisin de gauche", "    ..."],
+        sortie: [">> [A, b] = poisson2d(8, 6, 0.5, 0.5, bc);", "!Index in position 2 is invalid. Array indices must be positive integers or logical values."],
+        q: "Le code s'arrête dès le premier nœud. Pourquoi ?",
+        o: [["Pour i = 1, le voisin de gauche est le mur : idx(0, 1) = 0 n'est pas un indice. Il faut tester i > 1 et sinon passer le mur dans b", 1], ["A est trop petite : il faut spalloc(n, n, 6*n)", 0], ["nx et ny sont inversés dans idx", 0], ["Il faut écrire A(k, k-1) au lieu de A(k, idx(i-1, j))", 0]],
+        expl: "Chaque voisin doit être testé : <code>if i &gt; 1, A(k, idx(i-1, j)) = -ax; else, b(k) = b(k) + bc(1)*ax; end</code>. Et <code>A(k, k-1)</code> ne sauverait rien : pour i = 1, k − 1 est le dernier nœud de la rangée du dessous !" },
+      { titre: "Le mur qui gèle", code: ["if i < nx, A(k, idx(i+1, j)) = -ax;", "#end                                  % et le mur de droite ?", "if j > 1,  A(k, idx(i, j-1)) = -ay; else, b(k) = b(k) + bc(3)*ay; end"],
+        sortie: [">> T = A \\ b;", ">> [min(T)  max(T)]", "", "ans =", "", matLigne([oubli.min, oubli.max]), "", ">> all(T >= 10 & T <= 25)", "", "ans =", "", "  logical", "", "   0"],
+        q: "Tous les murs sont à 10 °C ou plus, et pourtant T descend à " + virgule(oubli.min, 2) + " °C. Diagnostic ?",
+        o: [["La contribution du mur de droite au second membre est oubliée : ce mur se comporte comme s'il était à 0 °C", 1], ["Normal : la salle perd de la chaleur par les fenêtres", 0], ["Le schéma est instable : il faut réduire h", 0], ["Il faut résoudre avec SOR au lieu de A \\ b", 0]],
+        expl: "Le <b>principe du maximum</b> donne l'alarme : toute valeur hors de [10 ; 25] est une erreur d'assemblage. Il manque <code>else, b(k) = b(k) + bc(2)*ax;</code> : sans elle, le mur droit compte pour 0 °C." },
+      { titre: "La salle sous zéro", code: ["if i > 1,  A(k, idx(i-1, j)) = -ax;", "#else, b(k) = b(k) - bc(1)*ax;", "end"],
+        sortie: [">> T = A \\ b;", ">> [min(T)  max(T)]", "", "ans =", "", matLigne([signe.min, signe.max])],
+        q: "Le mur chauffant est à 25 °C… et la salle descend à " + virgule(signe.min, 2) + " °C. Où est l'erreur ?",
+        o: [["Erreur de signe : la température du mur passe au second membre avec un + (on l'a soustraite)", 1], ["Il faut un signe − devant A(k, k)", 0], ["Le mur chauffant doit être dans la matrice A, pas dans b", 0], ["MATLAB ne gère pas les températures supérieures à 20 °C", 0]],
+        expl: "Dans l'équation du nœud, le voisin mur −T<sub>mur</sub>/h² passe de l'autre côté du signe égal : <b>b(k) += T<sub>mur</sub>/h²</b>. Avec le mauvais signe, le mur chauffant « refroidit » à −25 °C. Le principe du maximum le voit tout de suite." },
+      { titre: "La carte qui ment", code: ["T = A \\ b;", "#Tfaux = reshape(T, ny, nx);          % pour tracer la carte", "Tgrille = reshape(T, nx, ny)';"],
+        sortie: [">> [Tfaux(1, 7)  Tgrille(1, 7)]", "", "ans =", "", matLigne([Tf(1, 7), Tg(7, 1)])],
+        q: "Les deux nombres devraient être la température du coin bas-droit (entre deux murs à 10 °C). Lequel croire ?",
+        o: [["Tgrille : reshape(T, ny, nx) range les inconnues dans le mauvais ordre, sans aucun message d'erreur", 1], ["Les deux sont justes, l'écart vient de l'arrondi", 0], ["Tfaux : la transposition ' inverse les températures", 0], ["Aucun : A \\ b s'est trompé", 0]],
+        expl: "T est rangé rangée par rangée : k = (j − 1)·nx + i. <code>reshape(T, nx, ny)'</code> remet une rangée par ligne (première ligne = le bas de la salle). <code>reshape(T, ny, nx)</code> donne un tableau de la même taille mais faux, et MATLAB ne dit rien : ici " + virgule(Tf(1, 7), 4) + " au lieu de " + virgule(Tg(7, 1), 4) + " °C." },
+      { titre: "L'ordre qui s'effondre", code: ["h  = 2 / N;", "#xg = -1 + (0:N-2) * h;", "g  = @(i, j) -fman(xg(i), xg(j));", "[A, b] = poisson2d(N, N, h, h, [0 0 0 0], g);"],
+        sortie: [">> Ns = [10 20 40 80];", ">> format short e", ">> err = arrayfun(@erreur_manufacturee, Ns)", "", "err =", "", matLigneE(err), "", ">> format short", "", ">> rap = err(1:end-1) ./ err(2:end)", "", "rap =", "", matLigne(rap), "", ">> p = polyfit(log(2 ./ Ns), log(err), 1)", "", "p =", "", matLigne(p)],
+        q: "Le schéma à 5 points est d'ordre 2, mais la pente mesurée vaut " + virgule(p[0], 2) + ". Que se passe-t-il ?",
+        o: [["Les points où l'on évalue f sont décalés d'un pas : il faut xg = -1 + (1:N-1)*h", 1], ["Rien : le schéma à 5 points est d'ordre 1", 0], ["N est trop petit, il faut aller jusqu'à N = 1000", 0], ["polyfit doit prendre log(Ns) au lieu de log(2 ./ Ns)", 0]],
+        expl: "Avec les bons nœuds, les rapports valent 4 et la pente 2,0009 (corrigé du TP). Une pente de 1 signale presque toujours un <b>décalage aux bords</b> ou dans les indices : la solution manufacturée sert justement à le détecter." },
+      { titre: "Le sol isolé… ou presque", code: ["#nx = Nx - 1;  ny = Ny - 1;", "...", "#if j == 1, A(k, idx(i, j+1)) = -2*ay;        % mur isolé", "else, A(k, idx(i, j-1)) = -ay; ..."],
+        sortie: [">> size(Af)", "", "ans =", "", matLigne([Sf.n, Sf.n]), "", ">> mean(Tf)", "", "ans =", "", matLigne([mf])],
+        q: "Le sol doit être isolé (Neumann). Le code tourne et la salle se réchauffe. Est-il juste ?",
+        o: [["Non : la rangée du sol n'est pas devenue inconnue (ny = Ny, 42 inconnues) ; le mur isolé est décalé d'un pas", 1], ["Oui : 35 inconnues suffisent, un mur n'est jamais une inconnue", 0], ["Non : il fallait doubler le voisin du dessous", 0], ["Non : il manque b(k) += bc(3)*ay sur la première rangée", 0]],
+        expl: "Avec le nœud fictif T<sub>i,−1</sub> = T<sub>i,1</sub>, c'est la rangée du <b>mur</b> qui reçoit le coefficient doublé, et elle devient inconnue : 35 → 42 inconnues, moyenne " + virgule(TP5.stats(TP5.resoudre(S3)).moy, 4) + " °C. Ici, " + virgule(mf, 4) + " °C et un schéma d'ordre 1." },
+      { titre: "La symétrie perdue", code: ["[A3, b3] = poisson2d_isole(8, 6, 0.5, 0.5, bc);"],
+        sortie: [">> norm(A3 - A3', 1)", "", "ans =", "", matLigne([TP5.asymetrie(S3)]), "", ">> full(A3(1, [1 8]))", "", "ans =", "", matLigne(lig(S3, 1, [1, 8])), "", ">> full(A3(8, [1 8]))", "", "ans =", "", matLigne(lig(S3, 8, [1, 8]))],
+        q: "Avec le sol isolé, A3 n'est plus symétrique. Faut-il corriger le code ?",
+        o: [["Non : c'est normal, le coefficient doublé −2/h² = −8 du mur n'a pas de partenaire symétrique (−4)", 1], ["Oui : une matrice de diffusion est toujours symétrique", 0], ["Oui : il faut remplacer A3 par (A3 + A3')/2", 0], ["Non : c'est une erreur d'arrondi de MATLAB", 0]],
+        expl: "La ligne 1 (nœud du mur) contient −8 vers le nœud 8, mais la ligne 8 ne contient que −4 vers le nœud 1 : norm(A3 − A3', 1) = 4. Symétriser changerait le problème ! (On peut retrouver la symétrie en divisant par 2 les lignes du mur.)" },
+      { titre: "SOR s'emballe", code: ["#[x, k] = sor(A, b, 2.05, 1e-8, 2000);"],
+        sortie: [">> [x, k] = sor(A, b, 2.05, 1e-8, 2000);", "?Warning: Pas de convergence.", ">> k", "", "k =", "", matLigne([r2.k]), "", ">> max(abs(x))", "", "ans =", "", "  " + expo(xmax)],
+        q: "SOR tourne 2000 balayages et x atteint " + expo(xmax) + ". Diagnostic ?",
+        o: [["ω doit rester dans ]0 ; 2[ : au-delà de 2, SOR diverge, quelle que soit la matrice", 1], ["La tolérance 1e-8 est trop sévère", 0], ["nmax = 2000 est trop petit, il faut 20 000 balayages", 0], ["A n'est pas à diagonale dominante", 0]],
+        expl: "Théorème de Kahan : SOR ne peut converger que pour 0 &lt; ω &lt; 2. Pour cette matrice (symétrique définie positive), tout ω de ]0 ; 2[ converge, et le meilleur est ω_opt ≈ 1,383 (29 balayages) : à essayer dans la Course SOR !" },
+    ];
+  }
+  function demarrer() {
+    if (!AFFAIRES) AFFAIRES = dossiers();
+    E = { q: 0, bons: 0, score: 0 }; $("#j5-jeu").hidden = false; $("#j5-fin").hidden = true; poser();
+  }
+  function poser() {
+    const A = AFFAIRES[E.q];
+    $("#j5-q").textContent = "Affaire " + (E.q + 1) + " / " + AFFAIRES.length; $("#j5-score").textContent = E.score + " pt";
+    $("#j5-barre").style.width = E.q / AFFAIRES.length * 100 + "%";
+    $("#j5-dossier").innerHTML = '<h3 style="margin:0 0 6px">📁 ' + A.titre + '</h3><div class="console-titre">Extrait du code (ligne suspecte surlignée)</div>' + console_(A.code) +
+      '<div class="console-titre">Fenêtre de commandes</div>' + console_(A.sortie);
+    $("#j5-question").textContent = A.q; $("#j5-retour").innerHTML = ""; $("#j5-suivant").hidden = true;
+    const L = melanger(A.o.map(([t, b]) => ({ html: t, bon: !!b })));
+    choixBoutons($("#j5-choix"), L, (o, q, bs) => {
+      marquerChoix(bs, L, q); if (o.bon) { E.bons++; E.score += 100; }
+      retour($("#j5-retour"), o.bon, o.bon ? "✔ Affaire résolue ! +100 pt" : "✘ Fausse piste", A.expl);
+      $("#j5-score").textContent = E.score + " pt"; $("#j5-suivant").hidden = false;
+      $("#j5-suivant").textContent = E.q === AFFAIRES.length - 1 ? "Voir le résultat →" : "Affaire suivante →";
+    });
+  }
+  function suivant() {
+    if (E.q < AFFAIRES.length - 1) { E.q++; poser(); window.scrollTo({ top: $("#jeu-5").offsetTop - 10, behavior: "smooth" }); return; }
+    $("#j5-barre").style.width = "100%"; $("#j5-jeu").hidden = true; const z = $("#j5-fin"); z.hidden = false;
+    const et = E.bons >= 7 ? 3 : E.bons >= 5 ? 2 : E.bons >= 3 ? 1 : 0; noter("jeu-5", et);
+    ecranFin(z, { etoiles: et, titre: E.bons + " / 8 affaires résolues · " + E.score + " pt", rejouer: demarrer,
+      detail: "Les trois réflexes du TP5 : vérifier le <b>principe du maximum</b>, mesurer l'<b>ordre</b> sur une solution manufacturée, et <b>compter les inconnues</b> quand une condition aux limites change." });
+  }
+  $("#j5-suivant").addEventListener("click", suivant);
+  return { ouvrir: demarrer };
+})();
+
+/* ============================================================
+   Navigation
+   ============================================================ */
+const JEUX = { "jeu-1": jeu1, "jeu-2": jeu2, "jeu-3": jeu3, "jeu-4": jeu4, "jeu-5": jeu5 };
+function router() {
+  const id = location.hash.slice(1), vue = JEUX[id] ? id : "accueil";
+  $$(".vue").forEach(v => v.hidden = v.id !== vue);
+  majAccueil(); if (JEUX[id]) JEUX[id].ouvrir();
+  window.scrollTo(0, 0);
+}
+(function () {
+  const st = TP5.stats(TP5.resoudre(TP5.assembler(8, 6, 0.5, 0.5, BC)));
+  $("#verif-base").textContent = "T min = " + virgule(st.min, 4) + " °C, T max = " + virgule(st.max, 4) + " °C";
+})();
+addEventListener("hashchange", router);
+router();
+</script>
+</body>
+</html>
