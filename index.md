@@ -105,6 +105,19 @@ J'interviens également comme **enseignant vacataire** à l'[ENSAM Casablanca](h
       <span class="pub-q q1">Q1</span>
     </div>
     <div class="pub-right">
+      <h4>Vibration energy absorption characteristics of porous and functionally graded biomechanical implants</h4>
+      <p class="pub-venue">Results in Engineering · Elsevier · 114003 · Open Access</p>
+      <p class="pub-auth"><strong>M. Janane Allah</strong>, R. El Kadmiri, M. Zaydan, A. Timesli</p>
+      <a href="https://doi.org/10.1016/j.rineng.2026.114003" target="_blank" class="pub-read">DOI →</a>
+    </div>
+  </div>
+
+  <div class="pub-item">
+    <div class="pub-left">
+      <span class="pub-year">2026</span>
+      <span class="pub-q q1">Q1</span>
+    </div>
+    <div class="pub-right">
       <h4>A 3D extension of weak–strong formulation using a hybrid FE-meshless method for nonlinear structural analysis</h4>
       <p class="pub-venue">Engineering Analysis with Boundary Elements · Elsevier · Vol. 194, Part A, 107110</p>
       <p class="pub-auth">R. El Kadmiri, Y. Belaasilia, <strong>M. Janane Allah</strong>, A. Timesli</p>
@@ -200,12 +213,12 @@ J'interviens également comme **enseignant vacataire** à l'[ENSAM Casablanca](h
 
 <div class="kpi-row">
   <div class="kpi">
-    <div class="kpi-n">7</div>
+    <div class="kpi-n">8</div>
     <div class="kpi-l">Publications</div>
-    <div class="kpi-s">6 articles · 1 chapitre livre</div>
+    <div class="kpi-s">7 articles · 1 chapitre livre</div>
   </div>
   <div class="kpi">
-    <div class="kpi-n">5</div>
+    <div class="kpi-n">6</div>
     <div class="kpi-l">Revues Q1</div>
     <div class="kpi-s">Elsevier · Techno-Press</div>
   </div>
@@ -236,6 +249,11 @@ J'interviens également comme **enseignant vacataire** à l'[ENSAM Casablanca](h
 ## Actualités
 
 <div class="news-feed">
+  <div class="news-row">
+    <span class="news-dot green"></span>
+    <span class="news-tag">Nov. 2026</span>
+    <span class="news-text"><strong>📄 Publication J9</strong> : Article dans <em>Results in Engineering</em> (Q1, Elsevier, accès libre) — absorption de l'énergie vibratoire d'implants biomécaniques poreux et à gradient fonctionnel.</span>
+  </div>
   <div class="news-row">
     <span class="news-dot green"></span>
     <span class="news-tag">2026</span>

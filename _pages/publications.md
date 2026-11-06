@@ -20,8 +20,8 @@ toc_label: "Sections"
     </a>
   </div>
   <div class="pub-counters">
-    <div class="pub-c"><strong>6</strong><span>Articles publiés</span></div>
-    <div class="pub-c"><strong>5</strong><span>Revues Q1</span></div>
+    <div class="pub-c"><strong>7</strong><span>Articles publiés</span></div>
+    <div class="pub-c"><strong>6</strong><span>Revues Q1</span></div>
     <div class="pub-c"><strong>1</strong><span>Chapitre livre</span></div>
     <div class="pub-c"><strong>2</strong><span>En soumission</span></div>
     <div class="pub-c"><strong>8</strong><span>Conférences</span></div>
@@ -33,6 +33,44 @@ toc_label: "Sections"
 ## Articles de Revues Internationales
 
 ### 2026
+
+<div class="pub-full" id="j9">
+  <div class="pub-ribbon q1">Q1</div>
+  <div class="pub-content">
+    <div class="pub-top-row">
+      <span class="pub-ref">[J9]</span>
+      <span class="pub-venue-full">Results in Engineering · Elsevier · Open Access</span>
+      <span class="pub-year-pill">2026</span>
+    </div>
+    <h3>Vibration energy absorption characteristics of porous and functionally graded biomechanical implants</h3>
+    <p class="pub-auth-full"><strong>Mohamed JANANE ALLAH</strong>, Redouane El Kadmiri, Mostafa Zaydan, Abdelaziz Timesli</p>
+    <div class="pub-abstract-box">
+      <strong>Résumé :</strong> Étude des caractéristiques d'absorption de l'énergie vibratoire d'implants biomécaniques réalisés en matériaux poreux et à gradient fonctionnel (FGM). Article en accès libre (licence CC BY 4.0).
+    </div>
+    <div class="pub-kw-row">
+      <span>FGM</span><span>Porosité</span><span>Implants biomécaniques</span><span>Vibrations</span><span>Absorption d'énergie</span>
+    </div>
+    <div class="pub-links-row">
+      <a href="https://doi.org/10.1016/j.rineng.2026.114003" class="pub-btn">🔗 Article (DOI)</a>
+      <a href="https://www.sciencedirect.com/science/article/pii/S2590123026050103" class="pub-btn">📖 ScienceDirect (accès libre)</a>
+    </div>
+    <details class="bibtex-block">
+      <summary>📋 BibTeX</summary>
+      <pre><code>@article{jananeallah2026implants,
+  title={Vibration energy absorption characteristics of porous and functionally
+         graded biomechanical implants},
+  author={JANANE ALLAH, Mohamed and El Kadmiri, Redouane and Zaydan, Mostafa
+          and Timesli, Abdelaziz},
+  journal={Results in Engineering},
+  publisher={Elsevier},
+  pages={114003},
+  year={2026},
+  doi={10.1016/j.rineng.2026.114003},
+  note={Q1, open access}
+}</code></pre>
+    </details>
+  </div>
+</div>
 
 <div class="pub-full" id="j8">
   <div class="pub-ribbon q1">Q1</div>

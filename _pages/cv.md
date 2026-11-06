@@ -39,13 +39,14 @@ author_profile: true
 
 ## Publications (Sélection)
 
-1. **[J8]** El Kadmiri R., Belaasilia Y., JANANE ALLAH M., Timesli A. "A 3D extension of weak–strong formulation using a hybrid FE-meshless method for nonlinear structural analysis." *Engineering Analysis with Boundary Elements* (Q1). 2026.
-2. **[J1]** JANANE ALLAH M., Hassouna S., Timesli A., Abou El Majd B. "LSTM-based neural network architecture for predicting the nonlinear dynamic behavior of functional gradient viscoelastic porous plates." *Materials Today Communications* (Q1). 2024.
-3. **[J2]** JANANE ALLAH M., Hassouna S., Aitbelale R., Timesli A. "Free vibration analysis of FGM plates using ANN and TSDT." *Steel and Composite Structures* (Q1). 2023.
-4. **[J3]** JANANE ALLAH M., Timesli A. "Nonlinear dynamic analysis of viscoelastic FGM with porosity distributions." *Materials Today Communications* (Q1). 2023.
-5. **[J4]** JANANE ALLAH M., Timesli A., Belaasilia Y. "Nonlinear dynamic analysis of porous FGM based on TSDT." *Steel and Composite Structures* (Q1). 2022.
-6. **[C1]** Hassouna S., JANANE ALLAH M., Timesli A. "Crashworthiness Applications of Composite Sandwich Structures." *CRC Press*. 2022.
-7. **[J5]** JANANE ALLAH M., Belaasilia Y., Timesli A., El Haouzi A. "TSDT theory for free vibration of FGM plates." *Mathematical Modeling and Computing* (Q3). 2021.
+1. **[J9]** JANANE ALLAH M., El Kadmiri R., Zaydan M., Timesli A. "Vibration energy absorption characteristics of porous and functionally graded biomechanical implants." *Results in Engineering* (Q1). 2026.
+2. **[J8]** El Kadmiri R., Belaasilia Y., JANANE ALLAH M., Timesli A. "A 3D extension of weak–strong formulation using a hybrid FE-meshless method for nonlinear structural analysis." *Engineering Analysis with Boundary Elements* (Q1). 2026.
+3. **[J1]** JANANE ALLAH M., Hassouna S., Timesli A., Abou El Majd B. "LSTM-based neural network architecture for predicting the nonlinear dynamic behavior of functional gradient viscoelastic porous plates." *Materials Today Communications* (Q1). 2024.
+4. **[J2]** JANANE ALLAH M., Hassouna S., Aitbelale R., Timesli A. "Free vibration analysis of FGM plates using ANN and TSDT." *Steel and Composite Structures* (Q1). 2023.
+5. **[J3]** JANANE ALLAH M., Timesli A. "Nonlinear dynamic analysis of viscoelastic FGM with porosity distributions." *Materials Today Communications* (Q1). 2023.
+6. **[J4]** JANANE ALLAH M., Timesli A., Belaasilia Y. "Nonlinear dynamic analysis of porous FGM based on TSDT." *Steel and Composite Structures* (Q1). 2022.
+7. **[C1]** Hassouna S., JANANE ALLAH M., Timesli A. "Crashworthiness Applications of Composite Sandwich Structures." *CRC Press*. 2022.
+8. **[J5]** JANANE ALLAH M., Belaasilia Y., Timesli A., El Haouzi A. "TSDT theory for free vibration of FGM plates." *Mathematical Modeling and Computing* (Q3). 2021.
 
 ---
 
