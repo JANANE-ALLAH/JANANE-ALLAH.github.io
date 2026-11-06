@@ -46,7 +46,7 @@ toc_icon: "flask"
       <div class="topic">
         <h4>🏥 Applications biomédicales — Absorption d'énergie</h4>
         <p>Étude de la capacité d'absorption d'énergie lors d'impacts progressifs des plaques FGM poreuses viscoélastiques. Applications à la nouvelle génération de biomatériaux pour les systèmes biomédicaux (implants, prothèses, dispositifs de protection).</p>
-        <div class="topic-refs"><span>→ [J9], [J6 — en cours], [C1]</span></div>
+        <div class="topic-refs"><span>→ [J9], [C1]</span></div>
       </div>
     </div>
     <div class="methods-row">

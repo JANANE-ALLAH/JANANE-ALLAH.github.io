@@ -23,7 +23,7 @@ toc_label: "Sections"
     <div class="pub-c"><strong>7</strong><span>Articles publiés</span></div>
     <div class="pub-c"><strong>6</strong><span>Revues Q1</span></div>
     <div class="pub-c"><strong>1</strong><span>Chapitre livre</span></div>
-    <div class="pub-c"><strong>2</strong><span>En soumission</span></div>
+    <div class="pub-c"><strong>1</strong><span>En soumission</span></div>
     <div class="pub-c"><strong>8</strong><span>Conférences</span></div>
   </div>
 </div>
@@ -354,19 +354,6 @@ toc_label: "Sections"
 ---
 
 ## Articles en Cours de Soumission
-
-<div class="pub-full inprogress" id="j6">
-  <div class="pub-ribbon wp">En cours</div>
-  <div class="pub-content">
-    <div class="pub-top-row">
-      <span class="pub-ref">[J6]</span>
-      <span class="pub-year-pill">En cours</span>
-    </div>
-    <h3>Mechanical energy absorption capacity of viscoelastic plates made of porous FGM materials during a progressive collision — A new generation of materials for biomedical systems</h3>
-    <p class="pub-auth-full"><strong>M. JANANE ALLAH</strong>, et al.</p>
-    <p class="wp-status">📝 En phase finale de rédaction · Soumission prévue 2025</p>
-  </div>
-</div>
 
 <div class="pub-full inprogress" id="j7">
   <div class="pub-ribbon wp">En cours</div>
