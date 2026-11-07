@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hydraulique en 3D · ENSAM</title>
-<meta name="description" content="Simulations 3D du module Hydraulique (Licence Professionnelle IMPI, ENSAM Casablanca) : distributeurs, vérins, pompes et accumulateurs à manipuler en coupe.">
+<meta name="description" content="Simulations 3D du module Hydraulique (Licence Professionnelle IMPI, ENSAM Casablanca) : distributeurs, vérins, pompes, accumulateurs et filtres à manipuler en coupe.">
 <style>
 :root{
   --bg:#F4F6FB; --surface:#FFFFFF; --surface-2:#EEF2F9; --ink:#15213B; --ink-2:#4B5875; --line:#DCE3EE;
@@ -237,7 +237,7 @@ input[type=range]{width:100%;accent-color:var(--blue);height:28px}
 .legende3d{display:flex;flex-wrap:wrap;gap:10px;font-size:12.5px;color:var(--ink-2);margin-top:8px}
 .legende3d i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px}
 @media (min-width:700px){.cartes{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){.vue3d{height:330px}}
+@media (max-width:640px){.vue3d{height:330px}.vue3d .vue-btns button{font-size:11px;padding:4px 7px}}
 </style>
 </head>
 <body>
@@ -248,7 +248,7 @@ input[type=range]{width:100%;accent-color:var(--blue);height:28px}
       <h1>🛠️ L'hydraulique en 3D</h1>
       <div class="total" id="total" aria-live="polite">★ 0 / 15</div>
     </div>
-    <p>Quatre bancs virtuels pour manipuler les composants du chapitre 3 : faites tourner les pièces en coupe, déplacez le tiroir, mettez les vérins sous pression, réglez les pompes et gonflez l'accumulateur.</p>
+    <p>Cinq bancs virtuels pour manipuler les composants du chapitre 3 : faites tourner les pièces en coupe, déplacez le tiroir, mettez les vérins sous pression, réglez les pompes, gonflez l'accumulateur et comptez les particules qu'arrête un filtre.</p>
     <div class="autres"><a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-pro-hydraulique.md">⬅ Page du module</a> · <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/hydraulique/Chapitre_03_Technologie_systemes_hydrauliques/1_Cours_chapitre_03.pdf">📘 Chapitre 3 : technologie (PDF)</a></div>
   </div>
 </header>
@@ -319,6 +319,21 @@ input[type=range]{width:100%;accent-color:var(--blue);height:28px}
     <div>
       <div class="panneau mission" id="j4-mission"></div>
       <div class="panneau" style="margin-top:16px"><div class="groupe-titre" style="margin-top:0">Accumulateur</div><div class="segment" id="j4-type"><button data-v="vessie">À vessie</button><button data-v="piston">À piston</button><button data-v="membrane">À membrane</button></div><div class="groupe-titre">Transformation du gaz</div><div class="segment" id="j4-n"><button data-v="1">Lente (isotherme)</button><button data-v="1.4">Rapide (adiabatique)</button></div><div class="groupe-titre">Circuit</div><div class="actions" style="margin-top:0"><button class="btn" id="j4-pompe">▶ Pompe</button><button class="btn sec" id="j4-conso">↗ Vanne vers le circuit</button><button class="btn sec" id="j4-purge">⤓ Vanne de purge</button></div><div class="groupe-titre">Azote (valve de gonflage)</div><div class="actions" style="margin-top:0"><button class="btn sec petit" id="j4-g10m">−10</button><button class="btn sec petit" id="j4-g1m">−1</button><button class="btn sec petit" id="j4-g1p">+1</button><button class="btn sec petit" id="j4-g10p">+10 bar</button><button class="btn sec" id="j4-ctrl">🔍 Contrôler la précharge</button></div><div id="j4-msg" aria-live="polite"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 5 : Les filtres -->
+<section id="jeu-5" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🔬 Les filtres</h2><p class="sous">Comptez les particules avant et après le filtre : rapport β, efficacité, colmatage et by-pass</p></div>
+    <div class="compteurs"><span class="compteur" id="j5-compte">Missions : 0 / 5</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau"><div class="vue3d" id="j5-3d"><div class="chargement">Chargement de la scène 3D…</div></div><div class="legende3d"><span><i style="background:#D62828"></i>huile à filtrer</span><span><i style="background:#1F6FEB"></i>huile filtrée</span><span>Particules (tailles exagérées) :</span><span><i style="background:#6B7480"></i>4–6 µm</span><span><i style="background:#C98A1A"></i>6–14 µm</span><span><i style="background:#A3401C"></i>14–38 µm</span><span><i style="background:#231A12"></i>≥ 38 µm</span></div><div class="afficheurs" id="j5-aff"></div><p class="aide" id="j5-iso" style="margin:12px 0 4px"></p><table class="tableau" id="j5-table"></table><p class="aide" id="j5-gt" style="margin:14px 0 2px"></p><div class="graphe" id="j5-courbe"><canvas aria-label="Évolution au cours du temps"></canvas></div><div class="symbole"><p class="t" style="margin-bottom:4px"><b>Où placer le filtre ?</b> Cliquez un emplacement pour voir son rôle.</p><div id="j5-circuit"></div><div id="j5-circuit-t" aria-live="polite"></div></div></div>
+    <div>
+      <div class="panneau mission" id="j5-mission"></div>
+      <div class="panneau" style="margin-top:16px"><div class="groupe-titre" style="margin-top:0">Élément filtrant</div><div class="segment multi" id="j5-el"><button data-v="crepine">Crépine 125 µm</button><button data-v="cellulose">Cellulose 25 µm</button><button data-v="fv10">Fibre de verre 10 µm</button><button data-v="fv3">Fibre de verre 3 µm</button></div><div class="groupe-titre">Banc d’essai</div><div class="actions" style="margin-top:0"><button class="btn" id="j5-pompe">▶ Pompe</button><button class="btn sec" id="j5-inj">Injection</button></div><div class="reglage" style="margin-top:12px"><label for="j5-Q">Débit Q <span id="j5-Qv"></span></label><input type="range" id="j5-Q" min="10" max="80" step="1" value="60"></div><div class="actions" style="margin-top:4px"><button class="btn" id="j5-rel">📋 Relever les compteurs</button><button class="btn sec" id="j5-chg">🔧 Remplacer l’élément</button></div><div id="j5-msg" aria-live="polite"></div><table class="tableau" id="j5-rels" style="margin-top:10px"></table></div>
     </div>
   </div>
 </section>
@@ -1856,6 +1871,375 @@ const jeu4 = (() => {
     } else MM.afficher();
   }, etat: () => E, regler, gonfler, controler };
 })();
+/* ---------- SIMULATION 5 : les filtres et le rapport beta ---------- */
+const jeu5 = (() => {
+  const VRES = 200, ACCEL = 1, T_COLM = 150;                                    // reservoir (L) ; temps accelere : 1 s reelle = ACCEL min ; duree de colmatage de reference (min, modele)
+  const REF = HYD.pollutionRef(), CL = HYD.CLASSES, TA = HYD.TAILLES, I10 = TA.indexOf(10), U10REF = HYD.cumul(REF)[I10];
+  const POIDS = CL.map(c => c.s * c.s * c.s);                                     // masse d'une particule ~ s^3 (colmatage)
+  const ELS = HYD.ELEMENTS;
+  const E = { el: "fv10", Q: 60, pompe: false, inj: true, c: 0, t: 0, n: REF.slice(), fb: 0, dp: 0, dpEl: 0, rel: [], hist: [], debut: 0, erreurs: 0,
+    m3: { bypass: null, remplace: false, verif: null }, ex2: null, place: { q: 0, trouve: [], erreurs: 0 }, verrouQ: false, sig: "" };
+  let V = null, MM, A = null, horloge = 0;
+
+  // ---------- physique ----------
+  const cachePass = {};
+  const passe = (el, deg) => { const k = el + "|" + deg.toFixed(3); return cachePass[k] || (cachePass[k] = HYD.passages(el, deg)); };
+  const CAPT_REF = (() => { const p = HYD.passages("fv10", 1); return REF.reduce((s, v, i) => s + v * (1 - p[i]) * POIDS[i], 0) * 60; })();
+  function etatFiltre() {
+    const dpEl = HYD.dpElement(E.el, E.Q, E.c), fb = E.pompe ? HYD.partBypass(dpEl) : 0;
+    return { dpEl, fb, dp: E.pompe ? Math.min(dpEl, HYD.DP_BYPASS + 0.3 * fb) : 0, deg: HYD.degradation(Math.min(dpEl, HYD.DP_BYPASS)) };
+  }
+  // comptages dans 100 mL : amont = huile du reservoir, aval = ce qui traverse l'element + ce qui contourne par le by-pass
+  function mesure() {
+    const F = etatFiltre(), p = passe(E.el, F.deg), U = HYD.cumul(E.n), D = HYD.cumul(E.n.map((v, i) => v * ((1 - F.fb) * p[i] + F.fb)));
+    return { U, D, b: U.map((u, i) => D[i] > 0 ? u / D[i] : 1e6), fb: F.fb, dp: F.dp };
+  }
+  function pas(dt) {
+    const F = etatFiltre(); E.fb = F.fb; E.dp = F.dp; E.dpEl = F.dpEl;
+    if (E.pompe) {
+      let reste = dt * ACCEL;
+      while (reste > 1e-9) {
+        const tm = Math.min(0.25, reste), G = etatFiltre(), p = passe(E.el, G.deg); reste -= tm; E.t += tm;
+        const capt = E.n.reduce((s, v, i) => s + v * (1 - G.fb) * (1 - p[i]) * POIDS[i], 0) * E.Q;
+        E.c = Math.min(0.97, E.c + capt / CAPT_REF * tm / (T_COLM * ELS[E.el].capa));
+        E.n = E.n.map((v, i) => v * Math.exp(-(1 - ((1 - G.fb) * p[i] + G.fb)) * E.Q * tm / VRES));
+        if (E.inj) E.n = E.n.map((v, i) => v + (REF[i] - v) * (1 - Math.exp(-tm / 0.05)));   // le doseur maintient la pollution amont (banc multipasse)
+        const u10 = HYD.cumul(E.n)[I10];
+        if (E.ex2 && !E.ex2.fin && u10 <= 0.01 * U10REF) E.ex2.fin = E.t;
+        const h = E.hist[E.hist.length - 1];
+        if (!h || E.t - h[0] >= 0.25) { E.hist.push([E.t, u10, etatFiltre().dp]); if (E.hist.length > 800) E.hist.shift(); }
+      }
+    }
+    dessiner(dt, F);
+  }
+
+  // ---------- formats ----------
+  const mille = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  const fN = n => n >= 100 ? mille(n) : n >= 10 ? vg(n, 1) : n >= 0.01 ? vg(n, 2) : "< 0,01";
+  const fB = b => b >= 1e4 ? "> 10 000" : b >= 100 ? mille(b) : b >= 10 ? vg(b, 1) : vg(b, 2);
+  const fE = b => { const e = (1 - 1 / b) * 100; return e >= 99.99 ? "> 99,99 %" : vg(e, e >= 99.9 ? 2 : 1) + " %"; };
+
+  // ---------- scene ----------
+  function anneauY(re, ri, h, mat) { return new THREE.Mesh(new THREE.LatheGeometry([new THREE.Vector2(ri, -h / 2), new THREE.Vector2(re, -h / 2), new THREE.Vector2(re, h / 2), new THREE.Vector2(ri, h / 2), new THREE.Vector2(ri, -h / 2)], 56), mat); }
+  function canal(sc, pts, r, c, plans) {
+    const ch = new THREE.CurvePath(); for (let i = 0; i < pts.length - 1; i++) ch.add(new THREE.LineCurve3(new THREE.Vector3(...pts[i]), new THREE.Vector3(...pts[i + 1])));
+    const m = new THREE.MeshStandardMaterial({ color: c, transparent: true, opacity: 0.45, roughness: 0.3, side: THREE.DoubleSide, clippingPlanes: plans, depthWrite: false });
+    const t = new THREE.Mesh(new THREE.TubeGeometry(ch, pts.length * 12, r, 16, false), m); sc.add(t);
+    pts.slice(1, -1).forEach(p => { const b = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 10), m); b.position.set(...p); sc.add(b); });
+    return m;
+  }
+  function texturePerforee() {
+    const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
+    x.fillStyle = "#B9C2CC"; x.fillRect(0, 0, 128, 128); x.globalCompositeOperation = "destination-out";
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { x.beginPath(); x.arc(16 + 32 * i + (j % 2) * 16, 16 + 32 * j, 9, 0, 7); x.fill(); }
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 7); return t;
+  }
+  function construire() {
+    V = vue3D($("#j5-3d"), { section: $("#jeu-5"), camera: [0.5, 0.9, 15.6], cible: [0, -0.4, 0], dmin: 2.5, dmax: 26 });
+    V.btns.append(el("button", { html: "🔍 Le filtre", onclick: () => { V.camera.position.set(0.4, 1.2, 9.0); V.orbite.target.set(0, 0.9, 0); V.orbite.update(); } }));
+    const sc = V.scene, plans = PLAN_COUPE(); A = { plans };
+    // tete, cuve, bouchon
+    const tete = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.9, 1.8), MAT.coupe(0x8C99A8, plans)); tete.position.y = 2.0; sc.add(tete);
+    [-1, 1].forEach(k => { const o = cylX(0.2, 0.25, MAT.acier()); o.position.set(k * 1.36, 2.0, 0); sc.add(o); });
+    const cuve = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 3.3, 56, 1, true), MAT.coupe(0x4E6E8E, plans)); cuve.position.y = -0.1; sc.add(cuve);
+    const fond = new THREE.Mesh(new THREE.SphereGeometry(1.0, 56, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), MAT.coupe(0x4E6E8E, plans)); fond.scale.y = 0.35; fond.position.y = -1.75; sc.add(fond);
+    const bouchon = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.22, 16), MAT.acier()); bouchon.position.y = -2.18; sc.add(bouchon);
+    // huile : chambre amont (autour de l'element) et tube central (aval)
+    A.hAm = anneauY(0.985, 0.8, 3.15, new THREE.MeshStandardMaterial({ color: COUL.P, transparent: true, opacity: 0.22, side: THREE.DoubleSide, clippingPlanes: plans, depthWrite: false })); A.hAm.position.y = -0.1; sc.add(A.hAm);
+    A.hAv = new THREE.Mesh(new THREE.CylinderGeometry(0.47, 0.47, 2.9, 40), new THREE.MeshStandardMaterial({ color: COUL.T, transparent: true, opacity: 0.22, side: THREE.DoubleSide, clippingPlanes: plans, depthWrite: false })); A.hAv.position.y = -0.05; sc.add(A.hAv);
+    // element plisse
+    const N = 40, f = new THREE.Shape();
+    for (let k = 0; k <= 2 * N; k++) { const a = k * Math.PI / N, r = k % 2 ? 0.58 : 0.78; if (k) f.lineTo(r * Math.cos(a), r * Math.sin(a)); else f.moveTo(r, 0); }
+    const trou = new THREE.Path(); trou.absarc(0, 0, 0.51, 0, Math.PI * 2, true); f.holes.push(trou);
+    const geo = new THREE.ExtrudeGeometry(f, { depth: 2.9, bevelEnabled: false, curveSegments: 6 }); geo.rotateX(-Math.PI / 2); geo.translate(0, -1.5, 0);
+    A.media = new THREE.MeshStandardMaterial({ color: ELS[E.el].teinte, roughness: 0.85, metalness: 0.05, side: THREE.DoubleSide, clippingPlanes: plans });
+    sc.add(new THREE.Mesh(geo, A.media));
+    [1.47, -1.55].forEach(y => { const a = anneauY(0.82, 0.46, 0.1, MAT.coupe(0x9AA5B1, plans)); a.position.y = y; sc.add(a); });
+    const perf = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2.9, 40, 1, true), new THREE.MeshStandardMaterial({ map: texturePerforee(), metalness: 0.6, roughness: 0.4, side: THREE.DoubleSide, clippingPlanes: plans, alphaTest: 0.5 }));
+    perf.position.y = -0.05; sc.add(perf);
+    // canaux de la tete : entree, sortie, by-pass
+    A.cIn = canal(sc, [[-1.48, 2.0, 0], [-0.9, 2.0, 0], [-0.9, 1.52, 0]], 0.16, COUL.P, plans);
+    A.cOut = canal(sc, [[0, 1.45, 0], [0, 2.0, 0], [1.48, 2.0, 0]], 0.16, COUL.T, plans);
+    A.cBy = canal(sc, [[-0.9, 1.78, 0], [0, 1.78, 0]], 0.075, COUL.neutre, plans);
+    A.clapet = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.2, 20), MAT.chrome()); A.clapet.rotation.z = Math.PI / 2; A.clapet.position.set(-0.56, 1.78, -0.02); sc.add(A.clapet);
+    A.ress = ressort(0.065, 6, 0.012); A.ress.position.set(-0.45, 1.78, -0.02); sc.add(A.ress);
+    // indicateur de colmatage et manometre differentiel
+    const socle = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.14, 24), MAT.sombre()); socle.position.set(0.72, 2.52, -0.25); sc.add(socle);
+    A.indic = new THREE.Mesh(new THREE.SphereGeometry(0.15, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x2E9E44, emissive: 0x0B3D16, roughness: 0.4 }));
+    A.indic.position.set(0.72, 2.58, -0.25); sc.add(A.indic);
+    A.mano = manometre(6, 0.34); A.mano.g.position.set(-0.6, 3.05, 0.1); sc.add(A.mano.g);
+    const tige = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.32, 10), MAT.acier()); tige.position.set(-0.6, 2.6, 0); sc.add(tige);
+    // banc : reservoir, pompe, compteurs, injection de poussiere
+    const res = new THREE.Mesh(new THREE.BoxGeometry(8.4, 1.0, 1.5), MAT.verre(0x7FA6C9, 0.22)); res.position.set(0, -3.75, 0); sc.add(res);
+    const hres = new THREE.Mesh(new THREE.BoxGeometry(8.3, 0.75, 1.4), new THREE.MeshStandardMaterial({ color: COUL.T, transparent: true, opacity: 0.32, depthWrite: false })); hres.position.set(0, -3.86, 0); sc.add(hres);
+    const pompe = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.55, 0.55), MAT.peint(0x3D4B5C)); pompe.position.set(-3.6, -2.75, 0); sc.add(pompe);
+    const moteur = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.75, 32), MAT.peint(0x2E5E8C)); moteur.position.set(-3.6, -2.1, 0); sc.add(moteur);
+    A.TA = tuyau(sc, [[-3.6, -3.55, 0], [-3.6, -3.03, 0]], 0.1); A.TA.teinter(COUL.T);
+    A.TP = tuyau(sc, [[-3.3, -2.75, 0], [-2.9, -2.75, 0], [-2.9, 2.0, 0], [-1.48, 2.0, 0]], 0.1);
+    A.TR = tuyau(sc, [[1.48, 2.0, 0], [3.1, 2.0, 0], [3.1, -3.4, 0]], 0.1);
+    const compteur = x => { const g = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.62, 0.5), MAT.peint(0x24364A)); g.add(b);
+      const ecran = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.24), new THREE.MeshBasicMaterial({ color: 0x5EE6C1 })); ecran.position.z = 0.26; g.add(ecran); g.position.set(x, 2.0, 0); sc.add(g); return g; };
+    compteur(-2.2); compteur(2.3);
+    A.etAm = V.etiquette("", [-2.2, 1.36, 0], "discret"); A.etAv = V.etiquette("", [2.3, 1.36, 0], "discret");
+    const tremie = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.55, 24, 1, true), MAT.coupe(0x9A6B2F, [])); tremie.rotation.x = Math.PI; tremie.position.set(-1.7, -2.6, 0); sc.add(tremie);
+    V.etiquette("Poussière d’essai", [-0.85, -2.6, 0], "discret");
+    V.etiquette("Élément filtrant", [-1.95, 0.35, 0], "discret"); V.etiquette("Cuve", [1.45, -1.0, 0], "discret");
+    V.etiquette("By-pass", [-0.42, 2.3, 0.3], "discret"); V.etiquette("Δp", [-1.35, 3.08, 0.1], "discret"); V.etiquette("Indicateur", [1.15, 3.0, -0.2], "discret");
+    V.etiquette("Pompe", [-3.6, -1.5, 0], "discret"); V.etiquette("Réservoir 200 L", [1.75, -2.9, 0.4], "discret");
+    // particules : en mouvement, arretees sur l'element, en suspension dans le reservoir, poussiere injectee
+    const sph = new THREE.SphereGeometry(1, 8, 6), mp = () => new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.1 });
+    A.pm = new THREE.InstancedMesh(sph, mp(), 240); A.pb = new THREE.InstancedMesh(sph, mp(), 420); A.pr = new THREE.InstancedMesh(sph, mp(), 140); A.pd = new THREE.InstancedMesh(sph, mp(), 24);
+    [A.pm, A.pb, A.pr, A.pd].forEach(m => { m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; sc.add(m); });
+    A.mob = []; A.nb = 0; A.acc = 0; const zero = new THREE.Matrix4().makeScale(0, 0, 0), noir = new THREE.Color(0x3A3226);
+    for (let i = 0; i < 240; i++) { A.pm.setMatrixAt(i, zero); A.pm.setColorAt(i, noir); }
+    for (let i = 0; i < 420; i++) { A.pb.setMatrixAt(i, zero); A.pb.setColorAt(i, noir); }
+    A.res = []; for (let i = 0; i < 140; i++) { A.res.push([-3.9 + 7.8 * Math.random(), -4.15 + 0.6 * Math.random(), -0.6 + 1.2 * Math.random(), Math.random() * 6]); A.pr.setColorAt(i, new THREE.Color(0x4A3C2A)); }
+    A.dust = []; for (let i = 0; i < 24; i++) { A.dust.push(Math.random()); A.pd.setColorAt(i, new THREE.Color(0x9A6B2F)); }
+    V.chaque(pas);
+    habiller(); bouchonsSelon(E.c);
+  }
+  // couleur et taille d'une particule selon sa taille (um)
+  const couleurTaille = s => new THREE.Color(s < 6 ? 0x6B7480 : s < 14 ? 0xC98A1A : s < 38 ? 0xA3401C : 0x231A12);
+  const rayonTaille = s => 0.024 + 0.0021 * Math.min(s, 40);
+  function chemin(bypass) {
+    const zc = -0.07, P = [[-1.48, 2.0, zc], [-0.9, 2.0, zc]];
+    if (bypass) return { pts: P.concat([[-0.9, 1.78, zc], [0, 1.78, zc], [0, 2.0, zc], [1.48, 2.0, zc]]), arret: -1 };
+    const g = Math.random() < 0.5, th = g ? Math.PI + 0.06 + 0.4 * Math.random() : 2 * Math.PI - 0.06 - 0.4 * Math.random(), y = -1.3 + 2.55 * Math.random();
+    const R = (r, yy) => [r * Math.cos(th), yy, r * Math.sin(th)], xc = 0.22 * Math.cos(th);
+    const pts = P.concat([[-0.9, 1.62, zc], R(0.9, 1.62), R(0.9, y), R(0.81, y), R(0.53, y), [xc, y, zc], [xc, 1.3, zc], [0, 1.5, zc], [0, 2.0, zc], [1.48, 2.0, zc]]);
+    return { pts, arret: P.length + 3 };
+  }
+  function lancer(p, F) {
+    let r = Math.random() * A.som, i = 0; while (i < CL.length - 1 && r > A.poids[i]) { r -= A.poids[i]; i++; }
+    const s = CL[i].s * (0.9 + 0.2 * Math.random()), by = Math.random() < F.fb, stop = !by && Math.random() > p[i];
+    const ch = chemin(by), v = ch.pts.map(q => new THREE.Vector3(...q)), L = [0];
+    for (let k = 1; k < v.length; k++) L.push(L[k - 1] + v[k].distanceTo(v[k - 1]));
+    const slot = A.mob.findIndex(m => !m.actif), o = { actif: true, v, L, d: 0, fin: stop ? L[ch.arret] : L[L.length - 1], stop, r: rayonTaille(s), coul: couleurTaille(s) };
+    if (slot < 0) { if (A.mob.length >= 240) return; A.mob.push(o); A.pm.setColorAt(A.mob.length - 1, o.coul); } else { A.mob[slot] = o; A.pm.setColorAt(slot, o.coul); }
+    A.pm.instanceColor.needsUpdate = true;
+  }
+  const M4 = new THREE.Matrix4(), Q4 = new THREE.Quaternion(), S3 = new THREE.Vector3(), P3 = new THREE.Vector3();
+  function coller(pos, r, coul) {
+    const k = A.nb % 420; A.nb++;
+    P3.copy(pos); P3.y += (Math.random() - 0.5) * 0.04; A.pb.setMatrixAt(k, M4.compose(P3, Q4, S3.setScalar(r))); A.pb.setColorAt(k, coul);
+    A.pb.instanceMatrix.needsUpdate = true; A.pb.instanceColor.needsUpdate = true;
+  }
+  function bouchonsSelon(c) {                                                         // element deja charge (mission 3)
+    if (!A || !A.pb) return; const zero = new THREE.Matrix4().makeScale(0, 0, 0);
+    for (let i = 0; i < 420; i++) A.pb.setMatrixAt(i, zero); A.nb = 0; A.pb.instanceMatrix.needsUpdate = true;
+    const n = Math.round(c * 380);
+    for (let i = 0; i < n; i++) { const g = Math.random() < 0.5, th = g ? Math.PI + 0.06 + 0.4 * Math.random() : 2 * Math.PI - 0.06 - 0.4 * Math.random(), y = -1.3 + 2.55 * Math.random(), s = 4 + 40 * Math.pow(Math.random(), 2.2);
+      coller(new THREE.Vector3(0.81 * Math.cos(th), y, 0.81 * Math.sin(th)), rayonTaille(s), couleurTaille(s)); }
+  }
+  function habiller() { if (!A) return; A.teinte = new THREE.Color(ELS[E.el].teinte); A.media.metalness = E.el === "crepine" ? 0.7 : 0.05; A.media.roughness = E.el === "crepine" ? 0.35 : 0.85; }
+  const SALE = new THREE.Color(0x5E4B32), tmpC = new THREE.Color();
+  function dessiner(dt, F) {
+    if (!A || !A.pm) return;
+    const p = passe(E.el, F.deg), marche = E.pompe, v = marche ? 1.5 * Math.max(0.35, E.Q / 60) : 0;
+    A.poids = E.n.map((n, i) => n * Math.pow(CL[i].s, 1.8)); A.som = A.poids.reduce((a, b) => a + b, 0);
+    if (marche && A.som > 0) { A.acc += dt * 26 * (E.Q / 60) * Math.min(3, HYD.cumul(E.n)[I10] / U10REF); while (A.acc >= 1) { A.acc -= 1; lancer(p, F); } }
+    const zero = new THREE.Matrix4().makeScale(0, 0, 0);
+    A.mob.forEach((o, i) => {
+      if (!o.actif) { A.pm.setMatrixAt(i, zero); return; }
+      o.d += v * dt;
+      if (o.d >= o.fin) { if (o.stop) { const pos = posSur(o, o.fin); coller(pos, o.r, o.coul); } o.actif = false; A.pm.setMatrixAt(i, zero); return; }
+      A.pm.setMatrixAt(i, M4.compose(posSur(o, o.d), Q4, S3.setScalar(o.r)));
+    });
+    A.pm.instanceMatrix.needsUpdate = true;
+    // reservoir et poussiere
+    const nr = Math.round(140 * Math.min(1, HYD.cumul(E.n)[I10] / U10REF));
+    A.res.forEach((q, i) => { q[3] += dt; A.pr.setMatrixAt(i, i < nr ? M4.compose(P3.set(q[0] + 0.05 * Math.sin(q[3]), q[1] + 0.04 * Math.sin(q[3] * 1.3), q[2]), Q4, S3.setScalar(0.035)) : zero); });
+    A.pr.instanceMatrix.needsUpdate = true;
+    A.dust.forEach((q, i) => { if (E.inj && marche) { A.dust[i] = (q + dt * 0.9) % 1; A.pd.setMatrixAt(i, M4.compose(P3.set(-1.7 + 0.12 * Math.sin(i * 7), -2.85 - 0.45 * A.dust[i], 0.1 * Math.cos(i * 5)), Q4, S3.setScalar(0.035))); } else A.pd.setMatrixAt(i, zero); });
+    A.pd.instanceMatrix.needsUpdate = true;
+    // element, by-pass, indicateur, manometre, tuyaux
+    A.media.color.copy(tmpC.copy(A.teinte).lerp(SALE, Math.pow(E.c, 0.8) * 0.85));
+    const ouv = Math.min(1, F.fb * 5);
+    A.clapet.position.x = -0.56 + 0.09 * ouv; A.ress.position.x = -0.45 + 0.09 * ouv; A.ress.scale.x = 0.33 - 0.09 * ouv;
+    A.cBy.color.setHex(F.fb > 0 ? COUL.P : COUL.neutre);
+    const rouge = E.dp >= HYD.DP_INDIC; A.indic.material.color.setHex(rouge ? 0xD62828 : 0x2E9E44); A.indic.material.emissive.setHex(rouge ? 0x4A0A0A : 0x0B3D16); A.indic.scale.y = rouge ? 1.8 : 1;
+    A.mano.regler(E.dp);
+    A.cIn.color.setHex(marche ? COUL.P : COUL.neutre); A.hAm.material.color.setHex(marche ? COUL.P : COUL.neutre);
+    A.TP.teinter(marche ? COUL.P : COUL.neutre); A.TP.couler(v, dt); A.TR.teinter(COUL.T); A.TR.couler(v, dt); A.TA.couler(v, dt);
+    horloge += dt; if (horloge >= 0.1) { horloge = 0; info(); }
+  }
+  function posSur(o, d) {
+    let k = 1; while (k < o.L.length - 1 && o.L[k] < d) k++;
+    const a = o.L[k - 1], b = o.L[k], t = b > a ? (d - a) / (b - a) : 0;
+    return P3.copy(o.v[k - 1]).lerp(o.v[k], Math.max(0, Math.min(1, t))).clone();
+  }
+
+  // ---------- circuit 2D : les quatre emplacements ----------
+  const PLACES = {
+    asp: { x: 90, y: 172, lx: 112, ly: 177, ta: "start", nom: "Aspiration", role: "protège la pompe", plus: "tout le circuit est protégé, pompe comprise", moins: "pertes de charge à l'aspiration : maille grossière obligatoire" },
+    ref: { x: 215, y: 80, lx: 215, ly: 56, ta: "middle", nom: "Refoulement", role: "protège les composants", plus: "perte de charge indifférente ; maille très fine ; circuit protégé", moins: "pompe non protégée ; boîtier résistant à la pression : lourd, volumineux, cher" },
+    ret: { x: 500, y: 165, lx: 478, ly: 170, ta: "end", nom: "Retour", role: "capte les débris d'usure", plus: "pression faible ; maille fine ; filtres légers et économiques", moins: "il faut le protéger contre le colmatage (by-pass, indicateur)" },
+    hl: { x: 615, y: 160, lx: 628, ly: 96, ta: "end", nom: "Hors-ligne", role: "nettoie le fluide", plus: "perte de charge du circuit principal nulle ; maille fine ; basse pression", moins: "pompe de filtration non protégée ; consommation supplémentaire" },
+  };
+  const QUESTIONS = [
+    { k: "asp", q: "Protéger la <b>pompe</b> contre les gros débris, avec une crépine ou un filtre grossier." },
+    { k: "ret", q: "Capter les <b>débris d'usure</b> de tout le circuit avec un filtre léger et économique : la solution la plus employée." },
+    { k: "ref", q: "Protéger un <b>composant sensible</b> (servovalve, jeux de 1 à 4 µm) juste avant lui, avec une maille très fine." },
+    { k: "hl", q: "<b>Nettoyer l'huile en continu</b> avec une pompe dédiée, même machine à l'arrêt." },
+  ];
+  const NON = {
+    asp: "À l'aspiration, une maille fine ferait caviter la pompe (pression d'aspiration ≥ 0,8 bar absolu) : on n'y met qu'une crépine ou un filtre grossier.",
+    ref: "Au refoulement, le filtre ne protège pas la pompe, et son boîtier haute pression est lourd et cher.",
+    ret: "Au retour, le filtre capte l'usure du circuit, mais l'huile envoyée aux composants vient de la pompe sans y être passée.",
+    hl: "Hors-ligne, le filtre nettoie le réservoir en continu, mais ne protège aucun composant en particulier.",
+  };
+  function circuit() {
+    const ligne = (d, c, w) => '<path d="' + d + '" fill="none" stroke="' + (c || "#2B3445") + '" stroke-width="' + (w || 2.5) + '"/>';
+    let s = '<svg viewBox="0 0 640 250" role="img" aria-label="Circuit hydraulique et emplacements des filtres">';
+    s += '<rect x="20" y="200" width="600" height="38" rx="4" fill="#DCE8F7" stroke="#1F6FEB" stroke-width="2"/><text x="320" y="224" text-anchor="middle" font-size="16" fill="#1F4E8F">Réservoir</text>';
+    s += ligne("M90 200 V140") + ligne("M90 100 V80 H330") + '<circle cx="90" cy="120" r="19" fill="#fff" stroke="#2B3445" stroke-width="2.5"/><path d="M90 104 L80 120 H100 Z" fill="#2B3445"/><text x="64" y="125" text-anchor="end" font-size="15" fill="#5B6676">Pompe</text>';
+    s += '<rect x="330" y="62" width="90" height="34" fill="#fff" stroke="#2B3445" stroke-width="2"/><path d="M360 62 V96 M390 62 V96" stroke="#2B3445" stroke-width="1.5"/><text x="428" y="84" font-size="15" fill="#5B6676">Distributeur</text>';
+    s += ligne("M352 62 V36") + ligne("M398 62 V36") + '<rect x="330" y="12" width="96" height="24" fill="#fff" stroke="#2B3445" stroke-width="2"/><path d="M380 12 V36 M380 24 H470" stroke="#2B3445" stroke-width="3"/><text x="478" y="28" font-size="15" fill="#5B6676">Vérin</text>';
+    s += ligne("M405 96 V130 H500 V200", "#1F6FEB") + ligne("M560 200 V173", "#1F6FEB") + ligne("M560 147 V110 H615 V200", "#1F6FEB") + '<circle cx="560" cy="160" r="13" fill="#fff" stroke="#2B3445" stroke-width="2.2"/><path d="M560 149 L553 161 H567 Z" fill="#2B3445"/>';
+    Object.entries(PLACES).forEach(([k, P], i) => {
+      const ok = E.place.trouve.includes(k), x = P.x, y = P.y;
+      s += '<g class="place" data-k="' + k + '" style="cursor:pointer" tabindex="0" role="button" aria-label="' + P.nom + '"><circle cx="' + x + '" cy="' + y + '" r="24" fill="transparent"/>' +
+        '<polygon points="' + x + "," + (y - 15) + " " + (x + 15) + "," + y + " " + x + "," + (y + 15) + " " + (x - 15) + "," + y + '" fill="' + (ok ? "#E7F5EA" : "#fff") + '" stroke="' + (ok ? "#1E7B34" : "#7A8597") + '" stroke-width="2.4"' + (ok ? "" : ' stroke-dasharray="4 3"') + "/>" +
+        '<path d="M' + x + " " + (y - 15) + " V" + (y + 15) + '" stroke="' + (ok ? "#1E7B34" : "#7A8597") + '" stroke-width="1.6" stroke-dasharray="3 3"/>' +
+        '<text x="' + P.lx + '" y="' + P.ly + '" text-anchor="' + P.ta + '" font-size="17" font-weight="700" fill="' + (ok ? "#1E7B34" : "#15213B") + '">' + (i + 1) + " · " + P.nom + (ok ? " ✓" : "") + "</text></g>";
+    });
+    $("#j5-circuit").innerHTML = s + "</svg>";
+    $$("#j5-circuit .place").forEach(g => { const f = () => cliquerPlace(g.dataset.k); g.addEventListener("click", f); g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); f(); } }); });
+  }
+  function cliquerPlace(k) {
+    const P = PLACES[k], enJeu = MM && MM.E.m === 4 && E.place.q < QUESTIONS.length, fiche = "<br><b>Rôle :</b> " + P.role + " · <b>Avantages :</b> " + P.plus + " · <b>Inconvénients :</b> " + P.moins + ".";
+    if (!enJeu) { retour($("#j5-circuit-t"), true, P.nom, fiche); return; }
+    const Qn = QUESTIONS[E.place.q];
+    if (k === Qn.k) { E.place.trouve.push(k); E.place.q++; retour($("#j5-circuit-t"), true, "✔ " + P.nom, fiche); }
+    else { E.place.erreurs++; retour($("#j5-circuit-t"), false, "✘ Pas " + (k === "hl" ? "hors-ligne" : "au " + P.nom.toLowerCase()), "<br>" + NON[k]); }
+    circuit(); E.sig = ""; info();
+  }
+
+  // ---------- affichage ----------
+  function info() {
+    const M = mesure(), u = M.U[I10], b = M.b[I10], code = HYD.codeISO4406(M.U), codeAv = HYD.codeISO4406(M.D);
+    $("#j5-aff").innerHTML = lcd("Δp du filtre", vg(E.dp, 2), "bar", E.dp >= HYD.DP_INDIC ? "🔴 indicateur au rouge" : "indicateur 2,5 · by-pass 3,5") +
+      lcd("β₁₀ mesuré", E.pompe ? fB(b) : "—", "", E.pompe ? "η₁₀ = " + fE(b) : "pompe arrêtée") +
+      lcd("By-pass", E.fb > 0.001 ? vg(E.fb * 100, 0) : "fermé", E.fb > 0.001 ? "%" : "", E.fb > 0.001 ? "du débit non filtré" : "il s'ouvre à 3,5 bar") +
+      lcd("≥ 10 µm dans 100 mL", fN(u), "", "réservoir · ISO 4406 : " + code) +
+      lcd("Temps", vg(E.t, 1), "min", E.inj ? "1 s = 1 min" : vg(E.t * E.Q / VRES, 1).replace(",0", "") + " brassage(s) V/Q");
+    let h = ligneTab(["≥ taille", "Amont", "Aval", "β", "η"], true);
+    TA.slice(0, 6).forEach((x, i) => h += ligneTab([x + " µm", fN(M.U[i]), E.pompe ? fN(M.D[i]) : "—", E.pompe ? fB(M.b[i]) : "—", E.pompe ? fE(M.b[i]) : "—"]));
+    $("#j5-table").innerHTML = h;
+    $("#j5-iso").innerHTML = "Particules comptées dans 100 mL · code ISO 4406 (≥ 4/6/14 µm) : amont <b>" + code + "</b>" + (E.pompe ? " → aval <b>" + codeAv + "</b>" : "");
+    if (A && A.etAm) { A.etAm.element.innerHTML = "Compteur amont<br><b>" + fN(u) + "</b> ≥ 10 µm"; A.etAv.element.innerHTML = "Compteur aval<br><b>" + (E.pompe ? fN(M.D[I10]) : "—") + "</b> ≥ 10 µm"; }
+    $("#j5-pompe").textContent = E.pompe ? "■ Arrêter la pompe" : "▶ Démarrer la pompe"; $("#j5-pompe").className = E.pompe ? "btn" : "btn sec";
+    $("#j5-inj").textContent = E.inj ? "■ Couper l'injection de poussière" : "⛆ Injecter de la poussière"; $("#j5-inj").className = E.inj ? "btn" : "btn sec";
+    $("#j5-Q").disabled = E.verrouQ; $("#j5-Qv").textContent = "= " + E.Q + " L/min" + (E.verrouQ ? " (donnée de l'exercice)" : "");
+    courbe();
+    if (MM) { const X = missions[MM.E.m], sig = MM.E.m + "|" + (X.suivi ? X.suivi() : "") + "|" + (X.ok ? X.ok() : ""); if (sig !== E.sig) { E.sig = sig; MM.verifier(); } }
+  }
+  function courbe() {
+    const cadre = $("#j5-courbe"), H = E.hist, tf = H.length ? H[H.length - 1][0] : 0, tmax = Math.max(20, Math.ceil(tf / 10) * 10);
+    if (E.inj) {
+      $("#j5-gt").textContent = "Colmatage : perte de charge Δp du filtre au cours du temps";
+      tracer(cadre, { hauteur: 190, x: [0, tmax], y: [0, 5], xl: "t (min)", yl: "Δp (bar)", xt: ticks(0, tmax, 5), yt: ticks(0, 5, 5),
+        horiz: [{ y: HYD.DP_INDIC, c: css("--orange"), tir: [5, 4], l: 1.2 }, { y: HYD.DP_BYPASS, c: css("--red"), tir: [5, 4], l: 1.2 }],
+        series: [{ pts: H.map(h => [h[0], h[2]]), c: css("--blue"), l: 2.5 }],
+        textes: [{ t: "indicateur", x: tmax * 0.02, y: HYD.DP_INDIC, dy: -9, c: css("--orange"), gras: true }, { t: "by-pass", x: tmax * 0.02, y: HYD.DP_BYPASS, dy: -9, c: css("--red"), gras: true }] });
+    } else {
+      $("#j5-gt").textContent = "Nettoyage : particules ≥ 10 µm dans le réservoir (échelle logarithmique)";
+      const lg = v => Math.log10(Math.max(10, v)), th = [];
+      if (E.ex2) for (let k = 0; k <= 60; k++) { const t = tmax * k / 60; th.push([t, lg(HYD.concentration(U10REF, HYD.efficacite(200), 20, VRES, t))]); }
+      tracer(cadre, { hauteur: 190, x: [0, tmax], y: [2, 5.4], xl: "t (min)", yl: "N ≥ 10 µm", xt: ticks(0, tmax, 5), yt: [[2, "100"], [3, "1 000"], [4, "10 000"], [5, "100 000"]],
+        horiz: [{ y: 3, c: css("--red"), tir: [5, 4], l: 1.2 }],
+        series: [{ pts: th, c: css("--ink-2"), l: 1.2, tir: [4, 4] }, { pts: H.map(h => [h[0], lg(h[1])]), c: css("--blue"), l: 2.5 }],
+        textes: [{ t: "1 % de C₀", x: tmax * 0.98, y: 3, dy: -9, align: "right", c: css("--red"), gras: true }].concat(E.ex2 ? [{ t: "C₀ e^(−ηQt/V)", x: tmax * 0.98, y: 4.9, align: "right" }] : []) });
+    }
+  }
+  function tableReleves() {
+    const R = E.rel.slice(-5);
+    $("#j5-rels").innerHTML = R.length ? ligneTab(["Élément", "Q", "Δp", "β₁₀", "η₁₀"], true) + R.map(r => ligneTab([ELS[r.el].court + (r.fb > 0.001 ? " · by-pass " + vg(r.fb * 100, 0) + " %" : ""), r.Q, vg(r.dp, 2), fB(r.b[I10]), fE(r.b[I10])])).join("") : "";
+  }
+  const message = (ok, t) => retour($("#j5-msg"), ok, t);
+  function relever() {
+    if (!E.pompe) { message(false, "Démarrez la pompe : les compteurs mesurent l'huile qui circule."); return; }
+    const M = mesure(), r = { el: E.el, Q: E.Q, dp: M.dp, fb: M.fb, c: E.c, U: M.U, D: M.D, b: M.b, t: E.t };
+    E.rel.push(r); if (E.rel.length > 200) { E.rel.shift(); E.debut = Math.max(0, E.debut - 1); }
+    if (MM && MM.E.m === 2) { if (r.fb > 0.05 && !E.m3.remplace) E.m3.bypass = r; if (E.m3.remplace && r.fb === 0 && r.b[I10] >= 150 && r.el === "fv10") E.m3.verif = r; }
+    message(true, "📋 " + ELS[r.el].court + " : " + fN(r.U[I10]) + " particules ≥ 10 µm en amont, " + fN(r.D[I10]) + " en aval → β₁₀ = " + fB(r.b[I10]) + ", η₁₀ = " + fE(r.b[I10]) + ".");
+    tableReleves(); E.sig = ""; info();
+  }
+  function remplacer() {
+    if (E.pompe) { E.erreurs++; message(false, "⚠️ Arrêtez la pompe d'abord : la cuve est sous pression. On dépressurise et on consigne avant d'ouvrir un filtre."); E.sig = ""; info(); return; }
+    if (MM && MM.E.m === 2 && !E.m3.bypass) { message(false, "Relevez d'abord les compteurs by-pass ouvert : c'est l'objet de la mission."); return; }
+    E.c = 0; bouchonsSelon(0); if (MM && MM.E.m === 2) E.m3.remplace = true;
+    message(true, "🔧 Élément neuf en place (" + ELS[E.el].court + ") : Δp propre = " + vg(HYD.dpElement(E.el, E.Q, 0), 2) + " bar à " + E.Q + " L/min."); E.sig = ""; info();
+  }
+  function choisirElement(v) {
+    if (v === E.el) return;
+    if (E.pompe) { E.erreurs++; message(false, "⚠️ Arrêtez la pompe avant d'ouvrir la cuve pour changer d'élément."); regler({}); return; }
+    regler({ el: v, c: 0 }); bouchonsSelon(0); message(true, "Élément " + ELS[v].court + " en place (neuf).");
+  }
+  function regler(o) {
+    Object.assign(E, o);
+    segment($("#j5-el"), E.el, choisirElement);
+    $("#j5-Q").value = E.Q; habiller(); E.sig = ""; info();
+  }
+  function reinitialiser(c) { E.t = 0; E.hist = []; E.n = REF.slice(); E.ex2 = null; E.debut = E.rel.length; E.erreurs = 0; if (A) A.mob.forEach(o => o.actif = false); bouchonsSelon(c || 0); }
+
+  const depuis = () => E.rel.slice(E.debut);
+  const dernier = el => depuis().filter(r => r.el === el && r.fb === 0).pop();
+  const missions = [
+    { titre: "Mesurer le rapport β", consigne: "Banc d'essai multipasse : la pompe fait circuler une huile polluée à travers un élément <b>fibre de verre 10 µm</b>, et deux compteurs comptent les particules avant et après le filtre. Démarrez la pompe et <b>relevez les compteurs</b>.",
+      pari: { q: "Un filtre de β₁₀ = 200 reçoit 1 000 particules ≥ 10 µm. Combien en laisse-t-il passer ?", o: ["5", "50", "200"], bon: () => 0 },
+      entree: () => { regler({ el: "fv10", Q: 60, inj: true, pompe: false, c: 0, verrouQ: false }); reinitialiser(0); },
+      suivi: () => "Pompe " + (E.pompe ? "✓ en marche" : "○ arrêtée") + " · relevé fibre de verre 10 µm " + (dernier("fv10") ? "✓" : "○"),
+      ok: () => !!dernier("fv10"),
+      avantQuiz: () => { const r = dernier("fv10"); return "Dans 100 mL : " + fN(r.U[I10]) + " particules ≥ 10 µm en amont, " + fN(r.D[I10]) + " en aval. β₁₀ = " + fN(r.U[I10]) + " / " + fN(r.D[I10]) + " = <b>" + fB(r.b[I10]) + "</b>, η₁₀ = 1 − 1/β₁₀ = <b>" + fE(r.b[I10]) + "</b>. Le même filtre n'a que β₄ = " + fB(r.b[0]) + " : β dépend de la taille."; },
+      quiz: { q: "Un filtre de β₁₀ = 200 arrête…", o: [["99,5 % des particules de 10 µm", 1], ["50 % des particules de 10 µm", 0], ["99,95 % des particules de 10 µm", 0]],
+        expl: "η = 1 − 1/β = 1 − 1/200 = 0,995 : sur 100 000 particules ≥ 10 µm, 500 passent (exercice 2, question 2). β = 1 : filtre sans efficacité ; plus β est grand, plus l'huile est propre." } },
+    { titre: "Comparer les éléments", consigne: "Relevez les compteurs avec chacun des <b>quatre éléments</b>. Pour changer d'élément : arrêtez la pompe, choisissez l'élément, redémarrez.",
+      pari: { q: "La crépine (toile de 125 µm) arrête les particules de 10 µm…", o: ["presque pas : β₁₀ ≈ 1", "à moitié : β₁₀ = 2", "presque toutes"], bon: () => 0 },
+      entree: () => { regler({ Q: 60, inj: true, verrouQ: false }); E.debut = E.rel.length; },
+      suivi: () => Object.keys(ELS).map(k => { const r = dernier(k); return ELS[k].court + " " + (r ? "✓ β₁₀ = " + fB(r.b[I10]) : "○"); }).join(" · "),
+      ok: () => Object.keys(ELS).every(k => dernier(k)),
+      avantQuiz: () => Object.keys(ELS).map(k => { const r = dernier(k); return ELS[k].court + " : β₁₀ = " + fB(r.b[I10]) + " (η₁₀ = " + fE(r.b[I10]) + ")"; }).join("<br>") + "<br>La cellulose 25 µm a β₂₅ = 2 : elle n'arrête que la moitié des particules de 25 µm.",
+      quiz: { q: "Une pompe à pistons axiaux exige une huile filtrée à 10–20 µm. Quel élément pour son filtre de retour ?", o: [["Fibre de verre 10 µm, β₁₀ = 200", 1], ["Cellulose 25 µm : β₂₅ = 2 suffit", 0], ["Aucun : la crépine d'aspiration suffit", 0]],
+        expl: "Énigme 1 du chapitre : les jeux internes d'une pompe à pistons font 5 à 40 µm, on exige une filtration de 10 à 20 µm et un code ISO 4406 de 18/16/13 au plus. Une crépine (β ≈ 1 à 10 µm) ne protège que des gros débris." } },
+    { titre: "Colmatage et by-pass", consigne: "L'élément fibre de verre 10 µm est en service depuis longtemps. Pompe en marche, la poussière le colmate : suivez Δp et l'indicateur. <b>Relevez les compteurs une fois le by-pass ouvert</b>, puis <b>remplacez l'élément</b> (pompe arrêtée) et vérifiez au relevé que le filtre arrête de nouveau les particules.",
+      pari: { q: "Quand le by-pass s'ouvre, le β₁₀ mesuré…", o: ["s'effondre : une partie de l'huile n'est plus filtrée", "reste à 200", "augmente : l'élément colmaté est plus serré"], bon: () => 0 },
+      entree: () => { regler({ el: "fv10", Q: 60, inj: true, pompe: false, c: 0.52, verrouQ: false }); reinitialiser(0.52); E.m3 = { bypass: null, remplace: false, verif: null }; },
+      suivi: () => "By-pass " + (E.m3.bypass ? "✓ relevé ouvert (β₁₀ = " + fB(E.m3.bypass.b[I10]) + ")" : E.fb > 0.05 ? "● ouvert : relevez les compteurs !" : E.fb > 0 ? "● il s'ouvre…" : "○ fermé, Δp = " + vg(E.dp, 2) + " bar") +
+        " · élément " + (E.m3.remplace ? "✓ remplacé" : "○ à remplacer") + " · contrôle " + (E.m3.verif ? "✓ β₁₀ = " + fB(E.m3.verif.b[I10]) : "○") + (E.erreurs ? " · erreurs : " + E.erreurs : ""),
+      ok: () => !!(E.m3.bypass && E.m3.remplace && E.m3.verif),
+      avantQuiz: () => "By-pass ouvert à " + vg(E.m3.bypass.fb * 100, 0) + " % du débit : β₁₀ = " + fB(E.m3.bypass.b[I10]) + " (η₁₀ = " + fE(E.m3.bypass.b[I10]) + ") au lieu de 200. Élément neuf : Δp = " + vg(E.m3.verif.dp, 2) + " bar, β₁₀ = " + fB(E.m3.verif.b[I10]) + ".",
+      quiz: { q: "L'indicateur de colmatage passe au rouge. Que faire ?", o: [["Remplacer l'élément sans attendre : le by-pass va s'ouvrir et l'huile ne sera plus filtrée", 1], ["Rien : le by-pass protège le circuit", 0], ["Augmenter le débit pour décolmater l'élément", 0]],
+        expl: "Piège du cours : « by-pass ouvert, indicateur au rouge ignoré : l'huile n'est plus filtrée ». Le by-pass protège l'élément contre l'écrasement, pas les composants contre la pollution. Ici, l'indicateur s'allume à 2,5 bar et le by-pass s'ouvre à 3,5 bar : on change l'élément entre les deux." } },
+    { titre: "Nettoyer l'huile hors-ligne (exercice 2)", consigne: "Après un remplacement de pompe, l'huile est polluée : <b>C₀ = 100 000 particules ≥ 10 µm</b> dans 100 mL. Circuit hors-ligne : V = 200 L, Q = 20 L/min, filtre β₁₀ = 200, injection coupée. Démarrez la pompe et nettoyez jusqu'à <b>1 % de C₀</b>. Temps accéléré : 1 s = 1 min.",
+      pari: { q: "Combien de temps faut-il pour descendre à 1 % de C₀ ?", o: ["≈ 10 min : un brassage de tout le volume", "≈ 46 min", "≈ 3 h"], bon: () => 1 },
+      entree: () => { regler({ el: "fv10", Q: 20, inj: false, pompe: false, c: 0, verrouQ: true }); reinitialiser(0); E.ex2 = { fin: null }; },
+      suivi: () => { const u = HYD.cumul(E.n)[I10]; return "t = " + vg(E.t, 1) + " min (" + vg(E.t * E.Q / VRES, 1) + " brassage(s)) · N ≥ 10 µm = " + fN(u) + " (" + vg(100 * u / U10REF, 1) + " % de C₀)" + (E.ex2 && E.ex2.fin ? " · ✓ 1 % atteint à t = " + vg(E.ex2.fin, 1) + " min" : "") + (E.inj ? " · ⚠ coupez l'injection" : ""); },
+      ok: () => !!(E.ex2 && E.ex2.fin),
+      avantQuiz: () => "Temps de brassage t_b = V/Q = 200/20 = 10 min. C(t) = C₀ e^(−ηQt/V), donc t = (V/ηQ) ln 100 = 10,05 × 4,61 = <b>46,3 min</b> (vous : " + vg(E.ex2.fin, 1) + " min), soit 4,6 brassages. Un seul brassage ne retire que 63 % (1 − e^(−0,995)). Code ISO 4406 du réservoir : 21/19/16 → " + HYD.codeISO4406(HYD.cumul(E.n)) + ".",
+      quiz: { q: "Que se passe-t-il si le filtre se colmate (β diminue) ?", o: [["η diminue : le nettoyage dure plus longtemps ; on change l'élément", 1], ["Le nettoyage va plus vite : l'élément est plus serré", 0], ["Rien tant que le by-pass reste fermé", 0]],
+        expl: "Exercice 2, question 6 : β diminue ⇒ η diminue ⇒ le temps de nettoyage augmente. En pratique, on vérifie par une analyse d'huile (code ISO 4406) avant de remettre en service." } },
+    { titre: "Où placer le filtre ?", consigne: "Sur le schéma du circuit sous la vue 3D, cliquez l'emplacement qui convient à chaque besoin.",
+      entree: () => { regler({ verrouQ: false }); E.place = { q: 0, trouve: [], erreurs: 0 }; circuit(); $("#j5-circuit-t").innerHTML = ""; },
+      suivi: () => E.place.q < QUESTIONS.length ? "Besoin " + (E.place.q + 1) + " / 4 : " + QUESTIONS[E.place.q].q + (E.place.erreurs ? " · erreurs : " + E.place.erreurs : "") : "✓ Les quatre emplacements sont trouvés.",
+      ok: () => E.place.q >= QUESTIONS.length,
+      quiz: { q: "Quelle combinaison le cours conseille-t-il en pratique ?", o: [["Filtre de retour + crépine d'aspiration + filtre de refoulement devant les composants sensibles", 1], ["Un seul filtre très fin à l'aspiration, qui protège tout", 0], ["Un filtre de refoulement seulement, là où la pression est la plus forte", 0]],
+        expl: "Pratique du cours : filtre de retour (économique et efficace) + crépine d'aspiration + filtre de refoulement devant les composants sensibles. Il est utile de filtrer aussi les retours de drains : c'est par les tiges que la pollution extérieure entre." } },
+  ];
+
+  return { ouvrir: () => {
+    if (!V) {
+      $("#j5-pompe").addEventListener("click", () => { E.pompe = !E.pompe; E.sig = ""; info(); });
+      $("#j5-inj").addEventListener("click", () => { E.inj = !E.inj; E.sig = ""; info(); });
+      $("#j5-Q").addEventListener("input", ev => { if (E.verrouQ) return; E.Q = +ev.target.value; E.sig = ""; info(); });
+      $("#j5-rel").addEventListener("click", relever); $("#j5-chg").addEventListener("click", remplacer);
+      addEventListener("resize", () => { if (!$("#jeu-5").hidden) courbe(); });
+      MM = moteurMissions({ zone: $("#j5-mission"), compteur: $("#j5-compte"), jeu: "jeu-5", missions, recalculer: () => {}, etoiles: n => n >= 5 ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0 });
+      try { construire(); } catch (e) { $("#j5-3d").innerHTML = '<div class="chargement">La 3D n\'a pas pu démarrer sur cet appareil (WebGL indisponible).</div>'; console.error(e); }
+      circuit(); regler({}); MM.entrer(0);
+    } else MM.afficher();
+  }, etat: () => E, regler, relever, remplacer, choisirElement, cliquerPlace, mesure };
+})();
 
 /* ---------- accueil et navigation ---------- */
 window.FICHES = [
@@ -1863,9 +2247,10 @@ window.FICHES = [
   { id: "jeu-2", emoji: "🦾", fond: "linear-gradient(135deg,#6A4C93,#9B7BD0)", titre: "Les vérins", notion: "Simple effet, double effet, double tige, télescopique, rotatif : pièces, effort F = p·S, vitesses et chronomètre.", puces: ["Partie 7", "5 types", "≈ 15 min"] },
   { id: "jeu-3", emoji: "⚙️", fond: "linear-gradient(135deg,#C1121F,#E25563)", titre: "Les pompes", notion: "Engrenages, palettes, pistons axiaux en mouvement : cylindrée, débit réel, fuites, couple et rendements au banc.", puces: ["Partie 5", "banc d'essai", "≈ 10 min"] },
   { id: "jeu-4", emoji: "🫧", fond: "linear-gradient(135deg,#2E7D32,#58B35E)", titre: "L'accumulateur", notion: "Gonflez la vessie, remplissez, restituez : Boyle-Mariotte, isotherme ou adiabatique, et les règles de sécurité.", puces: ["Partie 4", "p₀V₀ = pV", "≈ 10 min"] },
+  { id: "jeu-5", emoji: "🔬", fond: "linear-gradient(135deg,#A65E00,#E09A2D)", titre: "Les filtres", notion: "Comptez les particules avant et après le filtre : rapport β, efficacité η = 1 − 1/β, colmatage, by-pass, nettoyage hors-ligne et emplacements.", puces: ["Partie 3", "β₁₀ = 200 ⇒ 99,5 %", "≈ 15 min"] },
 ];
 window.JEUX = {};
-[["jeu-1", typeof jeu1 !== "undefined" && jeu1], ["jeu-2", typeof jeu2 !== "undefined" && jeu2], ["jeu-3", typeof jeu3 !== "undefined" && jeu3], ["jeu-4", typeof jeu4 !== "undefined" && jeu4]]
+[["jeu-1", typeof jeu1 !== "undefined" && jeu1], ["jeu-2", typeof jeu2 !== "undefined" && jeu2], ["jeu-3", typeof jeu3 !== "undefined" && jeu3], ["jeu-4", typeof jeu4 !== "undefined" && jeu4], ["jeu-5", typeof jeu5 !== "undefined" && jeu5]]
   .forEach(([k, j]) => { if (j) window.JEUX[k] = j; });
 window.HYD3D = window.JEUX;
 demarrerPage();

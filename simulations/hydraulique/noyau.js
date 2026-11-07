@@ -106,11 +106,55 @@
     membrane: { nom: "à membrane", V0: 4, rapport: 8, emploi: "petits volumes : amortir les pulsations, compenser les fuites" },
   };
 
+  /* ================= 5) Filtres ================= */
+  // rapport beta (ISO 16889) : beta_x = N_amont(>= x um) / N_aval(>= x um) ; efficacite relative eta_x = 1 - 1/beta_x
+  const efficacite = b => 1 - 1 / b;
+  const betaPour = eta => 1 / (1 - eta);
+  // elements filtrants. Modele (hors cours) : log10 beta(x) = log10(beta_r) (x / x_r)^1,6 ; Dp propre a 60 L/min (bar) ; capacite de retention relative
+  const ELEMENTS = {
+    crepine: { nom: "Crépine (toile 125 µm)", court: "Crépine 125 µm", xr: 125, br: 2, dp60: 0.02, capa: 4, teinte: 0xB8BEC6 },
+    cellulose: { nom: "Cellulose 25 µm", court: "Cellulose 25 µm", xr: 25, br: 2, dp60: 0.25, capa: 0.6, teinte: 0xE8D9B5 },
+    fv10: { nom: "Fibre de verre 10 µm", court: "Fibre de verre 10 µm", xr: 10, br: 200, dp60: 0.5, capa: 1, teinte: 0xF1D36B },
+    fv3: { nom: "Fibre de verre 3 µm", court: "Fibre de verre 3 µm", xr: 3, br: 200, dp60: 0.9, capa: 0.8, teinte: 0xF4E3A0 },
+  };
+  const K_BETA = 1.6, BETA_MAX = 1e6;
+  // beta cumule a la taille x ; deg < 1 : beta degrade (le cours : beta varie avec la pression d'utilisation, diminue au colmatage)
+  const betaElement = (cle, x, deg) => { const e = ELEMENTS[cle]; return Math.min(BETA_MAX, Math.pow(10, Math.log10(e.br) * Math.pow(x / e.xr, K_BETA) * (deg === undefined ? 1 : deg))); };
+  // pollution de reference (huile neuve d'un circuit pollue) : N(>= x) dans 100 mL = 100 000 (10 / x)^2,69 -> code ISO 4406 21/19/16
+  const N_REF = (x) => 1e5 * Math.pow(10 / x, 2.69);
+  // tailles des compteurs (um(c)) et classes fines entre elles
+  const TAILLES = [4, 6, 10, 14, 21, 38, 70];
+  const BORDS = (() => { const b = [], T = TAILLES.concat([100]); for (let i = 0; i < T.length - 1; i++) for (let k = 0; k < 8; k++) b.push(T[i] * Math.pow(T[i + 1] / T[i], k / 8)); b.push(100); return b; })();
+  const CLASSES = BORDS.slice(0, -1).map((a, i) => ({ a, b: BORDS[i + 1], s: Math.sqrt(a * BORDS[i + 1]) })).concat([{ a: 100, b: Infinity, s: 120 }]);
+  const pollutionRef = () => CLASSES.map(c => N_REF(c.a) - (isFinite(c.b) ? N_REF(c.b) : 0));
+  // fraction qui traverse l'element, classe par classe, calee pour que beta cumule = beta du modele sur la pollution de reference
+  function passages(cle, deg) {
+    const U = CLASSES.map(c => N_REF(c.a)), D = CLASSES.map(c => N_REF(c.a) / betaElement(cle, c.a, deg));
+    return CLASSES.map((c, i) => { const n = U[i] - (U[i + 1] || 0), d = D[i] - (D[i + 1] || 0); return n > 0 ? Math.max(0, Math.min(1, d / n)) : 0; });
+  }
+  // comptages cumules (>= chaque taille de compteur) d'une repartition par classes
+  const cumul = n => TAILLES.map(x => CLASSES.reduce((s, c, i) => s + (c.a >= x - 1e-9 ? n[i] : 0), 0));
+  // ISO 4406 : nombre de particules par mL -> code (bornes superieures de chaque code)
+  const ISO_MAX = [0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.3, 2.5, 5, 10, 20, 40, 80, 160, 320, 640, 1300, 2500, 5000, 10000, 20000, 40000, 80000, 160000, 320000, 640000, 1300000, 2500000];
+  const codeISO = parML => { for (let r = 0; r < ISO_MAX.length; r++) if (parML <= ISO_MAX[r]) return r; return ISO_MAX.length; };
+  const codeISO4406 = N100 => [4, 6, 14].map(x => codeISO(N100[TAILLES.indexOf(x)] / 100)).join("/");     // N100 : cumuls dans 100 mL
+  // perte de charge de l'element (bar) : proportionnelle au debit, croit avec le colmatage c (0 a 1)
+  const dpElement = (cle, Q, c) => ELEMENTS[cle].dp60 * Q / 60 / Math.pow(1 - Math.min(c, 0.97), 2);
+  const DP_INDIC = 2.5, DP_BYPASS = 3.5;                                            // indicateur de colmatage et tarage du by-pass (bar)
+  // by-pass : il limite la perte de charge a son tarage ; la part du debit qui le traverse n'est pas filtree
+  const partBypass = dpEl => dpEl > DP_BYPASS ? 1 - DP_BYPASS / dpEl : 0;
+  // degradation de beta avec la perte de charge (au-dela de 1 bar)
+  const degradation = dp => 1 - 0.3 * Math.pow(Math.max(0, Math.min(1, (dp - 1) / (DP_BYPASS - 1))), 2);
+  // nettoyage hors-ligne d'un reservoir bien melange (exercice 2) : C(t) = C0 exp(-eta Q t / V)
+  const concentration = (C0, eta, Q, V, t) => C0 * Math.exp(-eta * Q * t / V);
+  const tempsPour = (frac, eta, Q, V) => -Math.log(frac) * V / (eta * Q);
+
   function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 
   const api = { CHAMBRES, ORDRE, COURSE, PORTEES, TYPES, porteesA, liaisons, relies, caseActive,
     ETA_VE, aire, force, vitesse, pressionPour, verinDE, dTigeMin,
     ENGR, PAL, PIST, POMPES, cylEngrenages, cylPalettes, cylPistons, bilanPompe,
-    volumeGaz, pressionGaz, volumeUtile, V0pour, ACCUS, gauss };
+    volumeGaz, pressionGaz, volumeUtile, V0pour, ACCUS, gauss,
+    efficacite, betaPour, ELEMENTS, betaElement, N_REF, TAILLES, CLASSES, pollutionRef, passages, cumul, codeISO, codeISO4406, dpElement, DP_INDIC, DP_BYPASS, partBypass, degradation, concentration, tempsPour };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else racine.HYD = api;
 })(this);
