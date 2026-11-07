@@ -1,0 +1,1874 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hydraulique en 3D · ENSAM</title>
+<meta name="description" content="Simulations 3D du module Hydraulique (Licence Professionnelle IMPI, ENSAM Casablanca) : distributeurs, vérins, pompes et accumulateurs à manipuler en coupe.">
+<style>
+:root{
+  --bg:#F4F6FB; --surface:#FFFFFF; --surface-2:#EEF2F9; --ink:#15213B; --ink-2:#4B5875; --line:#DCE3EE;
+  --navy:#0B2545; --navy-2:#13315C; --blue:#0056D2; --violet:#6A4C93; --red:#C1121F; --green:#2E7D32;
+  --orange:#E67E22; --gold:#D99A00; --ok:#1E7B34; --ok-bg:#E7F5EA; --ko:#B3261E; --ko-bg:#FCEDEC;
+  --code-bg:#0F1B2D; --code-ink:#E4ECF7; --code-dim:#8FA3BF; --code-err:#FF8A80; --code-warn:#FFB74D;
+  --sol:#F3EEE2; --mur:#5C6680; --ombre:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.07);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0D1422; --surface:#151F33; --surface-2:#1C2942; --ink:#E7ECF5; --ink-2:#A7B3C9; --line:#2A3A57;
+    --blue:#6EA8FF; --violet:#B49AE0; --red:#FF6B6B; --green:#5CC47A; --orange:#F5A35C; --gold:#F2C14E;
+    --ok:#6BD48A; --ok-bg:#15301F; --ko:#FF8A80; --ko-bg:#3A1A1A; --code-bg:#0A1220; --sol:#232B3D; --mur:#8C97B2;
+    --ombre:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+a{color:var(--blue)}
+button{font:inherit;color:inherit}
+code,pre,.mono{font-family:ui-monospace,"Cascadia Mono",Consolas,"Liberation Mono",monospace}
+.enveloppe{max-width:1120px;margin:0 auto;padding:0 16px}
+[hidden]{display:none!important}
+
+/* En-tete */
+.entete{background:linear-gradient(120deg,var(--navy) 0%,var(--navy-2) 60%,#1B4F8A 100%);color:#fff;padding:18px 0 26px}
+.ariane{font-size:13px;opacity:.85}
+.ariane a{color:#fff}
+.entete h1{font-size:clamp(24px,4vw,36px);line-height:1.15;margin:10px 0 6px}
+.entete p{margin:0;max-width:760px;opacity:.92}
+.entete .ligne{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.total{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 14px;font-weight:600;white-space:nowrap}
+.total .etoile{color:#FFC93C}
+
+/* Accueil */
+.intro{display:grid;gap:14px;margin:22px 0 8px}
+.note{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:12px 14px;font-size:15px}
+.cartes{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin:16px 0 30px}
+.carte-jeu{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--ombre);overflow:hidden;display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
+.carte-jeu:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(16,24,40,.14)}
+.carte-jeu .vignette{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:54px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.carte-jeu .vignette img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.carte-jeu .num{z-index:2}
+.carte-jeu .num{position:absolute;top:10px;left:12px;background:rgba(255,255,255,.9);color:#15213B;font-weight:700;font-size:13px;border-radius:999px;padding:2px 10px}
+.carte-jeu .corps{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.carte-jeu h3{margin:0;font-size:19px}
+.carte-jeu .notion{color:var(--ink-2);font-size:14.5px;flex:1}
+.puces{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.puce{font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--ink-2)}
+.carte-jeu .pied{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.etoiles{color:var(--gold);letter-spacing:2px;font-size:18px}
+.etoiles .vide{color:var(--line)}
+
+/* Boutons */
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:600;padding:10px 16px;cursor:pointer;text-decoration:none;min-height:44px}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn.sec{background:transparent;color:var(--blue);border:1.5px solid var(--blue)}
+.btn.vert{background:var(--green)}
+.btn.petit{min-height:36px;padding:6px 12px;font-size:14px}
+:focus-visible{outline:3px solid #FFB000;outline-offset:2px}
+.choix-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.choix{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;min-height:52px;font-size:15.5px;line-height:1.35}
+.choix:hover:not(:disabled){border-color:var(--blue);background:var(--surface-2)}
+.choix.mono{font-size:16px;text-align:center}
+.choix.bon{border-color:var(--ok);background:var(--ok-bg)}
+.choix.faux{border-color:var(--ko);background:var(--ko-bg)}
+.choix:disabled{cursor:default}
+.choix-1col{grid-template-columns:1fr}
+.segment{display:inline-flex;flex-wrap:wrap;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.segment button{border:0;background:var(--surface);padding:8px 12px;cursor:pointer;font-size:14px;min-height:40px;border-right:1px solid var(--line)}
+.segment button:last-child{border-right:0}
+.segment button[aria-pressed="true"]{background:var(--blue);color:#fff;font-weight:600}
+
+/* Vue de jeu */
+.jeu-entete{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin:18px 0 12px}
+.jeu-entete h2{margin:0;font-size:clamp(20px,3vw,26px)}
+.jeu-entete .sous{color:var(--ink-2);font-size:14.5px;margin:2px 0 0}
+.retour{font-weight:600;text-decoration:none;font-size:14.5px}
+.compteurs{display:flex;gap:8px;flex-wrap:wrap}
+.compteur{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-weight:600;font-size:14px;white-space:nowrap}
+.barre{height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-bottom:14px}
+.barre>div{height:100%;background:linear-gradient(90deg,var(--blue),var(--violet));width:0;transition:width .3s}
+.panneau{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--ombre);padding:16px}
+.deux{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:880px){.deux{grid-template-columns:minmax(0,1fr)}}
+.deux>*{min-width:0}
+.question{font-size:19px;font-weight:650;margin:0 0 4px}
+.aide{color:var(--ink-2);font-size:14.5px;margin:0 0 12px}
+.retour-msg{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:15px}
+.retour-msg.ok{background:var(--ok-bg);border:1px solid var(--ok)}
+.retour-msg.ko{background:var(--ko-bg);border:1px solid var(--ko)}
+.retour-msg b.t{display:block;margin-bottom:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.formule{font-family:ui-monospace,Consolas,monospace;background:var(--surface-2);border-radius:8px;padding:2px 7px;white-space:nowrap}
+.niveau{background:linear-gradient(90deg,var(--violet),var(--blue));color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-weight:600}
+
+/* Grille SVG (jeux 1 et 2) */
+.salle svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.salle .noeud circle{fill:var(--surface);stroke:var(--ink-2);stroke-width:2;transition:fill .15s}
+.salle.cliquable .noeud{cursor:pointer}
+.salle.cliquable .noeud:hover circle{fill:#FFE3A3;stroke:var(--orange)}
+.salle .noeud text{font-size:15px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.salle .noeud.allume circle{fill:var(--orange);stroke:#9A4A00}
+.salle .noeud.allume text{fill:#fff}
+.salle .noeud.bon circle{fill:var(--green);stroke:#145A1E}
+.salle .noeud.bon text,.salle .noeud.faux text{fill:#fff}
+.salle .noeud.faux circle{fill:var(--red);stroke:#7A0B13}
+.salle .noeud.voisin circle{fill:#CFE0FF;stroke:var(--blue)}
+.salle .noeud.voisin text{fill:#0B2545}
+.salle .noeud.discret circle{opacity:.35}
+.salle .axe{font-size:12px;fill:var(--ink-2);text-anchor:middle;dominant-baseline:central}
+.salle .etiquette-mur{font-size:12.5px;font-weight:600;text-anchor:middle;dominant-baseline:central}
+
+/* Carte thermique (jeux 3 et 4) */
+.carte-cadre{position:relative;width:100%}
+.carte-cadre canvas{display:block;width:100%;cursor:crosshair}
+.bulle{position:absolute;transform:translate(-50%,calc(-100% - 12px));background:var(--navy);color:#fff;border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.35;pointer-events:none;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:2}
+.bulle b{font-size:15px}
+.echelle{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);margin:4px 0 0}
+.echelle .grad{flex:1;height:10px;border-radius:99px;background:linear-gradient(90deg,#313695,#4575b4,#74add1,#abd9e9,#e0f3f8,#fee090,#fdae61,#f46d43,#d73027,#a50026)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin-top:12px}
+.stat{background:var(--surface-2);border-radius:10px;padding:8px 10px}
+.stat .l{font-size:12px;color:var(--ink-2)}
+.stat .v{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat.ok .v{color:var(--ok)}
+.stat.ko .v{color:var(--ko)}
+.reglage{margin:0 0 12px}
+.reglage label{display:flex;justify-content:space-between;font-size:14.5px;font-weight:600;margin-bottom:2px}
+.reglage label span{font-variant-numeric:tabular-nums;color:var(--blue)}
+input[type=range]{width:100%;accent-color:var(--blue);height:28px}
+.groupe-titre{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);font-weight:700;margin:14px 0 8px}
+.etapes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.etapes button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer}
+.etapes button.fait{background:var(--green);border-color:var(--green);color:#fff}
+.etapes button.actuel{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,86,210,.2)}
+.mission h4{margin:0 0 4px;font-size:18px}
+.mission .obj{background:var(--surface-2);border-radius:10px;padding:8px 12px;margin:10px 0;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Course SOR */
+.chrono{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.graphe{position:relative;width:100%;margin-top:8px}
+.graphe canvas{display:block;width:100%}
+.legende{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.legende i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.medaille{font-size:40px;line-height:1}
+.resultat{display:flex;gap:12px;align-items:center;border-radius:12px;padding:12px 14px;background:var(--surface-2);margin-top:12px}
+
+/* Consoles MATLAB */
+.console{max-width:100%;background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.5;overflow-x:auto;margin:10px 0;white-space:pre}
+.console .cmd{color:#9CDCFE}
+.console .err{color:var(--code-err)}
+.console .warn{color:var(--code-warn)}
+.console .com{color:#6A9955}
+.console .bug{background:rgba(255,138,128,.16);outline:1px dashed rgba(255,138,128,.6);border-radius:3px}
+.console-titre{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:700;margin-top:10px}
+
+/* Fin de partie */
+.fin{text-align:center;padding:22px 10px}
+.fin .grandes{font-size:46px;color:var(--gold);letter-spacing:6px}
+.fin .grandes .vide{color:var(--line)}
+.fin h3{font-size:24px;margin:6px 0}
+.pied-page{border-top:1px solid var(--line);margin-top:30px;padding:20px 0 36px;color:var(--ink-2);font-size:14px}
+.pied-page a{font-weight:600}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:50;pointer-events:none;animation:tombe linear forwards}
+@keyframes tombe{to{transform:translateY(105vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}.carte-jeu{transition:none}}
+@media (max-width:520px){.chrono .v{font-size:14.5px}.choix-grille{grid-template-columns:1fr}.panneau{padding:13px}.chrono{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Ajouts communs aux pages TP4 et TP6 */
+.nb{text-transform:none;letter-spacing:0}
+.autres{font-size:13px;opacity:.9;margin-top:4px}
+.autres a{color:#fff;font-weight:600}
+.tableau{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums;margin-top:10px}
+.tableau th,.tableau td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:right}
+.tableau th{color:var(--ink-2);font-weight:600;font-size:12.5px}
+.tableau td:first-child,.tableau th:first-child{text-align:center}
+.tableau tr.neuf td{background:var(--surface-2)}
+.pari-choisi{display:inline-block;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-weight:600;margin-top:6px}
+.bacs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.bac{border:2px dashed var(--line);border-radius:14px;padding:12px;background:var(--surface);cursor:pointer;text-align:left;min-height:96px}
+.bac:hover:not(:disabled){border-color:var(--blue);background:var(--surface-2)}
+.bac b{display:block;font-size:15.5px;margin-bottom:4px}
+.bac span{font-size:13px;color:var(--ink-2)}
+.bac.bon{border-style:solid;border-color:var(--ok);background:var(--ok-bg)}
+.bac.faux{border-style:solid;border-color:var(--ko);background:var(--ko-bg)}
+@media (max-width:640px){.bacs{grid-template-columns:1fr}}
+.plan{position:relative;width:100%}
+.plan canvas{display:block;width:100%}
+.lecture{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-top:10px}
+.matrice{border-collapse:separate;border-spacing:0;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:14.5px;margin:10px auto;border-left:2px solid var(--ink);border-right:2px solid var(--ink);border-radius:6px}
+.matrice td{padding:5px 9px;text-align:right;min-width:58px;font-variant-numeric:tabular-nums}
+.matrice td.barre{border-left:2px dashed var(--ink-2)}
+.matrice tr.piv td{background:#FFE9B8;color:#15213B}
+.matrice td.col{background:rgba(0,86,210,.10)}
+.matrice tr.piv td.col{background:#FFD36B}
+.matrice td.nul{color:var(--ink-2)}
+.matrice-titre{text-align:center;font-size:13px;color:var(--ink-2);margin-top:6px}
+.banc svg{width:100%;height:auto;display:block}
+.afficheurs{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:8px;margin-top:10px}
+.lcd{background:#1B2A1F;color:#C9F7A8;border-radius:10px;padding:8px 10px;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;box-shadow:inset 0 0 0 2px #2F4A36}
+.lcd .n{font-size:12px;color:#8FC79A;font-family:system-ui,Segoe UI,Arial}
+.lcd .v{font-size:22px;font-weight:700;letter-spacing:.5px;font-variant-numeric:tabular-nums}
+.lcd .u{font-size:13px;margin-left:4px}
+.lcd .c{font-size:11px;color:#8FC79A;font-family:system-ui,Segoe UI,Arial}
+.oscillo{position:relative;width:100%;margin-top:10px}
+.oscillo canvas{display:block;width:100%;border-radius:12px}
+.reglage-ligne{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}
+.reglage-ligne b{min-width:120px;font-size:14px}
+.saisie{font:inherit;font-size:16px;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;width:130px;background:var(--surface);color:var(--ink)}
+.vue3d{position:relative;height:440px;border-radius:12px;overflow:hidden;background:var(--surface-2);touch-action:none;border:1px solid var(--line)}
+.vue3d canvas{display:block}
+.vue3d .calque{position:absolute;inset:0;pointer-events:none}
+.vue3d .astuce{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--ink-2);background:color-mix(in srgb,var(--surface) 85%,transparent);padding:3px 8px;border-radius:8px;pointer-events:none}
+.vue3d .vue-btns{position:absolute;right:8px;top:8px;display:flex;gap:6px}
+.vue3d .vue-btns button{font:600 12px system-ui;padding:5px 9px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.vue3d .chargement{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-2);font-size:14px;text-align:center;padding:20px}
+.etiq{font:600 12px/1.15 system-ui,sans-serif;padding:3px 7px;border-radius:7px;background:rgba(255,255,255,.9);color:#15213B;border:1px solid #CBD5E1;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.etiq.port{font-size:13px;padding:2px 7px;background:#15213B;color:#fff;border-color:#15213B}
+.etiq.ok{background:#E7F5EA;border-color:#1E7B34;color:#14532D}
+.etiq.discret{background:rgba(255,255,255,.75);font-weight:500;font-size:11px}
+.symbole{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:6px 8px}
+.symbole svg{display:block;width:100%;height:auto;max-height:190px}
+.symbole .t{font-size:12.5px;color:var(--ink-2);margin:2px 4px 0}
+.segment.multi{flex-wrap:wrap}
+.choisir{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.choisir select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.legende3d{display:flex;flex-wrap:wrap;gap:10px;font-size:12.5px;color:var(--ink-2);margin-top:8px}
+.legende3d i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+@media (min-width:700px){.cartes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.vue3d{height:330px}}
+</style>
+</head>
+<body>
+<header class="entete">
+  <div class="enveloppe">
+    <div class="ariane"><a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-pro-hydraulique.md">Systèmes hydrauliques</a> › Licence Pro IMPI · Module 6 › <a href="#">Simulations 3D</a></div>
+    <div class="ligne">
+      <h1>🛠️ L'hydraulique en 3D</h1>
+      <div class="total" id="total" aria-live="polite">★ 0 / 15</div>
+    </div>
+    <p>Quatre bancs virtuels pour manipuler les composants du chapitre 3 : faites tourner les pièces en coupe, déplacez le tiroir, mettez les vérins sous pression, réglez les pompes et gonflez l'accumulateur.</p>
+    <div class="autres"><a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-pro-hydraulique.md">⬅ Page du module</a> · <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/hydraulique/Chapitre_03_Technologie_systemes_hydrauliques/1_Cours_chapitre_03.pdf">📘 Chapitre 3 : technologie (PDF)</a></div>
+  </div>
+</header>
+
+<main class="enveloppe">
+
+<section id="accueil" class="vue">
+  <div class="intro">
+    <div class="note">🧊 <b>Manipulez en 3D :</b> faites glisser pour tourner autour des pièces, molette ou pincement pour zoomer. Les composants sont montrés <b>en coupe</b> ; l'huile est colorée : <span style="color:#D62828;font-weight:700">rouge</span> sous pression de la pompe, <span style="color:#1F6FEB;font-weight:700">bleu</span> vers le réservoir, <span style="color:#E8811A;font-weight:700">orange</span> emprisonnée sous charge, gris sans pression. Toutes les valeurs viennent des formules du cours.</div>
+  </div>
+  <div class="cartes" id="cartes"></div>
+  <div class="note" style="border-left-color:var(--green)">💡 <b>Conseil :</b> lisez la partie du chapitre 3 correspondante, faites la simulation, puis vérifiez au TP sur les vrais composants : la simulation prépare la manipulation, elle ne la remplace pas.</div>
+</section>
+
+<!-- JEU 1 : Les distributeurs -->
+<section id="jeu-1" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🔀 Les distributeurs</h2><p class="sous">Déplacez le tiroir : chaque position relie d'autres chambres, comme les cases du symbole</p></div>
+    <div class="compteurs"><span class="compteur" id="j1-compte">Missions : 0 / 5</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau"><div class="vue3d" id="j1-3d"><div class="chargement">Chargement de la scène 3D…</div></div><div class="legende3d"><span><i style="background:#D62828"></i>pression pompe</span><span><i style="background:#1F6FEB"></i>retour réservoir</span><span><i style="background:#E8811A"></i>emprisonnée sous charge</span><span><i style="background:#A3ADB8"></i>sans pression</span></div><div class="symbole"><div id="j1-symb"></div><p class="t" id="j1-symb-t"></p></div><div class="afficheurs" id="j1-aff"></div></div>
+    <div>
+      <div class="panneau mission" id="j1-mission"></div>
+      <div class="panneau" style="margin-top:16px"><div class="groupe-titre" style="margin-top:0">Distributeur</div><div class="choisir"><select id="j1-type" aria-label="Type de distributeur"></select></div><div class="groupe-titre">Commande (maintenue)</div><div class="segment" id="j1-pos"></div><p class="aide" id="j1-aide" style="margin:8px 0 0">Vous pouvez aussi saisir le levier dans la vue 3D et le faire glisser : au lâcher, les ressorts ramènent le tiroir au repos.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 2 : Les vérins -->
+<section id="jeu-2" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🦾 Les vérins</h2><p class="sous">Simple effet, double effet, double tige, télescopique, rotatif : pression, débit, effort et vitesse</p></div>
+    <div class="compteurs"><span class="compteur" id="j2-compte">Missions : 0 / 6</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau"><div class="vue3d" id="j2-3d"><div class="chargement">Chargement de la scène 3D…</div></div><div class="legende3d"><span><i style="background:#D62828"></i>pression pompe</span><span><i style="background:#1F6FEB"></i>retour réservoir</span><span><i style="background:#E8811A"></i>emprisonnée sous charge</span><span><i style="background:#A3ADB8"></i>sans pression</span></div><div class="afficheurs" id="j2-aff"></div><div class="stats" id="j2-chrono"></div></div>
+    <div>
+      <div class="panneau mission" id="j2-mission"></div>
+      <div class="panneau" style="margin-top:16px"><div class="groupe-titre" style="margin-top:0">Type de vérin</div><div class="segment multi" id="j2-type"><button data-v="de">Double effet</button><button data-v="dt">Double tige</button><button data-v="se">Simple effet à ressort</button><button data-v="tele">Télescopique</button><button data-v="rot">Rotatif</button></div><div class="groupe-titre">Distributeur</div><div class="segment" id="j2-cmd"><button data-v="1">◀ Sortie</button><button data-v="0">Arrêt</button><button data-v="-1">Rentrée ▶</button></div><div class="choisir" id="j2-dims"><label>Alésage D <select id="j2-D"></select></label><label>Tige d <select id="j2-d"></select></label></div><div class="reglage" style="margin-top:12px"><label for="j2-p">Tarage du limiteur p <span id="j2-pv"></span></label><input type="range" id="j2-p" min="10" max="250" step="1" value="160"></div><div class="reglage"><label for="j2-Q">Débit de la pompe Q <span id="j2-Qv"></span></label><input type="range" id="j2-Q" min="1" max="60" step="1" value="40"></div><div class="reglage"><label for="j2-F">Effort résistant F <span id="j2-Fv"></span></label><input type="range" id="j2-F" min="0" max="150" step="1" value="0"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 3 : Les pompes -->
+<section id="jeu-3" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>⚙️ Les pompes</h2><p class="sous">Engrenages, palettes, pistons axiaux : cylindrée, débit, fuites et puissance au banc d'essai</p></div>
+    <div class="compteurs"><span class="compteur" id="j3-compte">Missions : 0 / 5</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau"><div class="vue3d" id="j3-3d"><div class="chargement">Chargement de la scène 3D…</div></div><div class="legende3d"><span><i style="background:#1F6FEB"></i>aspiration</span><span><i style="background:#D62828"></i>refoulement</span><span>Rotation montée au ralenti</span></div><div class="afficheurs" id="j3-aff"></div><div class="graphe" id="j3-courbe"><canvas aria-label="Débit réel en fonction de la pression"></canvas></div><table class="tableau" id="j3-table"></table></div>
+    <div>
+      <div class="panneau mission" id="j3-mission"></div>
+      <div class="panneau" style="margin-top:16px"><div class="groupe-titre" style="margin-top:0">Type de pompe</div><div class="segment" id="j3-type"><button data-v="engrenages">Engrenages</button><button data-v="palettes">Palettes</button><button data-v="pistons">Pistons axiaux</button></div><div class="reglage" style="margin-top:12px"><label for="j3-N">Vitesse d'entraînement N <span id="j3-Nv"></span></label><input type="range" id="j3-N" min="0" max="3000" step="10" value="1450"></div><div class="reglage"><label for="j3-p">Pression de refoulement p <span id="j3-pv"></span></label><input type="range" id="j3-p" min="0" max="250" step="1" value="0"></div><div class="reglage" id="j3-geo-r"><label for="j3-g"><span id="j3-gl"></span> <span id="j3-gv"></span></label><input type="range" id="j3-g" min="0" max="4" step="0.05" value="3"></div><div class="actions" style="margin-top:4px"><button class="btn" id="j3-rel">📋 Relever la mesure</button><button class="btn sec petit" id="j3-eff">🗑</button></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- JEU 4 : L'accumulateur -->
+<section id="jeu-4" class="vue" hidden>
+  <div class="jeu-entete">
+    <div><a class="retour" href="#">← Tous les jeux</a><h2>🫧 L'accumulateur</h2><p class="sous">Précharge d'azote, remplissage, restitution : la loi de Boyle-Mariotte en action</p></div>
+    <div class="compteurs"><span class="compteur" id="j4-compte">Missions : 0 / 5</span></div>
+  </div>
+  <div class="deux">
+    <div class="panneau"><div class="vue3d" id="j4-3d"><div class="chargement">Chargement de la scène 3D…</div></div><div class="afficheurs" id="j4-aff"></div><div class="graphe" id="j4-courbe"><canvas aria-label="Pression en fonction du volume de gaz"></canvas></div></div>
+    <div>
+      <div class="panneau mission" id="j4-mission"></div>
+      <div class="panneau" style="margin-top:16px"><div class="groupe-titre" style="margin-top:0">Accumulateur</div><div class="segment" id="j4-type"><button data-v="vessie">À vessie</button><button data-v="piston">À piston</button><button data-v="membrane">À membrane</button></div><div class="groupe-titre">Transformation du gaz</div><div class="segment" id="j4-n"><button data-v="1">Lente (isotherme)</button><button data-v="1.4">Rapide (adiabatique)</button></div><div class="groupe-titre">Circuit</div><div class="actions" style="margin-top:0"><button class="btn" id="j4-pompe">▶ Pompe</button><button class="btn sec" id="j4-conso">↗ Vanne vers le circuit</button><button class="btn sec" id="j4-purge">⤓ Vanne de purge</button></div><div class="groupe-titre">Azote (valve de gonflage)</div><div class="actions" style="margin-top:0"><button class="btn sec petit" id="j4-g10m">−10</button><button class="btn sec petit" id="j4-g1m">−1</button><button class="btn sec petit" id="j4-g1p">+1</button><button class="btn sec petit" id="j4-g10p">+10 bar</button><button class="btn sec" id="j4-ctrl">🔍 Contrôler la précharge</button></div><div id="j4-msg" aria-live="polite"></div></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="enveloppe pied-page">
+  <div>📘 <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/hydraulique/Chapitre_03_Technologie_systemes_hydrauliques/1_Cours_chapitre_03.pdf">Chapitre 3 : technologie des systèmes hydrauliques</a> · 📚 <a href="https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-pro-hydraulique.md">Page du module Hydraulique</a></div>
+  <div style="margin-top:6px">Pr. Mohamed JANANE ALLAH · Licence Professionnelle IMPI — ENSAM Casablanca · Votre progression reste dans ce navigateur, rien n'est envoyé.</div>
+</footer>
+
+<noscript><p class="enveloppe">Ces jeux ont besoin de JavaScript.</p></noscript>
+<script src="noyau.js"></script>
+<script>window.CLE_JEUX = "hydraulique-3d-v1";</script>
+<script>
+"use strict";
+/* ============================================================
+   Outils communs des pages de jeux (meme base que la page du TP5)
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const virgule = (v, d) => v.toFixed(d).replace(".", ",").replace("-", "−");
+const melanger = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const hasard = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const attendre = ms => new Promise(r => setTimeout(r, ms));
+function el(tag, attrs, ...enfants) {
+  const e = document.createElement(tag);
+  for (const [c, v] of Object.entries(attrs || {})) {
+    if (c === "html") e.innerHTML = v; else if (c === "texte") e.textContent = v;
+    else if (c.startsWith("on")) e.addEventListener(c.slice(2), v); else e.setAttribute(c, v);
+  }
+  enfants.forEach(x => e.append(x));
+  return e;
+}
+const css = nom => getComputedStyle(document.documentElement).getPropertyValue(nom).trim();
+
+// Affichage des nombres a la maniere de MATLAB (format short / short e)
+function expo(v) { return v.toExponential(4).replace(/e([+-])(\d)$/, "e$10$2"); }
+function champ(v, entiers, large) {
+  if (entiers) return String(v).padStart(large ? 12 : 6);
+  return (v === 0 ? "0" : v.toFixed(4)).padStart(10);
+}
+function matLigne(vals) {
+  const entiers = vals.every(v => Number.isInteger(v)), large = vals.some(v => Math.abs(v) >= 1000);
+  return vals.map(v => champ(v, entiers, large)).join("");
+}
+function matColonne(vals) {
+  const entiers = vals.every(v => Number.isInteger(v)), large = vals.some(v => Math.abs(v) >= 1000);
+  return vals.map(v => champ(v, entiers, large));
+}
+function matLigneE(vals) { return vals.map(v => expo(v).padStart(13)).join(""); }
+function echapper(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+// lignes : ">> " commande, "!" erreur, "?" avertissement, "#" ligne suspecte, "%..." commentaire en fin de ligne
+function console_(lignes) {
+  return '<pre class="console">' + lignes.map(l => {
+    if (l.startsWith(">> ")) return '<span class="cmd">' + echapper(l) + "</span>";
+    if (l.startsWith("!")) return '<span class="err">' + echapper(l.slice(1)) + "</span>";
+    if (l.startsWith("?")) return '<span class="warn">' + echapper(l.slice(1)) + "</span>";
+    if (l.startsWith("#")) return '<span class="bug">' + echapper(l.slice(1)) + "</span>";
+    return echapper(l).replace(/(%.*)$/, '<span class="com">$1</span>');
+  }).join("\n") + "</pre>";
+}
+// "ans =" a la MATLAB (format loose) : ["", nom + " =", "", ...lignes]
+const ans = (lignes, nom) => ["", (nom || "ans") + " =", ""].concat(lignes).concat([""]);
+
+// Progression (dans ce navigateur seulement) : window.CLE_JEUX = cle de stockage de la page
+let progres = {};
+try { progres = JSON.parse(localStorage.getItem(window.CLE_JEUX)) || {}; } catch (e) { progres = {}; }
+function noter(jeu, n) {
+  if (n > (progres[jeu] || 0)) { progres[jeu] = n; try { localStorage.setItem(window.CLE_JEUX, JSON.stringify(progres)); } catch (e) { /* stockage indisponible */ } }
+  majAccueil();
+}
+function etoilesHTML(n) { return '<span class="etoiles">' + "★".repeat(n) + '<span class="vide">' + "★".repeat(3 - n) + "</span></span>"; }
+function confettis() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cols = ["#0056D2", "#6A4C93", "#C1121F", "#2E7D32", "#E67E22", "#F2C14E"];
+  for (let q = 0; q < 70; q++) {
+    const c = el("div", { class: "confetti" });
+    c.style.left = Math.random() * 100 + "vw"; c.style.background = cols[q % cols.length];
+    c.style.animationDuration = 1.6 + Math.random() * 1.6 + "s"; c.style.animationDelay = Math.random() * 0.4 + "s";
+    document.body.append(c); setTimeout(() => c.remove(), 3800);
+  }
+}
+function ecranFin(zone, o) {
+  zone.innerHTML = '<div class="fin"><div class="grandes">' + "★".repeat(o.etoiles) + '<span class="vide">' + "★".repeat(3 - o.etoiles) +
+    "</span></div><h3>" + o.titre + '</h3><p class="aide" style="font-size:16px">' + o.detail + "</p>" + (o.extra || "") +
+    '<div class="actions" style="justify-content:center"><button class="btn" data-r>↻ Rejouer</button><a class="btn sec" href="#">Tous les jeux</a></div></div>';
+  $("[data-r]", zone).addEventListener("click", o.rejouer);
+  if (o.etoiles === 3) confettis();
+}
+function choixBoutons(zone, options, rappel, mono) {
+  zone.innerHTML = "";
+  options.forEach((o, q) => zone.append(el("button", { class: "choix" + (mono ? " mono" : ""), html: o.html, "data-q": q,
+    onclick: () => { $$("button", zone).forEach(b => b.disabled = true); rappel(o, q, $$("button", zone)); } })));
+}
+function marquerChoix(boutons, options, choisi) {
+  boutons.forEach((b, q) => { if (options[q].bon) b.classList.add("bon"); else if (q === choisi) b.classList.add("faux"); });
+}
+function retour(zone, ok, titre, html) {
+  zone.innerHTML = '<div class="retour-msg ' + (ok ? "ok" : "ko") + '"><b class="t">' + titre + "</b>" + (html || "") + "</div>";
+}
+function segment(zone, valeur, rappel) {
+  $$("button", zone).forEach(b => {
+    b.setAttribute("aria-pressed", b.dataset.v === String(valeur));
+    if (!b.dataset.lie) { b.dataset.lie = 1; b.addEventListener("click", () => rappel(b.dataset.v)); }
+  });
+}
+function graduations(min, max, n) {
+  const brut = (max - min) / (n || 5), p = Math.pow(10, Math.floor(Math.log10(brut))), m = brut / p;
+  const pas = (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p, r = [];
+  for (let v = Math.ceil(min / pas) * pas; v <= max + pas * 1e-9; v += pas) r.push(+v.toFixed(10));
+  return r;
+}
+
+/* Traceur de courbes : axes, grille, series, points, droites horizontales et verticales, textes */
+function tracer(cadre, o) {
+  const cv = $("canvas", cadre), W = cadre.clientWidth, H = o.hauteur || Math.max(180, Math.min(260, W * 0.55)), dpr = window.devicePixelRatio || 1;
+  if (!W) return null;
+  cv.style.height = H + "px"; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  const m = Object.assign({ l: 54, r: 12, t: 12, b: 36 }, o.marges || {}), ink = css("--ink-2"), ligne = css("--line");
+  const X = x => m.l + (x - o.x[0]) / (o.x[1] - o.x[0]) * (W - m.l - m.r);
+  const Y = y => H - m.b - (y - o.y[0]) / (o.y[1] - o.y[0]) * (H - m.t - m.b);
+  ctx.font = "11.5px system-ui,Segoe UI,Arial"; ctx.fillStyle = ink; ctx.strokeStyle = ligne; ctx.lineWidth = 1;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  (o.xt || []).forEach(([v, t]) => { ctx.beginPath(); ctx.moveTo(X(v), m.t); ctx.lineTo(X(v), H - m.b); ctx.stroke(); ctx.fillText(t, X(v), H - m.b + 5); });
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  (o.yt || []).forEach(([v, t]) => { ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(W - m.r, Y(v)); ctx.stroke(); ctx.fillText(t, m.l - 6, Y(v)); });
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; if (o.xl) ctx.fillText(o.xl, (m.l + W - m.r) / 2, H - 1);
+  if (o.yl) { ctx.save(); ctx.translate(9, (m.t + H - m.b) / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = "middle"; ctx.fillText(o.yl, 0, 0); ctx.restore(); }
+  ctx.save(); ctx.beginPath(); ctx.rect(m.l, m.t, W - m.l - m.r, H - m.t - m.b); ctx.clip();
+  (o.horiz || []).forEach(h => { ctx.strokeStyle = h.c; ctx.lineWidth = h.l || 1.5; ctx.setLineDash(h.tir || []); ctx.beginPath(); ctx.moveTo(m.l, Y(h.y)); ctx.lineTo(W - m.r, Y(h.y)); ctx.stroke(); });
+  (o.vert || []).forEach(h => { ctx.strokeStyle = h.c; ctx.lineWidth = h.l || 1.5; ctx.setLineDash(h.tir || []); ctx.beginPath(); ctx.moveTo(X(h.x), m.t); ctx.lineTo(X(h.x), H - m.b); ctx.stroke(); });
+  ctx.setLineDash([]);
+  (o.series || []).forEach(s => {
+    ctx.strokeStyle = s.c; ctx.lineWidth = s.l || 2; ctx.globalAlpha = s.a || 1; ctx.setLineDash(s.tir || []); ctx.lineJoin = "round"; ctx.beginPath();
+    let debut = true;
+    s.pts.forEach(([x, y]) => { if (!isFinite(y) || !isFinite(x)) { debut = true; return; } if (debut) ctx.moveTo(X(x), Y(y)); else ctx.lineTo(X(x), Y(y)); debut = false; });
+    ctx.stroke(); ctx.globalAlpha = 1; ctx.setLineDash([]);
+    if (s.marques) { ctx.fillStyle = s.c; s.pts.forEach(([x, y]) => { if (isFinite(y)) { ctx.beginPath(); ctx.arc(X(x), Y(y), s.marques, 0, 7); ctx.fill(); } }); }
+  });
+  (o.points || []).forEach(p => {
+    ctx.fillStyle = p.c; ctx.strokeStyle = p.c; ctx.lineWidth = 2;
+    if (p.croix) { ctx.beginPath(); ctx.moveTo(X(p.x) - 5, Y(p.y) - 5); ctx.lineTo(X(p.x) + 5, Y(p.y) + 5); ctx.moveTo(X(p.x) + 5, Y(p.y) - 5); ctx.lineTo(X(p.x) - 5, Y(p.y) + 5); ctx.stroke(); }
+    else if (p.anneau) { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r || 7, 0, 7); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r || 4.5, 0, 7); ctx.fill(); }
+  });
+  ctx.restore();
+  (o.textes || []).forEach(t => { ctx.fillStyle = t.c || ink; ctx.font = (t.gras ? "600 " : "") + "12px system-ui,Segoe UI,Arial"; ctx.textAlign = t.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t.t, X(t.x) + (t.dx || 0), Y(t.y) + (t.dy || 0)); });
+  return { X, Y, W, H, m, inverse: (px, py) => [o.x[0] + (px - m.l) / (W - m.l - m.r) * (o.x[1] - o.x[0]), o.y[0] + (H - m.b - py) / (H - m.t - m.b) * (o.y[1] - o.y[0])] };
+}
+
+/* ============================================================
+   Moteur de missions : etapes numerotees, pari facultatif, consigne suivie en direct,
+   action, bouton de validation, quiz final, message de reussite.
+   ============================================================ */
+function moteurMissions(o) {
+  const E = { m: 0, phase: "consigne", faites: new Set(), paris: {}, essais: 0 }, M = o.missions;
+  const val = f => typeof f === "function" ? f() : f;
+  function entrer(m) {
+    E.m = m; E.essais = 0;
+    E.phase = E.faites.has(m) ? "fini" : (M[m].pari && E.paris[m] === undefined) ? "pari" : "consigne";
+    if (M[m].entree) M[m].entree();
+    o.recalculer(); afficher();
+  }
+  function gagner() {
+    E.faites.add(E.m); const n = E.faites.size;
+    noter(o.jeu, o.etoiles(n)); if (o.compteur) o.compteur.textContent = "Missions : " + n + " / " + M.length;
+    if (n === M.length) confettis();
+  }
+  function verifier() {
+    const X = M[E.m], avant = E.phase;
+    if (E.phase === "consigne" && X.ok && X.ok()) { E.phase = X.quiz ? "quiz" : "fini"; if (!X.quiz) gagner(); }
+    if (E.phase === "consigne" || E.phase !== avant) afficher();
+  }
+  function afficher() {
+    const X = M[E.m], z = o.zone;
+    let h = '<div class="etapes">' + M.map((_, q) => '<button data-m="' + q + '" class="' + (E.faites.has(q) ? "fait " : "") + (q === E.m ? "actuel" : "") + '" aria-label="Mission ' + (q + 1) + '">' + (q + 1) + "</button>").join("") + "</div>";
+    h += "<h4>Mission " + (E.m + 1) + " · " + X.titre + '</h4><p style="margin:0">' + val(X.consigne) + "</p>";
+    if (X.pari && E.paris[E.m] !== undefined && E.phase !== "pari") h += '<span class="pari-choisi">Votre pronostic : ' + X.pari.o[E.paris[E.m]] + "</span>";
+    if (E.phase === "pari") {
+      h += '<p class="question" style="font-size:16.5px;margin-top:12px">🔮 ' + val(X.pari.q) + '</p><div class="choix-grille" id="mm-pari"></div>';
+    } else if (E.phase === "consigne") {
+      if (X.suivi) h += '<div class="obj">' + X.suivi() + "</div>";
+      if (X.action) h += '<div class="actions"><button class="btn" id="mm-action">' + X.action.label + "</button></div>";
+      if (X.valider) h += '<div class="actions"><button class="btn" id="mm-valider">' + val(X.valider.label) + '</button></div><div id="mm-vret"></div>';
+    } else if (E.phase === "quiz") {
+      h += '<div class="retour-msg ok"><b class="t">✔ Mission accomplie : une dernière question</b>' + (X.avantQuiz ? val(X.avantQuiz) : "") + "</div>";
+      h += '<p class="question" style="font-size:16.5px;margin-top:12px">' + val(X.quiz.q) + '</p><div class="choix-grille choix-1col" id="mm-quiz"></div><div id="mm-qret"></div>';
+    } else {
+      let bilan = "";
+      if (X.pari && E.paris[E.m] !== undefined) {
+        const bon = X.pari.bon();
+        bilan = "<br>" + (E.paris[E.m] === bon ? "🎯 Pronostic juste !" : "Pronostic : " + X.pari.o[E.paris[E.m]] + " · réponse : <b>" + X.pari.o[bon] + "</b>.");
+      }
+      h += '<div class="retour-msg ok"><b class="t">✔ Mission accomplie</b>' + (X.bravo ? val(X.bravo) : val(X.quiz.expl)) + bilan + "</div>";
+      h += '<div class="actions">' + (E.m < M.length - 1 ? '<button class="btn" id="mm-suite">Mission suivante →</button>' : '<a class="btn" href="#">🎉 Retour aux jeux</a>') + "</div>";
+    }
+    z.innerHTML = h;
+    $$(".etapes button", z).forEach(b => b.addEventListener("click", () => entrer(+b.dataset.m)));
+    const su = $("#mm-suite", z); if (su) su.addEventListener("click", () => entrer(E.m + 1));
+    const ac = $("#mm-action", z); if (ac) ac.addEventListener("click", () => { X.action.faire(); o.recalculer(); verifier(); });
+    const va = $("#mm-valider", z);
+    if (va) va.addEventListener("click", () => {
+      const [ok, msg] = X.valider.test();
+      if (ok) { E.phase = X.quiz ? "quiz" : "fini"; if (!X.quiz) gagner(); afficher(); }
+      else retour($("#mm-vret", z), false, "✘ Pas encore", msg);
+    });
+    if (E.phase === "pari") {
+      const L = X.pari.o.map((t, q) => ({ html: t, q }));
+      choixBoutons($("#mm-pari", z), L, c => { E.paris[E.m] = c.q; E.phase = "consigne"; if (X.apresPari) X.apresPari(); o.recalculer(); afficher(); verifier(); }, true);
+    }
+    if (E.phase === "quiz") {
+      const L = melanger(X.quiz.o.map(([t, b]) => ({ html: t, bon: !!b })));
+      choixBoutons($("#mm-quiz", z), L, (c, q, bs) => {
+        marquerChoix(bs, L, q);
+        if (c.bon) { E.phase = "fini"; gagner(); setTimeout(afficher, 900); }
+        else { retour($("#mm-qret", z), false, "✘ Non, réessayez", ""); setTimeout(afficher, 1100); }
+      });
+    }
+  }
+  return { E, entrer, verifier, afficher };
+}
+
+/* ============================================================
+   Moteur de manches : une suite de questions a choix, avec un panneau de gauche
+   (HTML ou fonction de dessin) et une explication. Le detective en est un cas particulier.
+   manches() rend [{gauche, q, o:[[texte, bon]], expl, apres?, mono?, ordre?}]
+   ============================================================ */
+function moteurManches(o) {
+  let E, A;
+  const P = s => $("#" + o.p + "-" + s), val = f => typeof f === "function" ? f() : f;
+  function demarrer() { A = o.manches(); E = { q: 0, bons: 0, score: 0 }; P("jeu").hidden = false; P("fin").hidden = true; poser(); }
+  function poser() {
+    const X = A[E.q];
+    P("q").textContent = (o.nom || "Question") + " " + (E.q + 1) + " / " + A.length; P("score").textContent = E.score + " pt";
+    P("barre").style.width = E.q / A.length * 100 + "%";
+    const g = P("dossier"); if (typeof X.gauche === "function") X.gauche(g); else g.innerHTML = X.gauche;
+    P("question").innerHTML = X.q; P("retour").innerHTML = ""; P("suivant").hidden = true;
+    const L0 = X.o.map(([t, b]) => ({ html: t, bon: !!b })), L = X.ordre ? L0 : melanger(L0);
+    choixBoutons(P("choix"), L, (c, q, bs) => {
+      marquerChoix(bs, L, q); if (c.bon) { E.bons++; E.score += 100; }
+      retour(P("retour"), c.bon, c.bon ? (o.juste || "✔ Juste ! +100 pt") : (o.faux || "✘ Non"), val(X.expl));
+      if (X.apres) X.apres(g, c.bon);
+      P("score").textContent = E.score + " pt"; P("suivant").hidden = false;
+      P("suivant").textContent = E.q === A.length - 1 ? "Voir le résultat →" : (o.suite || "Question suivante →");
+    }, X.mono);
+  }
+  function suivant() {
+    if (E.q < A.length - 1) { E.q++; poser(); window.scrollTo({ top: $("#" + o.id).offsetTop - 10, behavior: "smooth" }); return; }
+    P("barre").style.width = "100%"; P("jeu").hidden = true; const z = P("fin"); z.hidden = false;
+    const r = E.bons / A.length, et = o.etoiles ? o.etoiles(E.bons, A.length) : r >= 0.85 ? 3 : r >= 0.6 ? 2 : r >= 0.4 ? 1 : 0; noter(o.id, et);
+    ecranFin(z, { etoiles: et, titre: E.bons + " / " + A.length + " " + (o.bilan || "bonnes réponses") + " · " + E.score + " pt", rejouer: demarrer, detail: val(o.morale) });
+  }
+  P("suivant").addEventListener("click", suivant);
+  return { ouvrir: demarrer };
+}
+
+/* Detective du code : AFFAIRES = [{titre, code, sortie, q, o:[[texte, bon]], expl}] */
+function moteurDetective(o) {
+  let A = null;
+  return moteurManches({ id: o.id, p: o.p, nom: "Affaire", bilan: "affaires résolues", juste: "✔ Affaire résolue ! +100 pt", faux: "✘ Fausse piste", suite: "Affaire suivante →",
+    morale: o.morale, etoiles: (b) => b >= 7 ? 3 : b >= 5 ? 2 : b >= 3 ? 1 : 0,
+    manches: () => (A || (A = o.dossiers())).map(X => ({ gauche: '<h3 style="margin:0 0 6px">📁 ' + X.titre + '</h3><div class="console-titre">Extrait du code (ligne suspecte surlignée)</div>' + console_(X.code) +
+      '<div class="console-titre">Fenêtre de commandes</div>' + console_(X.sortie), q: X.q, o: X.o, expl: X.expl })) });
+}
+
+/* ============================================================
+   Accueil et navigation : window.FICHES (cartes) et window.JEUX (objets { ouvrir })
+   ============================================================ */
+function majAccueil() {
+  const zone = $("#cartes"); if (!zone) return; zone.innerHTML = "";
+  FICHES.forEach((f, q) => zone.append(el("a", { class: "carte-jeu", href: "#" + f.id, html:
+    '<div class="vignette" style="background:' + f.fond + '"><img src="vignettes/' + f.id + '.jpg" alt="" loading="lazy" onerror="this.remove()"><span class="num">Jeu ' + (q + 1) + "</span>" + f.emoji + "</div>" +
+    '<div class="corps"><h3>' + f.titre + '</h3><div class="notion">' + f.notion + '</div><div class="puces">' + f.puces.map(p => '<span class="puce">' + p + "</span>").join("") +
+    '</div><div class="pied">' + etoilesHTML(progres[f.id] || 0) + '<span class="btn petit">' + ((progres[f.id] || 0) ? "Rejouer" : "Jouer") + " ▶</span></div></div>" })));
+  const tot = FICHES.reduce((s, f) => s + (progres[f.id] || 0), 0);
+  $("#total").innerHTML = '<span class="etoile">★</span> ' + tot + " / " + 3 * FICHES.length;
+}
+function routeur() {
+  const id = location.hash.slice(1), vue = JEUX[id] ? id : "accueil";
+  $$(".vue").forEach(v => v.hidden = v.id !== vue);
+  majAccueil(); if (JEUX[id]) JEUX[id].ouvrir();
+  window.scrollTo(0, 0);
+}
+function demarrerPage() { addEventListener("hashchange", routeur); routeur(); }
+</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+/* ============================================================
+   Simulations 3D du module Hydraulique (distributeurs, verins, pompes, accumulateur)
+   Moteur 3D commun : scene, camera orbitale, etiquettes, vue en coupe, tuyaux animes.
+   ============================================================ */
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+
+const vg = (v, d) => virgule(v, d);
+const lcd = (nom, v, unite, info) => '<div class="lcd"><div class="n">' + nom + '</div><span class="v">' + v + '</span><span class="u">' + unite + '</span>' + (info ? '<div class="c">' + info + "</div>" : "") + "</div>";
+const ligneTab = (cells, entete) => "<tr>" + cells.map(c => entete ? "<th>" + c + "</th>" : "<td>" + c + "</td>").join("") + "</tr>";
+const borne = (v, a, b) => Math.max(a, Math.min(b, v));
+const ticks = (a, b, n) => graduations(a, b, n).map(v => [v, String(v).replace(".", ",")]);
+
+// couleurs de l'huile (code du cours) et des matieres
+const COUL = { P: 0xD62828, T: 0x1F6FEB, piege: 0xE8811A, neutre: 0xA3ADB8, azote: 0x8ED0F2 };
+const MAT = {
+  acier: () => new THREE.MeshStandardMaterial({ color: 0xC9D1D9, metalness: 0.8, roughness: 0.28 }),
+  chrome: () => new THREE.MeshStandardMaterial({ color: 0xE8EDF2, metalness: 0.95, roughness: 0.12 }),
+  sombre: () => new THREE.MeshStandardMaterial({ color: 0x39424E, metalness: 0.5, roughness: 0.5 }),
+  peint: (c) => new THREE.MeshStandardMaterial({ color: c, metalness: 0.25, roughness: 0.55 }),
+  joint: () => new THREE.MeshStandardMaterial({ color: 0x1B1F24, metalness: 0, roughness: 0.85 }),
+  // corps coupe : demi-piece, faces interieures visibles
+  coupe: (c, plans) => new THREE.MeshStandardMaterial({ color: c, metalness: 0.45, roughness: 0.45, side: THREE.DoubleSide, clippingPlanes: plans }),
+  huile: (c, plans) => new THREE.MeshStandardMaterial({ color: c, metalness: 0.05, roughness: 0.3, transparent: true, opacity: 0.88, side: THREE.DoubleSide, clippingPlanes: plans }),
+  verre: (c, op) => new THREE.MeshStandardMaterial({ color: c, metalness: 0, roughness: 0.15, transparent: true, opacity: op === undefined ? 0.35 : op, depthWrite: false, side: THREE.DoubleSide }),
+};
+// plan de coupe : on garde z <= 0 (la camera regarde depuis z > 0)
+const PLAN_COUPE = () => [new THREE.Plane(new THREE.Vector3(0, 0, -1), 0)];
+
+// texture rayee pour faire couler l'huile dans les tuyaux
+function textureFlux() {
+  const c = document.createElement("canvas"); c.width = 64; c.height = 8;
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, 64, 8); g.fillStyle = "rgba(255,255,255,0.25)"; g.fillRect(36, 0, 28, 8);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+
+// Scene 3D dans un cadre : renvoie la scene, la camera, les outils de visee et d'etiquetage
+function vue3D(cadre, o) {
+  cadre.innerHTML = "";
+  const rendu = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  rendu.setPixelRatio(Math.min(devicePixelRatio, 2)); rendu.localClippingEnabled = true;
+  cadre.append(rendu.domElement);
+  const calque = new CSS2DRenderer(); calque.domElement.className = "calque"; cadre.append(calque.domElement);
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(css("--surface-2") || "#EEF2F9");
+  const camera = new THREE.PerspectiveCamera(o.champ || 34, 1, 0.05, 400); camera.position.set(...o.camera);
+  const orbite = new OrbitControls(camera, rendu.domElement);
+  orbite.target.set(...o.cible); orbite.enableDamping = true; orbite.dampingFactor = 0.12;
+  orbite.minDistance = o.dmin || 3; orbite.maxDistance = o.dmax || 30; orbite.update();
+  scene.add(new THREE.HemisphereLight(0xFFFFFF, 0x8C9BAD, 1.25));
+  const soleil = new THREE.DirectionalLight(0xFFFFFF, 1.8); soleil.position.set(5, 9, 8); scene.add(soleil);
+  const contre = new THREE.DirectionalLight(0xDDE6F5, 0.7); contre.position.set(-6, 3, -5); scene.add(contre);
+  const astuce = el("div", { class: "astuce", html: o.astuce || "🖱 Glisser : tourner · Molette : zoom · Clic droit : déplacer" }); cadre.append(astuce);
+  const btns = el("div", { class: "vue-btns" }); cadre.append(btns);
+  const depart = { p: camera.position.clone(), c: orbite.target.clone() };
+  btns.append(el("button", { html: "⟲ Vue de face", onclick: () => { camera.position.copy(depart.p); orbite.target.copy(depart.c); orbite.update(); } }));
+  function taille() { const w = cadre.clientWidth, h = cadre.clientHeight; if (!w || !h) return; rendu.setSize(w, h); calque.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  new ResizeObserver(taille).observe(cadre); taille();
+  const taches = []; let t0 = performance.now();
+  function boucle(t) {
+    requestAnimationFrame(boucle);
+    if (o.section.hidden || document.hidden) { t0 = t; return; }
+    const dt = Math.min(0.05, (t - t0) / 1000); t0 = t;
+    taches.forEach(f => f(dt)); orbite.update(); rendu.render(scene, camera); calque.render(scene, camera);
+  }
+  requestAnimationFrame(boucle);
+  const rayon = new THREE.Raycaster(), souris = new THREE.Vector2();
+  function viser(ev, objets) {
+    const r = rendu.domElement.getBoundingClientRect();
+    souris.set((ev.clientX - r.left) / r.width * 2 - 1, -(ev.clientY - r.top) / r.height * 2 + 1);
+    rayon.setFromCamera(souris, camera); return rayon.intersectObjects(objets, true)[0];
+  }
+  function etiquette(texte, pos, cls, parent) {
+    const d = el("div", { class: "etiq " + (cls || ""), html: texte }), e = new CSS2DObject(d);
+    e.position.set(...pos); (parent || scene).add(e); return e;
+  }
+  return { scene, camera, rendu, orbite, btns, chaque: f => taches.push(f), viser, etiquette, toile: rendu.domElement };
+}
+
+// tuyau le long d'une ligne brisee, avec huile qui coule (vitesse > 0 dans le sens des points)
+function tuyau(scene, points, r) {
+  const chemin = new THREE.CurvePath();
+  for (let i = 0; i < points.length - 1; i++) chemin.add(new THREE.LineCurve3(new THREE.Vector3(...points[i]), new THREE.Vector3(...points[i + 1])));
+  const long = points.reduce((s, p, i) => i ? s + Math.hypot(p[0] - points[i - 1][0], p[1] - points[i - 1][1], p[2] - points[i - 1][2]) : 0, 0);
+  const seg = Math.max(8, points.length * 10);
+  const tex = textureFlux(); tex.repeat.set(Math.max(1, Math.round(long / 0.35)), 1);
+  const huile = new THREE.Mesh(new THREE.TubeGeometry(chemin, seg, r || 0.07, 12, false), new THREE.MeshStandardMaterial({ color: COUL.neutre, map: tex, roughness: 0.35, metalness: 0.1 }));
+  scene.add(huile);
+  const coudes = points.slice(1, -1).map(p => { const b = new THREE.Mesh(new THREE.SphereGeometry((r || 0.07) * 1.02, 12, 8), huile.material); b.position.set(...p); scene.add(b); return b; });
+  return {
+    huile, long,
+    teinter(c) { huile.material.color.setHex(c); },
+    couler(v, dt) { tex.offset.x -= v * dt / 0.35 * 1.2; },
+    montrer(b) { huile.visible = b; coudes.forEach(x => x.visible = b); },
+  };
+}
+
+// ressort helicoidal de longueur 1 le long de x (on l'etire par scale.x)
+function ressort(R, spires, r, mat) {
+  const pts = [];
+  for (let i = 0; i <= spires * 24; i++) { const a = i / 24 * 2 * Math.PI; pts.push(new THREE.Vector3(i / (spires * 24), R * Math.cos(a), R * Math.sin(a))); }
+  return new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), spires * 24, r, 8, false), mat || MAT.acier());
+}
+
+// cylindre oriente selon x (centre, longueur, rayon)
+function cylX(r, L, mat, seg) { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, L, seg || 40, 1, false), mat); m.rotation.z = Math.PI / 2; return m; }
+function tubeX(rExt, rInt, L, mat) {   // tube creux (anneau extrude) selon x
+  const f = new THREE.Shape(); f.absarc(0, 0, rExt, 0, Math.PI * 2, false);
+  const t = new THREE.Path(); t.absarc(0, 0, rInt, 0, Math.PI * 2, true); f.holes.push(t);
+  const g = new THREE.ExtrudeGeometry(f, { depth: L, bevelEnabled: false, curveSegments: 40 }); g.translate(0, 0, -L / 2); g.rotateY(Math.PI / 2);
+  return new THREE.Mesh(g, mat);
+}
+// cadran de manometre (0 a pmax bar) : renvoie le groupe et une fonction de reglage de l'aiguille
+function manometre(pmax, rayon) {
+  const g = new THREE.Group(), c = document.createElement("canvas"); c.width = c.height = 256;
+  const x = c.getContext("2d"); x.fillStyle = "#FBFCFE"; x.beginPath(); x.arc(128, 128, 124, 0, 7); x.fill();
+  x.strokeStyle = "#2B3445"; x.lineWidth = 6; x.stroke(); x.fillStyle = "#2B3445"; x.font = "bold 22px system-ui"; x.textAlign = "center"; x.textBaseline = "middle";
+  const ang = v => Math.PI * (0.75 + 1.5 * v / pmax);
+  for (let v = 0; v <= pmax; v += pmax / 10) {
+    const a = ang(v); x.lineWidth = 4; x.beginPath(); x.moveTo(128 + 100 * Math.cos(a), 128 + 100 * Math.sin(a)); x.lineTo(128 + 116 * Math.cos(a), 128 + 116 * Math.sin(a)); x.stroke();
+    if (Math.round(v / (pmax / 10)) % 2 === 0) x.fillText(String(Math.round(v)), 128 + 78 * Math.cos(a), 128 + 78 * Math.sin(a));
+  }
+  x.font = "bold 20px system-ui"; x.fillText("bar", 128, 178);
+  const face = new THREE.Mesh(new THREE.CircleGeometry(rayon, 48), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c) }));
+  const boitier = new THREE.Mesh(new THREE.CylinderGeometry(rayon * 1.08, rayon * 1.08, rayon * 0.35, 40), MAT.sombre()); boitier.rotation.x = Math.PI / 2; boitier.position.z = -rayon * 0.18;
+  const aiguille = new THREE.Mesh(new THREE.BoxGeometry(rayon * 0.8, rayon * 0.06, 0.01), new THREE.MeshBasicMaterial({ color: 0xC1121F }));
+  aiguille.geometry.translate(rayon * 0.4, 0, 0); aiguille.position.z = 0.01;
+  g.add(boitier, face, aiguille);
+  return { g, regler: p => { aiguille.rotation.z = -ang(borne(p, 0, pmax)) ; } };
+}
+// couleur d'un groupe d'orifices selon son etat
+const teinteEtat = e => ({ P: COUL.P, T: COUL.T, piege: COUL.piege })[e] || COUL.neutre;
+
+/* ---------- SIMULATION 1 : les distributeurs ---------- */
+const jeu1 = (() => {
+  const T = HYD.TYPES, C = HYD.CHAMBRES, RB = 0.18, RC = 0.3, YB = 0.45;      // rayon d'alesage, de chambre, demi-hauteur du corps
+  const PORTS_HAUT = { A: -0.6, B: 0.6 }, PORTS_BAS = { T1: -1.2, P: 0, T2: 1.2 };
+  const VER = HYD.verinDE(63, 36), CHARGE = 10000, COURSE_M = 0.4, QP = 20, PLIM = 100;
+  const pCharge = HYD.pressionPour(CHARGE, VER.S);                              // ~ 36 bar
+  const E = { type: "43f", s: 0, cmd: 0, glisse: false, x: 0.15, v: 0, pp: 0, tenue: 0, obs: {}, seq32: 0, depart: 0.15, sig: "" };
+  let V = null, MM, symbAvant = "";
+
+  // ---------- etat hydraulique ----------
+  function etat() {
+    const t = T[E.type], G = HYD.liaisons(E.type, E.s), r = (a, b) => HYD.relies(G, a, b);
+    const ports = new Set(Object.values(t.orifices)), DE = ports.has("B"), aT = ports.has("T");
+    const PT = aT && r("P", "T"), PA = r("P", "A"), AT = aT && r("A", "T"), PB = DE && r("P", "B"), BT = DE && aT && r("B", "T");
+    const capA = PA && !AT ? "alim" : AT ? "vid" : "bloque", tigeB = !DE ? "air" : PB && !BT ? "alim" : BT ? "vid" : "bloque";
+    let v = 0;
+    if (capA === "alim" && (tigeB === "vid" || tigeB === "air")) v = E.x < 1 ? HYD.vitesse(QP, VER.S) : 0;
+    else if (tigeB === "alim" && capA === "vid") v = E.x > 0 ? -HYD.vitesse(QP, VER.S2) : 0;
+    else if (capA === "vid" && tigeB !== "bloque") v = E.x > 0 ? -0.11 : 0;                     // la charge redescend seule
+    let pp;
+    if (PT) pp = 3; else if (PA && v > 0) pp = pCharge + 2; else if (PB && v < 0) pp = 6; else pp = PLIM;
+    const etatPort = L => {
+      if (L === "P") return PT ? "T" : "P";
+      if (r(L, "P") && !PT) return "P";
+      if (aT && r(L, "T")) return "T";
+      if (L === "A") return "piege";
+      return "neutre";
+    };
+    return { G, PT, PA, AT, PB, BT, DE, aT, capA, tigeB, v, pp, etatPort, limiteur: pp === PLIM };
+  }
+
+  // ---------- symbole ISO ----------
+  function symbole(type, s) {
+    const t = T[type], n = t.positions.length, W = 70, H = 60, VB = 480, x0 = (VB - W) / 2, y0 = 52;
+    const q = (t.positions[0] - s) / (t.positions[0] - t.positions[n - 1]) * (n - 1), sx = x0 - q * W;
+    const quatre = new Set(Object.values(t.orifices)).has("B"), ports = [...new Set(Object.values(t.orifices))];
+    const pos = L => {                                                             // position d'un orifice dans une case
+      if (type === "22") return { P: [W / 2, H], A: [W / 2, 0] }[L];
+      return { P: [W / 3, H], T: [2 * W / 3, H], A: [W / 3, 0], B: [2 * W / 3, 0] }[L];
+    };
+    const fl = (x1, y1, x2, y2) => { const a = Math.atan2(y2 - y1, x2 - x1), L = 8;
+      return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/><path d="M' + x2 + "," + y2 + " L" + (x2 - L * Math.cos(a - 0.4)) + "," + (y2 - L * Math.sin(a - 0.4)) + " L" + (x2 - L * Math.cos(a + 0.4)) + "," + (y2 - L * Math.sin(a + 0.4)) + 'Z" fill="currentColor"/>'; };
+    let h = '<svg viewBox="0 0 ' + VB + ' 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Symbole du distributeur ' + t.nom + '" style="color:' + css("--ink") + '">';
+    h += '<g stroke="currentColor" stroke-width="2" fill="none">';
+    // conduites fixes vers les orifices (sous et sur la case active)
+    ports.forEach(L => { const [px, py] = pos(L), X = x0 + px, haut = py === 0;
+      h += '<line x1="' + X + '" y1="' + (haut ? y0 - 22 : y0 + H) + '" x2="' + X + '" y2="' + (haut ? y0 : y0 + H + 22) + '"/>'; });
+    h += '</g><g font-size="15" font-weight="700" text-anchor="middle" fill="currentColor">';
+    ports.forEach(L => { const [px, py] = pos(L); h += '<text x="' + (x0 + px) + '" y="' + (py === 0 ? y0 - 27 : y0 + H + 38) + '">' + L + "</text>"; });
+    h += "</g>";
+    // bande des cases, decalee selon le tiroir
+    h += '<g transform="translate(' + sx.toFixed(1) + "," + y0 + ')" stroke="currentColor" stroke-width="2" fill="none">';
+    t.cases.forEach((cs, k) => {
+      const actif = Math.abs(k - q) < 0.08, X = k * W;
+      h += '<rect x="' + X + '" y="0" width="' + W + '" height="' + H + '" fill="' + (actif ? "rgba(0,86,210,.12)" : "none") + '" stroke-width="' + (actif ? 3 : 2) + '"/>';
+      const dans = new Set(cs.flat());
+      cs.forEach(g => {
+        if (g.length === 2) {
+          const [x1, y1] = pos(g[0]), [x2, y2] = pos(g[1]);
+          if (y1 === y2) h += '<polyline points="' + (X + x1) + "," + y1 + " " + (X + x1) + "," + (H * 0.45) + " " + (X + x2) + "," + (H * 0.45) + '"/>' + fl(X + x2, H * 0.45, X + x2, y2 - 1);
+          else h += fl(X + x1, y1 > 0 ? y1 - 1 : y1 + 1, X + x2, y2 > 0 ? y2 - 1 : y2 + 1);
+        } else {
+          const jx = X + W / 2, jy = H / 2;
+          g.forEach(L => { const [px, py] = pos(L); h += '<line x1="' + (X + px) + '" y1="' + py + '" x2="' + jx + '" y2="' + jy + '"/>'; });
+          h += '<circle cx="' + jx + '" cy="' + jy + '" r="3.5" fill="currentColor"/>';
+        }
+      });
+      ports.forEach(L => { if (!dans.has(L)) { const [px, py] = pos(L), d = py === 0 ? 1 : -1;
+        h += '<line x1="' + (X + px) + '" y1="' + py + '" x2="' + (X + px) + '" y2="' + (py + d * 12) + '"/><line x1="' + (X + px - 7) + '" y1="' + (py + d * 12) + '" x2="' + (X + px + 7) + '" y2="' + (py + d * 12) + '"/>'; } });
+    });
+    // organes de commande et de rappel aux extremites
+    const zig = (X, dir, dy) => { const y = H / 2 + (dy || 0); let p = "M" + X + "," + y; for (let k = 0; k < 6; k++) p += " L" + (X + dir * (5 + 5 * k)) + "," + (y + (k % 2 ? 8 : -8)); return '<path d="' + p + " L" + (X + dir * 34) + "," + y + '"/>'; };
+    const sol = (X, dir) => { const x = dir > 0 ? X : X - 30; return '<rect x="' + x + '" y="' + (H / 2 - 13) + '" width="30" height="26"/><line x1="' + (x + 8) + '" y1="' + (H / 2 + 13) + '" x2="' + (x + 22) + '" y2="' + (H / 2 - 13) + '"/>'; };
+    const lev = (X, dy) => { const y = H / 2 + dy; return '<line x1="' + X + '" y1="' + y + '" x2="' + (X - 16) + '" y2="' + y + '"/><line x1="' + (X - 16) + '" y1="' + y + '" x2="' + (X - 28) + '" y2="' + (y - 14) + '"/><circle cx="' + (X - 29) + '" cy="' + (y - 16) + '" r="3" fill="currentColor"/>'; };
+    const bp = X => '<line x1="' + X + '" y1="' + (H / 2) + '" x2="' + (X - 16) + '" y2="' + (H / 2) + '"/><path d="M' + (X - 16) + "," + (H / 2 - 12) + " A12,12 0 0 0 " + (X - 16) + "," + (H / 2 + 12) + 'Z"/>';
+    const fin = n * W, cmd = t.commande;
+    if (cmd.startsWith("levier")) h += lev(0, -10) + zig(0, -1, 14) + zig(fin, 1);
+    else if (cmd.startsWith("2 électro")) h += sol(0, -1) + sol(fin, 1) + zig(-30, -1) + zig(fin + 30, 1);
+    else if (cmd.startsWith("électro")) h += sol(0, -1) + zig(fin, 1);
+    else if (cmd.startsWith("bouton")) h += bp(0) + zig(fin, 1);
+    h += "</g></svg>";
+    return h;
+  }
+
+  // ---------- scene 3D ----------
+  function construire() {
+    V = vue3D($("#j1-3d"), { section: $("#jeu-1"), camera: [-0.8, 1.3, 15.5], cible: [-0.8, 1.2, 0], dmin: 2.5, dmax: 28 });
+    const sc = V.scene, plans = PLAN_COUPE(), G = {};
+    // corps en coupe : profil extrude vers l'arriere, face coupee hachuree
+    const hach = document.createElement("canvas"); hach.width = hach.height = 32; const gh = hach.getContext("2d");
+    gh.fillStyle = "#AEB8C4"; gh.fillRect(0, 0, 32, 32); gh.strokeStyle = "#7E8A99"; gh.lineWidth = 3; gh.beginPath(); gh.moveTo(0, 32); gh.lineTo(32, 0); gh.moveTo(-8, 8); gh.lineTo(8, -8); gh.moveTo(24, 40); gh.lineTo(40, 24); gh.stroke();
+    const th = new THREE.CanvasTexture(hach); th.wrapS = th.wrapT = THREE.RepeatWrapping; th.repeat.set(5, 5);
+    const prof = new THREE.Shape(); prof.moveTo(-1.6, -YB); prof.lineTo(1.6, -YB); prof.lineTo(1.6, YB); prof.lineTo(-1.6, YB); prof.closePath();
+    const trou = [], haut = [[-1.5, RB]], bas = [[-1.5, -RB]];
+    HYD.ORDRE.forEach(c => { const [a, b] = C[c], m = (a + b) / 2;
+      haut.push([a, RB], [a, RC]); if (PORTS_HAUT[c] !== undefined) haut.push([m - 0.08, RC], [m - 0.08, YB - 0.04], [m + 0.08, YB - 0.04], [m + 0.08, RC]); haut.push([b, RC], [b, RB]);
+      bas.push([a, -RB], [a, -RC]); if (PORTS_BAS[c] !== undefined) bas.push([m - 0.08, -RC], [m - 0.08, -YB + 0.04], [m + 0.08, -YB + 0.04], [m + 0.08, -RC]); bas.push([b, -RC], [b, -RB]); });
+    haut.push([1.5, RB]); bas.push([1.5, -RB]);
+    haut.concat(bas.reverse()).forEach(p => trou.push(new THREE.Vector2(...p)));
+    prof.holes.push(new THREE.Path(trou));
+    const geo = new THREE.ExtrudeGeometry(prof, { depth: 0.42, bevelEnabled: false }); geo.translate(0, 0, -0.42);
+    const corps = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ map: th, metalness: 0.2, roughness: 0.7 }), MAT.peint(0x5D6D7E)]);
+    sc.add(corps);
+    const demi = (r, L, x, mat) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, L, 40, 1, true, Math.PI / 2, Math.PI), mat); m.rotation.z = Math.PI / 2; m.position.x = x; sc.add(m); return m; };
+    demi(RB, 3.0, 0, MAT.coupe(0x8C99A8));
+    HYD.ORDRE.forEach(c => { const [a, b] = C[c]; demi(RC, b - a, (a + b) / 2, MAT.coupe(0x8C99A8)); });
+    // huile dans les chambres, les canaux et les gorges du tiroir
+    G.ch = {}; HYD.ORDRE.forEach(c => { const [a, b] = C[c], m = cylX(RC - 0.01, b - a - 0.005, MAT.huile(COUL.neutre, plans)); m.position.x = (a + b) / 2; sc.add(m); G.ch[c] = m; });
+    G.canal = {};
+    Object.entries(Object.assign({}, PORTS_HAUT, PORTS_BAS)).forEach(([c, x]) => { const hautP = PORTS_HAUT[c] !== undefined;
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, YB - RC + 0.02, 20), MAT.huile(COUL.neutre, plans)); m.position.set(x, (hautP ? 1 : -1) * (RC + YB) / 2, 0); sc.add(m); G.canal[c] = m; });
+    G.gorges = [0, 1, 2, 3, 4].map(() => { const m = cylX(RB - 0.006, 1, MAT.huile(COUL.neutre, plans)); sc.add(m); return m; });
+    // tiroir (portees et noyau), ressorts, commande
+    G.tiroir = new THREE.Group(); sc.add(G.tiroir);
+    G.noyau = cylX(0.09, 4.2, MAT.chrome()); G.tiroir.add(G.noyau);
+    G.portees = []; G.perce = new THREE.Group(); G.tiroir.add(G.perce);
+    const pc = MAT.huile(COUL.T); pc.clippingPlanes = null; pc.opacity = 1;
+    const axe = cylX(0.035, 2.5, pc); G.perce.add(axe); const rad = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.2, 12), pc); G.perce.add(rad); G.percage = pc;
+    G.bouts = [-1, 1].map(k => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.33, 0.14, 36), MAT.sombre()); m.rotation.z = Math.PI / 2; m.position.x = k * 1.67; sc.add(m); return m; });
+    G.carters = [-1, 1].map(k => { const m = tubeX(0.27, 0.24, 0.7, MAT.coupe(0x6E7F91, plans)); m.position.x = k * 2.09; sc.add(m); return m; });
+    G.ressorts = [-1, 1].map(k => { const r = ressort(0.17, 6, 0.025); sc.add(r); return r; });
+    G.coupelles = [-1, 1].map(k => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.04, 24), MAT.acier()); m.rotation.z = Math.PI / 2; G.tiroir.add(m); m.position.x = k * 1.8; return m; });
+    // levier (a droite), electro-aimants, bouton-poussoir
+    G.levier = new THREE.Group(); sc.add(G.levier); G.levier.position.set(2.62, 0.05, 0);
+    const pied = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.5, 0.3), MAT.sombre()); pied.position.y = -0.2; G.levier.add(pied);
+    G.bras = new THREE.Group(); G.levier.add(G.bras);
+    const tige = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.3, 16), MAT.acier()); tige.position.y = 0.65; G.bras.add(tige);
+    G.pommeau = new THREE.Mesh(new THREE.SphereGeometry(0.17, 24, 16), MAT.peint(0xC1121F)); G.pommeau.position.y = 1.35; G.bras.add(G.pommeau);
+    G.sol = [-1, 1].map(k => { const g = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({ color: 0x2F3B4C, metalness: 0.3, roughness: 0.5, emissive: 0x000000 }));
+      g.add(b); const bob = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.2, 16), MAT.sombre()); bob.position.y = 0.33; g.add(bob); g.position.x = k * 2.7; sc.add(g); g.userData.boite = b; return g; });
+    G.bp = new THREE.Group(); const tigeBp = cylX(0.05, 0.35, MAT.acier()); tigeBp.position.x = -0.17; G.bp.add(tigeBp);
+    const champi = new THREE.Mesh(new THREE.SphereGeometry(0.22, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), MAT.peint(0xC1121F)); champi.rotation.z = Math.PI / 2; champi.position.x = -0.35; G.bp.add(champi); sc.add(G.bp);
+    G.etiqSol = [V.etiquette("Y1", [-2.7, 0.62, 0], "discret"), V.etiquette("Y2", [2.7, 0.62, 0], "discret")];
+    // etiquettes des orifices
+    G.etiqPorts = {};
+    // ---------- verin vertical et charge ----------
+    const XV = -4.0, plansV = plans;
+    const tubeV = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 2.2, 40, 1, true), MAT.coupe(0x7B8A9A, plansV)); tubeV.position.set(XV, 1.45, 0); sc.add(tubeV);
+    const fond = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 0.2, 40), MAT.peint(0x4A5868)); fond.position.set(XV, 0.25, 0); sc.add(fond);
+    const tete = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 0.2, 40), MAT.peint(0x4A5868)); tete.position.set(XV, 2.65, 0); sc.add(tete);
+    G.hA = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 1, 40), MAT.huile(COUL.neutre, plansV)); sc.add(G.hA);
+    G.hB = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 1, 40), MAT.huile(COUL.neutre, plansV)); sc.add(G.hB);
+    G.piston = new THREE.Mesh(new THREE.CylinderGeometry(0.385, 0.385, 0.16, 40), MAT.acier()); sc.add(G.piston);
+    G.tige = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 2.6, 28), MAT.chrome()); sc.add(G.tige);
+    G.charge = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.55, 0.7), MAT.peint(0xD99A00)); sc.add(G.charge);
+    G.etiqCharge = V.etiquette("Charge 1 t", [0, 0.5, 0], "discret", G.charge);
+    V.etiquette("Vérin double effet", [XV - 0.2, -0.05, 0.5], "discret");
+    // ---------- centrale : reservoir, pompe, limiteur, manometre ----------
+    const res = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.7, 1.4), MAT.verre(0x7FA6C9, 0.28)); res.position.set(0, -2.45, 0); sc.add(res);
+    const huileRes = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.45, 1.3), new THREE.MeshStandardMaterial({ color: COUL.T, transparent: true, opacity: 0.55 })); huileRes.position.set(0, -2.56, 0); sc.add(huileRes);
+    V.etiquette("Réservoir", [1.75, -2.2, 0.75], "discret"); V.etiquette("Manomètre", [-0.62, -1.42, 0.5], "discret");
+    const moteur = cylX(0.32, 0.9, MAT.peint(0x2E5E8C)); moteur.position.set(-0.95, -1.75, 0); sc.add(moteur);
+    const pompe = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), MAT.peint(0x3D4B5C)); pompe.position.set(0, -1.75, 0); sc.add(pompe);
+    V.etiquette("Pompe", [0.45, -1.62, 0.3], "discret");
+    const lim = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.5, 24), MAT.peint(0x8E2B2B)); lim.position.set(0.8, -1.3, 0); sc.add(lim);
+    V.etiquette("Limiteur " + PLIM + " bar", [1.45, -1.25, 0.2], "discret");
+    G.mano = manometre(160, 0.32); G.mano.g.position.set(-0.62, -0.95, 0.5); sc.add(G.mano.g);
+    // ---------- tuyaux ----------
+    const TU = {};
+    TU.P = tuyau(sc, [[0, -1.5, 0], [0, -0.43, 0]], 0.075);
+    TU.lim = tuyau(sc, [[0, -1.1, 0], [0.8, -1.1, 0], [0.8, -1.05, 0]], 0.06);
+    TU.limR = tuyau(sc, [[0.8, -1.55, 0], [0.8, -2.15, 0]], 0.06);
+    TU.mano = tuyau(sc, [[0, -0.95, 0], [0, -0.95, 0.5], [-0.3, -0.95, 0.5]], 0.045);
+    TU.T1 = tuyau(sc, [[-1.2, -0.43, 0], [-1.2, -2.15, 0]], 0.075);
+    TU.T2 = tuyau(sc, [[1.2, -0.43, 0], [1.2, -2.15, 0]], 0.075);
+    TU.A = tuyau(sc, [[-0.6, 0.43, 0], [-0.6, 0.6, 0], [-3.58, 0.6, 0]], 0.075);
+    TU.B = tuyau(sc, [[0.6, 0.43, 0], [0.6, 2.45, 0], [-3.58, 2.45, 0]], 0.075);
+    G.reniflard = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.18, 16), MAT.sombre()); G.reniflard.rotation.z = Math.PI / 2; G.reniflard.position.set(XV + 0.5, 2.45, 0); sc.add(G.reniflard);
+    G.bouchons = {}; ["A", "B", "T1", "T2", "P"].forEach(c => { const x = PORTS_HAUT[c] !== undefined ? PORTS_HAUT[c] : PORTS_BAS[c], hautP = PORTS_HAUT[c] !== undefined;
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.1, 20), MAT.sombre()); b.position.set(x, hautP ? YB + 0.04 : -YB - 0.04, 0); sc.add(b); G.bouchons[c] = b; });
+    // etiquettes des orifices (mises a jour selon le type)
+    ["A", "B"].forEach(c => G.etiqPorts[c] = V.etiquette(c, [PORTS_HAUT[c] + 0.22, 0.75, 0], "port"));
+    ["T1", "P", "T2"].forEach(c => G.etiqPorts[c] = V.etiquette(c === "P" ? "P" : "T", [PORTS_BAS[c] + 0.22, -0.72, 0], "port"));
+    V.btns.prepend(el("button", { html: "🔍 Distributeur", onclick: () => { V.camera.position.set(0.3, 0.4, 6.2); V.orbite.target.set(0.2, 0, 0); V.orbite.update(); } }));
+    // ---------- saisir le levier ----------
+    let x0 = 0, s0 = 0;
+    V.toile.addEventListener("pointerdown", ev => {
+      const cible = V.viser(ev, [G.pommeau, G.sol[0], G.sol[1], G.bp].filter(o => o.visible && (o !== G.pommeau || G.levier.visible)));
+      if (!cible) return;
+      const t = T[E.type];
+      if (cible.object === G.pommeau && t.commande.startsWith("levier")) { E.glisse = true; V.orbite.enabled = false; x0 = ev.clientX; s0 = E.s; V.toile.setPointerCapture(ev.pointerId); return; }
+      // clic sur un electro-aimant ou sur le bouton : commande maintenue (on bascule)
+      let vise = null;
+      if (G.sol[0].children.includes(cible.object) || cible.object.parent === G.sol[0]) vise = 1;
+      if (G.sol[1].children.includes(cible.object) || cible.object.parent === G.sol[1]) vise = -1;
+      if (cible.object.parent === G.bp) vise = 1;
+      if (vise !== null) { const ok = t.positions.includes(vise) && (vise === 1 ? G.sol[0].visible || G.bp.visible : G.sol[1].visible); if (ok) { E.cmd = E.cmd === vise ? t.repos : vise; majCommande(); } }
+    });
+    V.toile.addEventListener("pointermove", ev => { if (!E.glisse) return; const t = T[E.type]; E.s = borne(s0 - (ev.clientX - x0) / 110, Math.min(...t.positions), Math.max(...t.positions)); });
+    const lacher = () => { if (!E.glisse) return; E.glisse = false; V.orbite.enabled = true; E.cmd = T[E.type].repos; majCommande(); };
+    V.toile.addEventListener("pointerup", lacher); V.toile.addEventListener("pointercancel", lacher);
+    V.G = G; V.TU = TU;
+    V.chaque(pas);
+    habiller();
+  }
+
+  // apparence selon le type de distributeur
+  function habiller() {
+    const t = T[E.type], G = V.G, ports = new Set(Object.values(t.orifices)), cmd = t.commande;
+    // portees du tiroir
+    G.portees.forEach(m => G.tiroir.remove(m)); G.portees = [];
+    HYD.PORTEES[t.portees].concat([[-1.65, -1.45], [1.45, 1.65]]).forEach(([a, b]) => { const m = cylX(0.172, b - a, MAT.acier()); m.position.x = (a + b) / 2; G.tiroir.add(m); G.portees.push(m); });
+    G.perce.visible = !!t.percage; G.noyau.material.transparent = !!t.percage; G.noyau.material.opacity = t.percage ? 0.45 : 1;
+    // orifices utilises : chambres -> nom ; bouchons sur les autres
+    HYD.ORDRE.forEach(c => { const used = t.orifices[c] !== undefined; G.ch[c].visible = true; if (G.canal[c]) G.canal[c].visible = used; if (G.bouchons[c]) G.bouchons[c].visible = !used;
+      if (G.etiqPorts[c]) { G.etiqPorts[c].visible = used; G.etiqPorts[c].element.textContent = used ? t.orifices[c] : ""; } });
+    // tuyaux : A et B de l'actionneur selon les chambres
+    const cA = Object.keys(t.orifices).find(c => t.orifices[c] === "A"), cB = Object.keys(t.orifices).find(c => t.orifices[c] === "B");
+    V.TU.A.montrer(cA === "A"); V.TU.B.montrer(cB === "B");
+    if (!V.TU.A2) { V.TU.A2 = tuyau(V.scene, [[0.6, 0.43, 0], [0.6, 0.75, 0], [0.6, 0.75, 0.4], [-3.58, 0.75, 0.4], [-3.58, 0.6, 0.4], [-3.58, 0.6, 0]], 0.075); V.TU.B2 = tuyau(V.scene, [[-0.6, 0.43, 0], [-0.6, 1.05, 0], [-2.6, 1.05, 0], [-2.6, 2.45, 0], [-3.58, 2.45, 0]], 0.075); }
+    V.TU.A2.montrer(cA === "B"); V.TU.B2.montrer(cB === "A");
+    V.TU.T1.montrer(t.orifices.T1 !== undefined); V.TU.T2.montrer(t.orifices.T2 !== undefined);
+    G.reniflard.visible = !ports.has("B");
+    // commande
+    const lev = cmd.startsWith("levier"), deuxSol = cmd.startsWith("2 électro"), unSol = cmd.startsWith("électro"), bp = cmd.startsWith("bouton");
+    G.levier.visible = lev; G.sol[0].visible = deuxSol || unSol; G.sol[1].visible = deuxSol; G.bp.visible = bp;
+    G.etiqSol[0].visible = deuxSol || unSol; G.etiqSol[1].visible = deuxSol;
+    const ressG = t.positions.length === 3; G.ressorts[0].visible = ressG; G.carters[0].visible = true;
+    symbAvant = "";
+  }
+  function majCommande() {
+    const t = T[E.type];
+    $$("#j1-pos button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === E.cmd)));
+  }
+  function remplirCommandes() {
+    const t = T[E.type], noms = t.positions.length === 3 ? ["◀ Case gauche", "Centre (repos)", "Case droite ▶"] : ["◀ Actionnée (case gauche)", "Repos (case droite) ▶"];
+    $("#j1-pos").innerHTML = t.positions.map((p, k) => '<button data-v="' + p + '">' + noms[k] + "</button>").join("");
+    $$("#j1-pos button").forEach(b => b.addEventListener("click", () => { E.cmd = +b.dataset.v; majCommande(); }));
+    majCommande();
+  }
+  function choisirType(ty) {
+    E.type = ty; E.cmd = T[ty].repos; E.s = T[ty].repos; E.tenue = 0; $("#j1-type").value = ty;
+    remplirCommandes(); if (V) habiller(); E.depart = E.x;
+  }
+
+  // ---------- boucle ----------
+  let horloge = 0;
+  function pas(dt) {
+    const t = T[E.type], G = V.G;
+    if (!E.glisse) { const d = E.cmd - E.s; E.s += Math.sign(d) * Math.min(Math.abs(d), 4 * dt); }
+    const S = etat(); E.v = S.v; E.pp = S.pp;
+    E.x = borne(E.x + S.v * dt / COURSE_M, 0, 1);
+    // suivi des missions
+    if ((E.type === "43f" || E.type === "43t") && Math.abs(E.s) < 0.02 && E.x > 0.4 && E.x < 0.6 && S.v === 0) E.tenue += dt; else E.tenue = 0;
+    if (Math.abs(E.s) < 0.02 && (E.type === "43o" || E.type === "43y")) { if (E.x < E.depart - 0.1) E.obs[E.type] = true; } else E.depart = E.x;
+    if (E.type === "32") { if (E.x >= 0.8) E.seq32 = Math.max(E.seq32, 1); if (E.seq32 >= 1 && E.x <= 0.2) E.seq32 = 2; }
+    // tiroir, ressorts, levier, electro-aimants
+    const dx = HYD.COURSE * E.s; G.tiroir.position.x = dx;
+    G.ressorts[1].position.x = 1.8 + dx; G.ressorts[1].scale.x = 0.62 - dx;
+    G.ressorts[0].position.x = -2.42; G.ressorts[0].scale.x = 0.62 + dx;
+    G.bras.rotation.z = -E.s * 0.45;
+    G.sol.forEach((g, k) => { const actif = (k === 0 && E.s > 0.5) || (k === 1 && E.s < -0.5); g.userData.boite.material.emissive.setHex(actif ? 0xB45309 : 0x000000); });
+    G.bp.position.x = -2.62 + dx;
+    // couleurs de l'huile
+    const coulPort = L => teinteEtat(S.etatPort(L));
+    HYD.ORDRE.forEach(c => { const L = t.orifices[c]; G.ch[c].material.color.setHex(L ? coulPort(L) : COUL.neutre); if (G.canal[c]) G.canal[c].material.color.setHex(L ? coulPort(L) : COUL.neutre); });
+    const P = HYD.porteesA(E.type, E.s).concat([[-1.65 + dx, -1.45 + dx], [1.45 + dx, 1.65 + dx]]).sort((a, b) => a[0] - b[0]);
+    const gorges = []; let g0 = -1.5;
+    P.forEach(([a, b]) => { if (a > g0) gorges.push([g0, Math.min(a, 1.5)]); g0 = Math.max(g0, b); }); if (g0 < 1.5) gorges.push([g0, 1.5]);
+    G.gorges.forEach((m, k) => { const gg = gorges[k]; if (!gg || gg[1] - gg[0] < 0.01) { m.visible = false; return; }
+      m.visible = true; m.position.x = (gg[0] + gg[1]) / 2; m.scale.y = gg[1] - gg[0];
+      const ch = HYD.ORDRE.find(c => C[c][0] < gg[1] && C[c][1] > gg[0]), L = ch && t.orifices[ch];
+      m.material.color.setHex(L ? coulPort(L) : COUL.neutre); });
+    G.percage.color.setHex(coulPort("P"));
+    // verin
+    const yp = 0.5 + 1.82 * E.x, XV = -4.0;
+    G.piston.position.set(XV, yp, 0); G.tige.position.set(XV, yp + 1.3, 0); G.charge.position.set(XV, yp + 2.6 + 0.27, 0);
+    G.hA.position.set(XV, (0.35 + yp) / 2, 0); G.hA.scale.y = Math.max(0.01, yp - 0.08 - 0.35);
+    G.hB.position.set(XV, (yp + 0.08 + 2.55) / 2, 0); G.hB.scale.y = Math.max(0.01, 2.55 - yp - 0.08);
+    G.hA.material.color.setHex(coulPort("A")); G.hB.material.color.setHex(S.DE ? coulPort("B") : 0xD7DEE6);
+    // tuyaux
+    const TU = V.TU, vit = S.v / 0.107;
+    TU.P.teinter(coulPort("P")); TU.mano.teinter(coulPort("P")); TU.lim.teinter(S.limiteur ? COUL.P : COUL.neutre); TU.limR.teinter(S.limiteur ? COUL.T : COUL.neutre);
+    TU.T1.teinter(COUL.T); TU.T2.teinter(COUL.T);
+    [TU.A, TU.A2].forEach(u => u.teinter(coulPort("A"))); [TU.B, TU.B2].forEach(u => u.teinter(coulPort("B")));
+    const pRelie = S.G.some(g => g.includes("P"));
+    TU.P.couler(pRelie ? 1 : 0, dt); TU.lim.couler(S.limiteur ? 1 : 0, dt); TU.limR.couler(S.limiteur ? 1 : 0, dt);
+    [TU.A, TU.A2].forEach(u => u.couler(vit, dt)); [TU.B, TU.B2].forEach(u => u.couler(-vit * VER.S2 / VER.S, dt));
+    const retour = S.PT || (S.AT && S.v < 0) || (S.BT && S.v > 0);
+    TU.T1.couler(retour ? 1 : 0, dt); TU.T2.couler(retour ? 1 : 0, dt);
+    G.mano.regler(S.pp);
+    // affichage (10 fois par seconde)
+    horloge += dt; if (horloge < 0.1) return; horloge = 0;
+    afficher(S);
+  }
+  function afficher(S) {
+    const t = T[E.type], q = HYD.caseActive(E.type, E.s), cases = t.cases;
+    const decrire = cs => cs.length ? cs.map(g => g.join(g.length > 2 ? "–" : "→")).join(", ") : "tous les orifices bloqués";
+    const casTxt = q < 0 ? "tiroir entre deux positions" : (t.positions.length === 3 ? ["case gauche", "case centrale", "case droite"][q] : ["case gauche (actionnée)", "case droite (repos)"][q]) + " : " + decrire(cases[q]);
+    const pompe = S.PT ? "déchargée vers le réservoir" : S.limiteur ? "en pression, le débit part par le limiteur" : "alimente le vérin";
+    $("#j1-aff").innerHTML = lcd("Pression pompe", vg(S.pp, 0), "bar", pompe) + lcd("Position de la tige", vg(E.x * COURSE_M * 1000, 0), "mm", "course 400 mm") +
+      lcd("Vitesse", vg(Math.abs(S.v), 3), "m/s", S.v > 0 ? "sortie" : S.v < 0 ? "rentrée" : "arrêt") + lcd("Puissance perdue", vg(S.limiteur || S.PT ? S.pp * QP / 600 : 0, 2), "kW", S.limiteur ? "au limiteur, en chaleur" : S.PT ? "dans le distributeur" : "la pompe travaille utilement");
+    const sy = E.type + Math.round(E.s * 50);
+    if (sy !== symbAvant) { symbAvant = sy; $("#j1-symb").innerHTML = symbole(E.type, E.s); }
+    $("#j1-symb-t").innerHTML = "<b>" + t.nom + "</b> · " + t.commande + " · " + casTxt;
+    // missions : on ne redessine le panneau que si le suivi change
+    const X = missions[MM.E.m], sig = MM.E.m + "|" + (X.suivi ? X.suivi() : "") + "|" + (X.ok ? X.ok() : "");
+    if (sig !== E.sig) { E.sig = sig; MM.verifier(); }
+  }
+
+  const pct = () => Math.round(E.x * 100) + " %";
+  const missions = [
+    { titre: "Sortir la tige", consigne: "Distributeur <b>4/3 centre fermé</b>. Faites sortir complètement la tige du vérin, qui soulève la charge d'une tonne.",
+      entree: () => choisirType("43f"), suivi: () => "Tige sortie à " + pct(),
+      ok: () => E.type === "43f" && E.x >= 0.99,
+      avantQuiz: () => "Pendant la montée, la pompe ne monte qu'à " + vg(pCharge + 2, 0) + " bar : c'est la charge qui fixe la pression (F = p · S).",
+      quiz: { q: "Pendant la sortie, quelle case du symbole était alignée sur les orifices ?", o: [["La case de droite : P → A et B → T", 1], ["La case de gauche : P → B et A → T", 0], ["La case centrale : tout est bloqué", 0]],
+        expl: "Le tiroir a relié P à la chambre côté fond (A) et la chambre côté tige (B) au réservoir : c'est exactement ce que dessine la case de droite." } },
+    { titre: "Arrêter et tenir la charge", consigne: "Toujours en <b>4/3 centre fermé</b> : arrêtez la tige entre 40 et 60 % de sa course, tiroir au centre, et laissez la charge en l'air 3 secondes.",
+      entree: () => choisirType("43f"),
+      pari: { q: "Tiroir au centre fermé, que va faire la charge ?", o: ["Elle reste en place", "Elle redescend doucement", "Elle continue de monter"], bon: () => 0 },
+      suivi: () => "Tige à " + pct() + " · tenue : " + vg(Math.min(3, E.tenue), 1) + " s / 3 s",
+      ok: () => E.tenue >= 3,
+      bravo: () => "Centre fermé : A et B sont bloqués, l'huile côté fond est <b>emprisonnée</b> (en orange) et porte la charge. Mais la pompe, elle, ne peut aller nulle part : son débit part par le limiteur à " + PLIM + " bar, soit <b>" + vg(PLIM * QP / 600, 2) + " kW</b> transformés en chaleur." },
+    { titre: "Tenir sans chauffer l'huile", consigne: "Trouvez le distributeur 4/3 qui <b>tient la charge</b> au centre <b>et</b> décharge la pompe vers le réservoir, puis arrêtez la charge à mi-course (entre 30 et 70 %).",
+      pari: { q: "Quel centre tient la charge et décharge la pompe ?", o: ["Centre fermé", "Centre tandem", "Centre ouvert (H)", "Centre flottant (Y)"], bon: () => 1 },
+      suivi: () => "Distributeur : " + T[E.type].court + " · tige à " + pct() + " · pompe à " + vg(E.pp, 0) + " bar",
+      ok: () => E.type === "43t" && Math.abs(E.s) < 0.02 && E.x > 0.3 && E.x < 0.7 && E.v === 0,
+      bravo: () => "Centre tandem : A et B bloqués (charge tenue), P relié à T par le perçage du tiroir. La pompe tourne à 3 bar : " + vg(3 * QP / 600, 2) + " kW perdus au lieu de " + vg(PLIM * QP / 600, 2) + " kW avec le centre fermé." },
+    { titre: "Centres ouvert et flottant", consigne: "Essayez le <b>centre ouvert (H)</b> puis le <b>centre flottant (Y)</b> : charge en l'air, remettez le tiroir au centre et observez.",
+      suivi: () => "Centre ouvert : " + (E.obs["43o"] ? "✓ observé" : "○") + " · centre flottant : " + (E.obs["43y"] ? "✓ observé" : "○"),
+      ok: () => !!(E.obs["43o"] && E.obs["43y"]),
+      avantQuiz: "Dans les deux cas, A et B sont reliés au réservoir : rien ne retient la charge, elle redescend.",
+      quiz: { q: "Quelle est la différence entre le centre ouvert et le centre flottant ?", o: [["Ouvert : la pompe est déchargée vers T ; flottant : P est bloqué, la pompe reste en pression", 1], ["Ouvert : le vérin est bloqué ; flottant : le vérin est libre", 0], ["Aucune : ce sont deux noms du même centre", 0]],
+        expl: "Ouvert (H) : P, A, B et T reliés, pompe déchargée, vérin libre (moteur en roue libre). Flottant (Y) : A, B, T reliés, P bloqué : vérin libre, pompe en pression via le limiteur (positionnement à la main)." } },
+    { titre: "Le 3/2 et le vérin simple effet", consigne: "Passez au <b>3/2 normalement fermé</b> à bouton-poussoir : soulevez la charge au-delà de 80 %, puis relâchez pour la faire redescendre sous 20 %.",
+      entree: () => { choisirType("32"); E.seq32 = 0; },
+      suivi: () => "Montée au-delà de 80 % : " + (E.seq32 >= 1 ? "✓" : "○") + " · redescente sous 20 % : " + (E.seq32 >= 2 ? "✓" : "○") + " · tige à " + pct(),
+      ok: () => E.seq32 >= 2,
+      quiz: { q: "Que signifie la désignation « 3/2 NF » ?", o: [["3 orifices, 2 positions ; au repos, P est fermé", 1], ["3 positions, 2 orifices ; normalement fermé", 0], ["3 voies de pilotage et 2 ressorts", 0]],
+        expl: "o/p : le premier chiffre compte les orifices (P, A, T), le second les positions. Au repos (case de droite), P est bloqué et A part au réservoir : le vérin simple effet redescend sous la charge." } },
+  ];
+
+  return { ouvrir: () => {
+    if (!V) {
+      $("#j1-type").innerHTML = Object.entries(T).map(([k, t]) => '<option value="' + k + '">' + t.nom + "</option>").join("");
+      $("#j1-type").addEventListener("change", e => choisirType(e.target.value));
+      remplirCommandes();
+      MM = moteurMissions({ zone: $("#j1-mission"), compteur: $("#j1-compte"), jeu: "jeu-1", missions, recalculer: () => {}, etoiles: n => n >= 5 ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0 });
+      try { construire(); } catch (e) { $("#j1-3d").innerHTML = '<div class="chargement">La 3D n\'a pas pu démarrer sur cet appareil (WebGL indisponible).</div>'; console.error(e); }
+      MM.entrer(0);
+    } else MM.afficher();
+  }, etat: () => E };
+})();
+
+/* ---------- SIMULATION 2 : les verins ---------- */
+const jeu2 = (() => {
+  const ETA = HYD.ETA_VE, COURSE = 0.5, LV = 2.2, K = 4.5;                   // course reelle (m), course dessinee, echelle des diametres
+  const RESS = { F0: 2000, k: 8000 };                                          // ressort du simple effet : precharge (N), raideur (N/m)
+  const TELE = [100, 80, 60], CT = 0.25;                                       // diametres des etages (mm), course par etage (m)
+  const ROT = { D: 80, r: 0.04 };                                              // rotatif : piston (mm), rayon primitif du pignon (m)
+  const PIECES = [["piston", "le piston"], ["tige", "la tige"], ["fond", "le fond"], ["tete", "la tête"], ["tirant", "un tirant"], ["joint", "un joint (racleur ou joint de piston)"]];
+  const NOMS = { piston: "le piston", tige: "la tige de piston", fond: "le fond", tete: "la tête (palier de tige)", tirant: "un tirant", joint: "un joint", tube: "le corps (chemise)", ressort: "le ressort de rappel", charge: "la charge", etage: "un étage télescopique", pignon: "le pignon", cremaillere: "la crémaillère" };
+  const E = { type: "de", D: 100, d: 45, p: 160, Q: 40, F: 0, cmd: 0, x: 0, v: 0, pm: 0, cale: false, et: [0, 0, 0], pE: [0, 0, 0],
+    chrono: null, mes: {}, trouves: new Set(), msgPiece: "", sortieOK: null, sig: "" };
+  let V = null, MM, A = null;
+
+  const sec = () => { const S = HYD.aire(E.D), s = HYD.aire(E.d); return { S, s, S2: S - s }; };
+  // ---------- physique ----------
+  function pas(dt) {
+    const t = E.type, c = E.cmd; let v = 0, pm = 0; E.cale = false;
+    if (t === "de" || t === "dt") {
+      const { S, S2 } = sec(), Ss = t === "dt" ? S2 : S, Se = S2;
+      if (c === 1 && E.x < 1) { const pn = HYD.pressionPour(E.F * 1000, Ss) + 2; if (pn <= E.p) { v = HYD.vitesse(E.Q, Ss) / COURSE; pm = pn; } else { E.cale = true; pm = E.p; } }
+      else if (c === -1 && E.x > 0) { const pn = HYD.pressionPour(E.F * 1000, Se) + 2; if (pn <= E.p) { v = -HYD.vitesse(E.Q, Se) / COURSE; pm = pn; } else { E.cale = true; pm = E.p; } }
+      else if (c !== 0) pm = E.p;
+    } else if (t === "se") {
+      const { S } = sec(), Fr = RESS.F0 + RESS.k * E.x * COURSE;
+      if (c === 1) { const pn = HYD.pressionPour(E.F * 1000 + Fr, S) + 1;
+        if (E.x < 1 && pn <= E.p) { v = HYD.vitesse(E.Q, S) / COURSE; pm = pn; } else { pm = E.p; E.cale = E.x < 1; } }
+      else if (c === -1 && E.x > 0) { v = -0.15 / COURSE; pm = 0; }
+      else if (c === 0) pm = E.x > 0 ? HYD.pressionPour(Fr, S) : 0;
+    } else if (t === "tele") {
+      const i = E.et.findIndex(e => e < 1), j = [2, 1, 0].find(k => E.et[k] > 0);
+      if (c === 1 && i >= 0) { const S = HYD.aire(TELE[i]), pn = HYD.pressionPour(E.F * 1000, S) + 2;
+        if (pn <= E.p) { const dv = HYD.vitesse(E.Q, S) * dt / CT; E.et[i] = Math.min(1, E.et[i] + dv); v = HYD.vitesse(E.Q, S); pm = pn; E.pE[i] = pn; } else { E.cale = true; pm = E.p; } }
+      else if (c === 1) pm = E.p;
+      else if (c === -1 && j !== undefined && E.F > 0) { E.et[j] = Math.max(0, E.et[j] - 0.12 * dt / CT); v = -0.12; pm = 0; }
+      else pm = j !== undefined ? HYD.pressionPour(E.F * 1000, HYD.aire(TELE[j])) : 0;
+      E.x = (E.et[0] + E.et[1] + E.et[2]) / 3;
+    } else if (t === "rot") {
+      const S = HYD.aire(ROT.D), Cr = E.F;                                         // couple resistant (N.m) = curseur F
+      if (c !== 0 && (c === 1 ? E.x < 1 : E.x > 0)) { const pn = Cr / (ETA * S * ROT.r) / 1e5 + 2;
+        if (pn <= E.p) { v = c * HYD.vitesse(E.Q, S) / ROT.r / Math.PI; pm = pn; } else { E.cale = true; pm = E.p; } }
+      else if (c !== 0) pm = E.p;
+    }
+    if (t !== "tele") E.x = borne(E.x + v * dt, 0, 1);
+    E.v = v; E.pm = pm;
+    // chronometre : une course complete, sans arret
+    if (t !== "rot") {
+      if (!E.chrono && v !== 0 && ((v > 0 && E.x < 0.02) || (v < 0 && E.x > 0.98))) E.chrono = { sens: v > 0 ? "s" : "e", t: 0 };
+      if (E.chrono) {
+        if (v === 0 && E.x > 0.001 && E.x < 0.999) E.chrono = null;
+        else { E.chrono.t += dt; if ((E.chrono.sens === "s" && E.x >= 1) || (E.chrono.sens === "e" && E.x <= 0)) { (E.mes[t] = E.mes[t] || {})[E.chrono.sens] = E.chrono.t; E.chrono = null; } }
+      }
+    }
+    if (E.x >= 1 && t === "de") E.sortieOK = { D: E.D, F: E.F, p: E.p };
+    dessiner(dt);
+  }
+
+  // ---------- scene ----------
+  function construire() {
+    V = vue3D($("#j2-3d"), { section: $("#jeu-2"), camera: [1.7, 1.7, 9.6], cible: [1.6, 0.3, 0], dmin: 2.5, dmax: 24 });
+    const sol = new THREE.Mesh(new THREE.BoxGeometry(9, 0.08, 2.6), MAT.peint(0xDCE3EA)); sol.position.set(1.6, -1.3, 0); V.scene.add(sol);
+    // reperer une piece au clic (sans glisser)
+    let bas = null;
+    V.toile.addEventListener("pointerdown", ev => bas = [ev.clientX, ev.clientY]);
+    V.toile.addEventListener("pointerup", ev => {
+      if (!bas || Math.hypot(ev.clientX - bas[0], ev.clientY - bas[1]) > 5 || !A) return;
+      const cible = V.viser(ev, A.pickables); if (!cible) return;
+      let o = cible.object; while (o && !o.userData.piece) o = o.parent; if (!o) return;
+      cliquer(o.userData.piece, cible.point);
+    });
+    V.chaque(pas);
+    habiller();
+  }
+  function cliquer(piece, point) {
+    const X = MM && missions[MM.E.m];
+    const attendu = PIECES.find(([k]) => !E.trouves.has(k));
+    if (MM && MM.E.m === 0 && attendu && E.type === "de") {
+      if (piece === attendu[0]) { E.trouves.add(piece); E.msgPiece = "✓ Oui, c'est " + NOMS[piece] + "."; V.etiquette("✓ " + NOMS[piece], [point.x, point.y + 0.25, point.z], "ok", A.groupe); }
+      else E.msgPiece = "✘ Non : vous avez cliqué sur " + (NOMS[piece] || piece) + ".";
+    } else E.msgPiece = "C'est " + (NOMS[piece] || piece) + ".";
+    E.sig = ""; info();
+  }
+  const piece = (m, nom) => { m.userData.piece = nom; return m; };
+  // l'actionneur selon le type et les dimensions : groupe reconstruit a chaque changement
+  function habiller() {
+    if (A) { V.scene.remove(A.groupe); A.groupe.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.element) o.element.remove(); }); }
+    const g = new THREE.Group(), plans = PLAN_COUPE(), t = E.type; A = { groupe: g, pickables: [], t };
+    V.scene.add(g);
+    const barre = (r, mat) => { const geo = new THREE.CylinderGeometry(r, r, 1, 40); geo.rotateZ(Math.PI / 2); return new THREE.Mesh(geo, mat); };
+    const anneau = (rExt, rInt, mat) => { const m = tubeX(rExt, rInt, 1, mat); return m; };
+    const pick = m => { A.pickables.push(m); return m; };
+    const peint = MAT.peint(0x3E5C7A), huileS = () => MAT.huile(COUL.neutre, plans);
+    if (t === "de" || t === "dt" || t === "se") {
+      const R = E.D / 1000 * K, r = E.d / 1000 * K, B = R + 0.17;
+      A.R = R; A.r = r;
+      const fond = pick(piece(new THREE.Mesh(new THREE.BoxGeometry(0.24, 2 * B, 2 * B), peint), "fond")); fond.position.x = -1.47; g.add(fond);
+      const tete = pick(piece(new THREE.Mesh(new THREE.BoxGeometry(0.28, 2 * B, 2 * B), peint), "tete")); tete.position.x = 1.49; g.add(tete);
+      const tube = pick(piece(tubeX(R + 0.06, R, 2.7, MAT.coupe(0x8796A8, plans)), "tube")); g.add(tube);
+      [[1, 1], [1, -1], [-1, -1]].forEach(([a, b]) => { const tr = pick(piece(barre(0.045, MAT.acier()), "tirant")); tr.scale.x = 3.4; tr.position.set(0, a * (B - 0.08), b * (B - 0.08)); g.add(tr);
+        [-1.72, 1.76].forEach(x => { const n = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.09, 6), MAT.sombre()); n.rotation.z = Math.PI / 2; n.position.set(x, a * (B - 0.08), b * (B - 0.08)); g.add(n); }); });
+      A.hF = barre(R - 0.008, huileS()); g.add(A.hF);
+      A.hT = anneau(R - 0.008, r + 0.004, huileS()); g.add(A.hT);
+      A.piston = pick(piece(barre(R - 0.004, MAT.acier()), "piston")); A.piston.scale.x = 0.26; g.add(A.piston);
+      A.joints = [-0.08, 0.08].map(dx => { const j = pick(piece(new THREE.Mesh(new THREE.TorusGeometry(R - 0.012, 0.022, 10, 48), MAT.joint()), "joint")); j.rotation.y = Math.PI / 2; g.add(j); j.userData.dx = dx; return j; });
+      const racleur = pick(piece(new THREE.Mesh(new THREE.TorusGeometry(r + 0.02, 0.025, 10, 40), MAT.joint()), "joint")); racleur.rotation.y = Math.PI / 2; racleur.position.x = 1.64; g.add(racleur);
+      A.tige = pick(piece(barre(r, MAT.chrome()), "tige")); A.tige.scale.x = 3.3; g.add(A.tige);
+      A.oeil = new THREE.Mesh(new THREE.TorusGeometry(r * 0.9 + 0.05, 0.06, 12, 32), MAT.acier()); g.add(A.oeil);
+      if (t === "dt") { A.tige2 = pick(piece(barre(r, MAT.chrome()), "tige")); A.tige2.scale.x = 3.3; g.add(A.tige2);
+        const rac2 = pick(piece(new THREE.Mesh(new THREE.TorusGeometry(r + 0.02, 0.025, 10, 40), MAT.joint()), "joint")); rac2.rotation.y = Math.PI / 2; rac2.position.x = -1.62; g.add(rac2); }
+      if (t === "se") { A.ressort = piece(ressort(Math.min(R - 0.06, Math.max(r + 0.08, (R + r) / 2)), 9, 0.03, MAT.peint(0x8E9AAB)), "ressort"); A.pickables.push(A.ressort); g.add(A.ressort);
+        const ren = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.22, 16), MAT.sombre()); ren.position.set(1.45, B + 0.11, 0); g.add(ren);
+        V.etiquette("Reniflard (air)", [1.45, B + 0.42, 0], "discret", g); }
+      // orifices et tuyaux vers le distributeur
+      const yD = B + 1.3;
+      A.TUf = tuyau(g, [[-1.38, R + 0.06, 0], [-1.38, yD - 0.25, 0], [-0.25, yD - 0.25, 0]], 0.065);
+      if (t !== "se") A.TUt = tuyau(g, [[1.38, R + 0.06, 0], [1.38, yD - 0.25, 0], [0.25, yD - 0.25, 0]], 0.065);
+      const dist = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.5, 0.5), MAT.peint(0x2F3B4C)); dist.position.set(0, yD, 0); g.add(dist);
+      V.etiquette(t === "se" ? "Distributeur 3/2" : "Distributeur 4/3", [0, yD + 0.45, 0], "discret", g);
+      A.mano = manometre(250, 0.3); A.mano.g.position.set(-0.85, yD - 0.25, 0.3); g.add(A.mano.g);
+      V.etiquette("A", [-1.2, R + 0.4, 0], "port", g); if (t !== "se") V.etiquette("B", [1.2, R + 0.4, 0], "port", g);
+    } else if (t === "tele") {
+      const Rs = TELE.map(d => d / 1000 * K * 0.85);
+      const fut = tubeX(Rs[0] + 0.1, Rs[0] + 0.03, 2.5, MAT.coupe(0x8796A8, plans)); fut.position.x = -0.15; g.add(piece(fut, "tube")); A.pickables.push(fut);
+      const fond = piece(new THREE.Mesh(new THREE.CylinderGeometry(Rs[0] + 0.14, Rs[0] + 0.14, 0.22, 40), MAT.peint(0x3E5C7A)), "fond"); fond.rotation.z = Math.PI / 2; fond.position.x = -1.5; g.add(fond); A.pickables.push(fond);
+      A.etages = [0, 1, 2].map(k => { const R = Rs[k], m = k < 2 ? tubeX(R, Rs[k + 1] + 0.03, 2.3, MAT.coupe([0xB7C3CF, 0xC9D2DC, 0xD8DFE6][k], plans)) : (() => { const geo = new THREE.CylinderGeometry(R, R, 2.3, 40); geo.rotateZ(Math.PI / 2); return new THREE.Mesh(geo, MAT.chrome()); })();
+        piece(m, "etage"); A.pickables.push(m); g.add(m); return m; });
+      A.hF = barre(Rs[0], huileS()); g.add(A.hF);
+      A.oeil = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.06, 12, 32), MAT.acier()); g.add(A.oeil);
+      A.TUf = tuyau(g, [[-1.38, Rs[0] + 0.1, 0], [-1.38, 1.55, 0], [-0.25, 1.55, 0]], 0.065);
+      const dist = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.5, 0.5), MAT.peint(0x2F3B4C)); dist.position.set(0, 1.8, 0); g.add(dist);
+      V.etiquette("Distributeur 3/2", [0, 2.25, 0], "discret", g);
+      A.mano = manometre(250, 0.3); A.mano.g.position.set(-0.85, 1.55, 0.3); g.add(A.mano.g);
+      A.etiqE = [0, 1, 2].map(k => V.etiquette("Étage " + (k + 1) + " · Ø " + TELE[k], [0, 0, 0], "discret", g));
+    } else {                                                                         // rotatif a cremaillere
+      const R = ROT.D / 1000 * K;
+      [-1, 1].forEach(k => { const c = tubeX(R + 0.06, R, 1.3, MAT.coupe(0x8796A8, plans)); c.position.x = k * 1.25; g.add(c);
+        const f = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.1, R + 0.1, 0.18, 40), MAT.peint(0x3E5C7A)); f.rotation.z = Math.PI / 2; f.position.x = k * 1.98; g.add(f); });
+      const carter = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.3, 1.0), MAT.verre(0x7B8A9A, 0.3)); carter.position.set(0, 0.25, 0); g.add(carter);
+      A.crem = new THREE.Group(); g.add(A.crem);
+      const barreC = piece(new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.16, 0.3), MAT.acier()), "cremaillere"); A.crem.add(barreC); A.pickables.push(barreC);
+      for (let k = -11; k <= 11; k++) { const d = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.3), MAT.acier()); d.position.set(k * 0.1, 0.12, 0); A.crem.add(d); }
+      A.pistons = [-1, 1].map(k => { const p = piece(barre(R - 0.004, MAT.acier()), "piston"); p.scale.x = 0.22; p.position.x = k * 1.25; A.crem.add(p); A.pickables.push(p); return p; });
+      A.hG = barre(R - 0.008, huileS()); g.add(A.hG); A.hD = barre(R - 0.008, huileS()); g.add(A.hD);
+      A.pignon = new THREE.Group(); A.pignon.position.set(0, 0.62, 0); g.add(A.pignon);
+      const roue = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.28, 32), MAT.acier()); roue.rotation.x = Math.PI / 2; A.pignon.add(roue);
+      for (let k = 0; k < 24; k++) { const d = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 0.28), MAT.acier()), a = k / 24 * 2 * Math.PI; d.position.set(0.44 * Math.cos(a), 0.44 * Math.sin(a), 0); d.rotation.z = a; A.pignon.add(d); }
+      piece(roue, "pignon"); A.pickables.push(roue);
+      const arbre = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.3, 20), MAT.chrome()); arbre.rotation.x = Math.PI / 2; arbre.position.z = 0.6; A.pignon.add(arbre);
+      const bras = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.12, 0.08), MAT.peint(0xC1121F)); bras.geometry.translate(0.62, 0, 0); bras.position.z = 1.2; A.pignon.add(bras);
+      // rapporteur 0 a 180 degres
+      const cv = document.createElement("canvas"); cv.width = 512; cv.height = 280; const x = cv.getContext("2d");
+      x.fillStyle = "rgba(255,255,255,0.45)"; x.beginPath(); x.arc(256, 256, 250, Math.PI, 0); x.fill(); x.strokeStyle = "#15213B"; x.fillStyle = "#15213B"; x.font = "bold 22px system-ui"; x.textAlign = "center";
+      for (let a = 0; a <= 180; a += 10) { const r = a * Math.PI / 180, L = a % 30 ? 16 : 30; x.lineWidth = a % 30 ? 2 : 4; x.beginPath(); x.moveTo(256 - 246 * Math.cos(r), 256 - 246 * Math.sin(r)); x.lineTo(256 - (246 - L) * Math.cos(r), 256 - (246 - L) * Math.sin(r)); x.stroke();
+        if (a % 30 === 0) x.fillText(a + "°", 256 - 196 * Math.cos(r), 264 - 196 * Math.sin(r)); }
+      const rap = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.42), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, side: THREE.DoubleSide }));
+      rap.position.set(0, 0.62 + 0.71 - 0.05, 1.15); rap.renderOrder = 2; g.add(rap);
+      A.TUf = tuyau(g, [[-1.95, R + 0.1, 0], [-1.95, 1.9, 0], [-0.25, 1.9, 0]], 0.065); A.TUt = tuyau(g, [[1.95, R + 0.1, 0], [1.95, 1.9, 0], [0.25, 1.9, 0]], 0.065);
+      const dist = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.5, 0.5), MAT.peint(0x2F3B4C)); dist.position.set(0, 2.15, 0); g.add(dist);
+      V.etiquette("Distributeur 4/3", [0, 2.6, 0], "discret", g);
+      A.mano = manometre(250, 0.3); A.mano.g.position.set(-0.85, 1.9, 0.3); g.add(A.mano.g);
+    }
+    [-1.4, 1.4].forEach(x => { const pied = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.6, 0.9), MAT.peint(0x55606E)); pied.position.set(t === "rot" ? x * 1.4 : x, -0.95, 0); g.add(pied); });
+    if (t !== "rot") { A.charge = piece(new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 1.1), MAT.peint(0xD99A00)), "charge"); A.charge.position.y = -0.7; g.add(A.charge); A.pickables.push(A.charge);
+      A.etiqF = V.etiquette("", [0, 0.75, 0], "discret", A.charge); }
+    $("#j2-dims").style.display = t === "rot" || t === "tele" ? "none" : "";
+    $("#j2-Fv").previousSibling.textContent = t === "rot" ? "Couple résistant " : "Effort résistant F ";
+    E.sig = "";
+  }
+  function dessiner(dt) {
+    if (!A) return;
+    const t = E.type, coulAlim = E.cmd === 0 ? (E.pm > 0 ? COUL.piege : COUL.neutre) : COUL.P;
+    const cF = E.cmd === 1 ? COUL.P : E.cmd === -1 ? COUL.T : E.pm > 0 ? COUL.piege : COUL.neutre, cT = E.cmd === -1 ? COUL.P : E.cmd === 1 ? COUL.T : COUL.neutre;
+    const vit = E.v * 6;
+    if (t === "de" || t === "dt" || t === "se") {
+      const xp = -1.21 + E.x * LV;
+      A.piston.position.x = xp; A.joints.forEach(j => j.position.x = xp + j.userData.dx);
+      A.tige.position.x = xp + 1.65; A.oeil.position.set(xp + 3.3 + 0.1, 0, 0); A.oeil.rotation.y = Math.PI / 2;
+      if (A.tige2) A.tige2.position.x = xp - 1.65;
+      A.hF.position.x = (-1.35 + xp - 0.13) / 2; A.hF.scale.x = Math.max(0.01, xp - 0.13 + 1.35);
+      A.hT.position.x = (xp + 0.13 + 1.35) / 2; A.hT.scale.x = Math.max(0.01, 1.35 - xp - 0.13);
+      A.hF.material.color.setHex(t === "dt" ? cF : cF); A.hT.material.color.setHex(t === "se" ? 0xE3E8EE : cT); A.hT.material.opacity = t === "se" ? 0.25 : 0.88;
+      if (A.ressort) { A.ressort.position.x = xp + 0.14; A.ressort.scale.x = 1.34 - xp - 0.14; }
+      A.charge.position.x = xp + 3.3 + 0.75;
+      A.TUf.teinter(cF); A.TUf.couler(vit, dt); if (A.TUt) { A.TUt.teinter(cT); A.TUt.couler(-vit, dt); }
+    } else if (t === "tele") {
+      let gauche = -1.25;
+      let finPrec = 1.05; E.et.forEach((e, k) => { gauche += e * 0.72; A.etages[k].position.x = gauche + 1.15; const fin = gauche + 2.3; A.etiqE[k].position.set((finPrec + fin) / 2, k === 1 ? -0.62 : 0.62, 0.2); A.etiqE[k].visible = k === 0 || fin - finPrec > 0.25; finPrec = fin; });
+      const bout = gauche + 2.3;
+      A.oeil.position.set(bout + 0.1, 0, 0); A.oeil.rotation.y = Math.PI / 2; A.charge.position.x = bout + 0.75;
+      A.hF.position.x = (-1.38 + gauche) / 2 + 0.0; A.hF.scale.x = Math.max(0.01, gauche + 1.38); A.hF.material.color.setHex(E.cmd === 1 ? COUL.P : E.cmd === -1 ? COUL.T : E.pm > 0 ? COUL.piege : COUL.neutre);
+      A.TUf.teinter(A.hF.material.color.getHex()); A.TUf.couler(vit, dt);
+    } else {
+      const xr = (E.x - 0.5) * 1.6; A.crem.position.x = xr; A.pignon.rotation.z = -(E.x * Math.PI) + Math.PI;
+      A.hG.position.x = (-1.88 + xr - 1.25 - 0.11) / 2; A.hG.scale.x = Math.max(0.01, (xr - 1.25 - 0.11) + 1.88);
+      A.hD.position.x = (1.88 + xr + 1.25 + 0.11) / 2; A.hD.scale.x = Math.max(0.01, 1.88 - (xr + 1.25 + 0.11));
+      A.hG.material.color.setHex(cF); A.hD.material.color.setHex(cT);
+      A.TUf.teinter(cF); A.TUt.teinter(cT); A.TUf.couler(vit, dt); A.TUt.couler(-vit, dt);
+    }
+    A.mano.regler(E.pm);
+  }
+
+  // ---------- affichage ----------
+  let horloge = 0;
+  function info() {
+    const t = E.type; let h = "";
+    if (t === "de" || t === "dt" || t === "se") {
+      const { S, s, S2 } = sec(), Ss = t === "dt" ? S2 : S;
+      h += lcd("Pression mesurée", vg(E.pm, 0), "bar", E.cale ? "calage : le limiteur s'ouvre" : E.cmd === 0 ? "distributeur au centre" : E.v === 0 ? "fin de course : le limiteur s'ouvre" : "fixée par la charge");
+      h += lcd("Effort maxi en sortie", vg(HYD.force(E.p, Ss) / 1000, 1), "kN", "η p S, à " + E.p + " bar");
+      h += lcd("Vitesse", vg(Math.abs(E.v * COURSE), 3), "m/s", t === "se" ? "Vs = Q / S" : "Vs = " + vg(HYD.vitesse(E.Q, Ss), 3) + " · Ve = " + vg(HYD.vitesse(E.Q, S2), 3));
+      h += lcd("Position", vg(E.x * COURSE * 1000, 0), "mm", "course 500 mm");
+      if (t !== "se") h += lcd("Débit de retour", vg(Math.abs(E.v * COURSE) * (E.v > 0 ? (t === "dt" ? S2 : S2) : (t === "dt" ? S2 : S)) * 60000, 1), "L/min", E.v > 0 ? "Q' = Q S'/S" : E.v < 0 ? "Q'' = Q S/S'" : "—");
+      else h += lcd("Effort du ressort", vg((RESS.F0 + RESS.k * E.x * COURSE) / 1000, 2), "kN", "F₀ + k x");
+    } else if (t === "tele") {
+      const i = E.et.findIndex(e => e < 1);
+      h += lcd("Pression mesurée", vg(E.pm, 0), "bar", E.cale ? "calage : le limiteur s'ouvre" : "étage en mouvement : " + (E.v > 0 && i >= 0 ? i + 1 : "—"));
+      h += lcd("Vitesse", vg(Math.abs(E.v), 3), "m/s", "v = Q / S de l'étage");
+      h += lcd("Sortie totale", vg(E.x * 3 * CT * 1000, 0), "mm", "3 étages × 250 mm");
+      h += lcd("Pressions relevées", E.pE.map(p => p ? vg(p, 0) : "—").join(" · "), "bar", "étages 1 · 2 · 3");
+    } else {
+      const S = HYD.aire(ROT.D);
+      h += lcd("Angle", vg(E.x * 180, 1), "°", "0 à 180°");
+      h += lcd("Pression mesurée", vg(E.pm, 0), "bar", E.cale ? "calage" : "fixée par le couple");
+      h += lcd("Couple maxi", vg(ETA * E.p * 1e5 * S * ROT.r, 0), "N·m", "C = η p S r");
+      h += lcd("Vitesse", vg(Math.abs(E.v) * 180, 1), "°/s", "ω = v / r");
+    }
+    $("#j2-aff").innerHTML = h;
+    const m = E.mes[t] || {}, ch = E.chrono;
+    $("#j2-chrono").innerHTML = t === "rot" ? "" : ['<div class="stat"><div class="l">⏱ Chronomètre</div><div class="v">' + (ch ? vg(ch.t, 1) + " s (" + (ch.sens === "s" ? "sortie" : "rentrée") + ")" : "prêt") + "</div></div>",
+      '<div class="stat"><div class="l">Course de sortie</div><div class="v">' + (m.s ? vg(m.s, 2) + " s → " + vg(COURSE * (t === "tele" ? 1.5 : 1) / m.s, 3) + " m/s" : "—") + "</div></div>",
+      '<div class="stat"><div class="l">Course de rentrée</div><div class="v">' + (m.e ? vg(m.e, 2) + " s → " + vg(COURSE * (t === "tele" ? 1.5 : 1) / m.e, 3) + " m/s" : "—") + "</div></div>"].join("");
+    if (A && A.etiqF) A.etiqF.element.textContent = t === "rot" ? "" : "F = " + E.F + " kN";
+    $("#j2-pv").textContent = E.p + " bar"; $("#j2-Qv").textContent = E.Q + " L/min"; $("#j2-Fv").textContent = t === "rot" ? E.F + " N·m" : E.F + " kN";
+    if (MM) { const X = missions[MM.E.m], sig = MM.E.m + "|" + (X.suivi ? X.suivi() : "") + "|" + (X.ok ? X.ok() : ""); if (sig !== E.sig) { E.sig = sig; MM.verifier(); } }
+  }
+  function boucle(dt) { horloge += dt; if (horloge >= 0.1) { horloge = 0; info(); } }
+
+  // ---------- reglages ----------
+  function remplirDims() {
+    const Ds = [63, 80, 100, 125], ds = [36, 45, 56, 63, 70];
+    $("#j2-D").innerHTML = Ds.map(d => '<option value="' + d + '"' + (d === E.D ? " selected" : "") + ">Ø " + d + "</option>").join("");
+    if (E.d > E.D - 25) E.d = ds.filter(d => d <= E.D - 25).pop();
+    $("#j2-d").innerHTML = ds.filter(d => d <= E.D - 25).map(d => '<option value="' + d + '"' + (d === E.d ? " selected" : "") + ">Ø " + d + "</option>").join("");
+  }
+  function regler(o) {
+    Object.assign(E, o); if (o.type || o.D || o.d) { E.x = 0; E.et = [0, 0, 0]; E.pE = [0, 0, 0]; E.chrono = null; }
+    $("#j2-p").value = E.p; $("#j2-Q").value = E.Q; $("#j2-F").value = E.F; $("#j2-F").max = E.type === "rot" ? 150 : 150;
+    segment($("#j2-type"), E.type, v => regler({ type: v })); segment($("#j2-cmd"), String(E.cmd), v => regler({ cmd: +v }));
+    remplirDims(); if (V && (o.type || o.D || o.d)) habiller(); info();
+  }
+
+  const fait = (t, k) => (E.mes[t] || {})[k];
+  const missions = [
+    { titre: "Nommer les pièces", consigne: "Vérin <b>double effet</b> à tirants, en coupe. Cliquez dans la vue 3D sur la pièce demandée (tournez autour du vérin si besoin).",
+      entree: () => regler({ type: "de", D: 100, d: 45, cmd: 0 }),
+      suivi: () => { const a = PIECES.find(([k]) => !E.trouves.has(k)); return "Trouvées : " + E.trouves.size + " / " + PIECES.length + (a ? " · Cliquez sur <b>" + a[1] + "</b>" : "") + (E.msgPiece ? "<br>" + E.msgPiece : ""); },
+      ok: () => E.trouves.size === PIECES.length,
+      bravo: "Tête, corps (chemise), piston, fond, tirants, tige et jeu de joints : la nomenclature de la coupe du cours. Les joints (racleur, joint de tige, joint de piston) assurent l'étanchéité ; les tirants serrent le fond et la tête sur le corps." },
+    { titre: "Sortie, rentrée et double tige", consigne: "Q = 40 L/min. Chronométrez une <b>sortie complète puis une rentrée complète</b> avec le vérin double effet (Ø 100, tige Ø 45), puis faites de même avec le vérin <b>double tige</b>.",
+      entree: () => regler({ type: "de", D: 100, d: 45, Q: 40, F: 0, p: 160, cmd: 0 }),
+      suivi: () => "Double effet : sortie " + (fait("de", "s") ? "✓ " + vg(fait("de", "s"), 2) + " s" : "○") + " · rentrée " + (fait("de", "e") ? "✓ " + vg(fait("de", "e"), 2) + " s" : "○") +
+        "<br>Double tige : sortie " + (fait("dt", "s") ? "✓ " + vg(fait("dt", "s"), 2) + " s" : "○") + " · rentrée " + (fait("dt", "e") ? "✓ " + vg(fait("dt", "e"), 2) + " s" : "○"),
+      ok: () => !!(fait("de", "s") && fait("de", "e") && fait("dt", "s") && fait("dt", "e")),
+      avantQuiz: () => { const v = HYD.verinDE(100, 45); return "Double effet : Vs = Q/S = " + vg(HYD.vitesse(40, v.S), 3) + " m/s, Ve = Q/S' = " + vg(HYD.vitesse(40, v.S2), 3) + " m/s : la rentrée est " + vg(v.phi, 2) + " fois plus rapide. Double tige : les deux temps sont égaux."; },
+      quiz: { q: "Pourquoi le vérin double tige sort-il et rentre-t-il à la même vitesse ?", o: [["Les deux chambres ont la même section annulaire S − s", 1], ["Le débit de retour est égal au débit de la pompe", 0], ["La pression est la même des deux côtés", 0]],
+        expl: "Avec une tige de chaque côté, la section utile vaut S' = S − s dans les deux sens : mêmes vitesses Q/S' et mêmes efforts η p S'." } },
+    { titre: "Pousser 100 kN (exercice 7)", consigne: "Une charge de <b>F = 100 kN</b>, un limiteur taré à <b>160 bar</b>. Choisissez le <b>plus petit alésage</b> normalisé (80, 100 ou 125) qui pousse la charge, et faites une sortie complète.",
+      entree: () => { regler({ type: "de", D: 80, d: 45, Q: 40, F: 100, p: 160, cmd: 0 }); E.sortieOK = null; },
+      pari: { q: "Avec un alésage Ø 80 à 160 bar, la charge de 100 kN…", o: ["avance normalement", "reste immobile : l'effort est insuffisant", "avance, mais lentement"], bon: () => 1 },
+      suivi: () => "Alésage Ø " + E.D + " · effort maxi " + vg(HYD.force(E.p, HYD.aire(E.D)) / 1000, 1) + " kN · charge " + E.F + " kN · tige à " + vg(E.x * 500, 0) + " mm",
+      ok: () => !!E.sortieOK && E.sortieOK.D === 100 && E.sortieOK.F >= 100 && E.sortieOK.p <= 160,
+      bravo: "Ø 80 : Fs = η p S = " + vg(HYD.force(160, HYD.aire(80)) / 1000, 1) + " kN < 100 kN, le vérin cale et le limiteur s'ouvre. Ø 100 : <b>" + vg(HYD.force(160, HYD.aire(100)) / 1000, 1) + " kN</b>, soit 13 % de marge. La pression ne monte qu'à " + vg(HYD.pressionPour(100e3, HYD.aire(100)), 0) + " bar : c'est la charge qui la fixe." },
+    { titre: "Simple effet à ressort", consigne: "Vérin <b>simple effet</b> Ø 63 à ressort de rappel (précharge 2 kN, raideur 8 kN/m), sans charge. Trouvez la <b>pression de tarage minimale</b> qui donne une sortie complète (à 3 bar près).",
+      entree: () => regler({ type: "se", D: 63, d: 36, Q: 20, F: 0, p: 60, cmd: 0 }),
+      suivi: () => "Tarage " + E.p + " bar · tige à " + vg(E.x * 500, 0) + " mm" + (E.cmd === 1 && E.cale ? " · arrêtée : le ressort équilibre la pression" : ""),
+      ok: () => E.type === "se" && E.x >= 0.999 && E.p <= Math.ceil(HYD.pressionPour(RESS.F0 + RESS.k * COURSE, HYD.aire(63)) + 1) + 3,
+      avantQuiz: () => "En fin de course, le ressort pousse F₀ + k c = " + vg((RESS.F0 + RESS.k * COURSE) / 1000, 1) + " kN : il faut p = F / (η S) ≈ " + vg(HYD.pressionPour(RESS.F0 + RESS.k * COURSE, HYD.aire(63)) + 1, 0) + " bar. En dessous, la tige s'arrête là où le ressort équilibre la pression.",
+      quiz: { q: "Une fois l'orifice A mis au réservoir, qu'est-ce qui fait rentrer la tige ?", o: [["Le ressort de rappel, qui chasse l'huile vers le réservoir", 1], ["La pompe, par l'orifice B", 0], ["La pression atmosphérique sur le piston", 0]],
+        expl: "Un vérin simple effet ne travaille que dans un sens : la rentrée est assurée par un ressort (ou par la charge). Côté tige, il n'y a que de l'air, par le reniflard." } },
+    { titre: "Le vérin télescopique", consigne: "Vérin <b>télescopique</b> simple effet (étages Ø 100, 80, 60), charge 20 kN. Faites-le sortir complètement et regardez la pression à chaque étage.",
+      entree: () => regler({ type: "tele", Q: 40, F: 20, p: 160, cmd: 0 }),
+      pari: { q: "Quel étage sort en premier ?", o: ["Le plus gros (Ø 100)", "Le plus petit (Ø 60)", "Les trois ensemble"], bon: () => 0 },
+      suivi: () => "Sortie : " + vg(E.x * 750, 0) + " / 750 mm · pressions relevées : " + E.pE.map(p => p ? vg(p, 0) + " bar" : "—").join(" · "),
+      ok: () => E.type === "tele" && E.et.every(e => e >= 1),
+      bravo: "L'étage qui demande le moins de pression sort d'abord : le plus gros (p = F / (η S) la plus faible). Puis la pression monte d'un étage à l'autre (≈ 30, 46, 81 bar) pendant que la vitesse augmente (Q / S plus grand). C'est le vérin de la benne du chapitre 1 : grande course, longueur repliée réduite." },
+    { titre: "Le vérin rotatif", consigne: "Vérin <b>rotatif à crémaillère</b> (pistons Ø 80, pignon de rayon 40 mm). Faites tourner l'arbre de <b>90°</b> (à 3° près) puis mettez le distributeur à l'arrêt. Astuce : un petit débit donne une rotation lente.",
+      entree: () => regler({ type: "rot", Q: 2, F: 50, p: 100, cmd: 0 }),
+      suivi: () => "Angle : " + vg(E.x * 180, 1) + "° · distributeur " + (E.cmd === 0 ? "à l'arrêt" : "en marche"),
+      ok: () => E.type === "rot" && E.cmd === 0 && Math.abs(E.x * 180 - 90) <= 3,
+      quiz: { q: "Comment doubler le couple de ce vérin rotatif sans changer la pression ?", o: [["Doubler la section des pistons ou le rayon du pignon (C = η p S r)", 1], ["Doubler le débit de la pompe", 0], ["Réduire l'angle de rotation", 0]],
+        expl: "La crémaillère reçoit F = η p S et le pignon la transforme en couple C = F r. Le débit, lui, fixe la vitesse de rotation ω = Q / (S r)." } },
+  ];
+
+  return { ouvrir: () => {
+    if (!V) {
+      $("#j2-p").addEventListener("input", e => { E.p = +e.target.value; info(); });
+      $("#j2-Q").addEventListener("input", e => { E.Q = +e.target.value; info(); });
+      $("#j2-F").addEventListener("input", e => { E.F = +e.target.value; info(); });
+      $("#j2-D").addEventListener("change", e => regler({ D: +e.target.value }));
+      $("#j2-d").addEventListener("change", e => regler({ d: +e.target.value }));
+      MM = moteurMissions({ zone: $("#j2-mission"), compteur: $("#j2-compte"), jeu: "jeu-2", missions, recalculer: () => {}, etoiles: n => n >= 6 ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0 });
+      try { construire(); V.chaque(boucle); } catch (e) { $("#j2-3d").innerHTML = '<div class="chargement">La 3D n\'a pas pu démarrer sur cet appareil (WebGL indisponible).</div>'; console.error(e); }
+      regler({}); MM.entrer(0);
+    } else MM.afficher();
+  }, etat: () => E, regler, cliquer };
+})();
+
+/* ---------- SIMULATION 3 : les pompes ---------- */
+const jeu3 = (() => {
+  const PO = HYD.POMPES, GEO = { palettes: { min: 0, max: 4, pas: 0.05, nom: "Excentricité e", u: "mm", def: 3 }, pistons: { min: -18, max: 18, pas: 0.5, nom: "Angle du plateau α", u: "°", def: 12 } };
+  const E = { type: "engrenages", N: 1450, p: 0, g: { palettes: 3, pistons: 12 }, rel: [], ang: 0, sig: "" };
+  let V = null, MM, A = null;
+
+  const cyl = () => E.type === "engrenages" ? HYD.cylEngrenages() : E.type === "palettes" ? HYD.cylPalettes(E.g.palettes) : HYD.cylPistons(E.g.pistons);
+  const bilan = () => HYD.bilanPompe(E.type, cyl(), E.N, E.p);
+
+  // ---------- geometries ----------
+  function profilEngrenage(z, rp, m) {
+    const ra = rp + m, rf = rp - 1.25 * m, pasA = 2 * Math.PI / z, f = new THREE.Shape();
+    for (let k = 0; k < z; k++) {
+      const a = k * pasA, pts = [[rf, a - pasA * 0.5], [rf, a - pasA * 0.28], [ra, a - pasA * 0.14], [ra, a + pasA * 0.14], [rf, a + pasA * 0.28]];
+      pts.forEach(([r, t], q) => { const x = r * Math.cos(t), y = r * Math.sin(t); if (k === 0 && q === 0) f.moveTo(x, y); else f.lineTo(x, y); });
+    }
+    f.closePath();
+    const trou = new THREE.Path(); trou.absarc(0, 0, 0.18, 0, Math.PI * 2, true); f.holes.push(trou);
+    return f;
+  }
+  function plaqueAvecCavite(L, H, cavite, prof, mat) {
+    const f = new THREE.Shape(); f.moveTo(-L / 2, -H / 2); f.lineTo(L / 2, -H / 2); f.lineTo(L / 2, H / 2); f.lineTo(-L / 2, H / 2); f.closePath(); f.holes.push(cavite);
+    const g = new THREE.ExtrudeGeometry(f, { depth: prof, bevelEnabled: false, curveSegments: 48 }); g.translate(0, 0, -prof / 2); return new THREE.Mesh(g, mat);
+  }
+
+  function construire() {
+    V = vue3D($("#j3-3d"), { section: $("#jeu-3"), camera: [1.4, 1.6, 12.2], cible: [0, 0, 0], dmin: 3, dmax: 22 });
+    V.chaque(pas);
+    habiller();
+  }
+  function habiller() {
+    if (A) { V.scene.remove(A.g); A.g.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.element) o.element.remove(); }); }
+    const g = new THREE.Group(); A = { g, t: E.type }; V.scene.add(g);
+    const t = E.type, carter = MAT.peint(0x5D6D7E), verre = MAT.verre(0xA9C4DD, 0.16);
+    if (t === "engrenages") {
+      const rp = 1.2, m = 0.2, Rc = rp + m + 0.03, xi = Math.sqrt(Rc * Rc - rp * rp);
+      const cav = new THREE.Path(); cav.absarc(0, rp, Rc, Math.atan2(-rp, xi), Math.atan2(-rp, -xi) + 2 * Math.PI, false); cav.absarc(0, -rp, Rc, Math.atan2(rp, -xi), Math.atan2(rp, xi) + 2 * Math.PI, false);
+      const corps = plaqueAvecCavite(4.4, 5.6, cav, 1.0, carter); g.add(corps);
+      const fond = new THREE.Mesh(new THREE.BoxGeometry(4.4, 5.6, 0.15), MAT.peint(0x8796A8)); fond.position.z = -0.58; g.add(fond);
+      const couvercle = new THREE.Mesh(new THREE.BoxGeometry(4.4, 5.6, 0.08), verre); couvercle.position.z = 0.55; g.add(couvercle);
+      A.pignons = [1, -1].map((k, q) => { const gr = new THREE.Group(); gr.position.y = k * rp; g.add(gr);
+        const geo = new THREE.ExtrudeGeometry(profilEngrenage(12, rp, m), { depth: 0.9, bevelEnabled: false }); geo.translate(0, 0, -0.45);
+        const p = new THREE.Mesh(geo, MAT.acier()); gr.add(p);
+        const arbre = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, q ? 1.2 : 2.6, 24), MAT.chrome()); arbre.rotation.x = Math.PI / 2; arbre.position.z = q ? 0 : 0.7; gr.add(arbre);
+        gr.userData.poches = []; for (let k2 = 0; k2 < 12; k2++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.26, 0.86), new THREE.MeshStandardMaterial({ color: COUL.T, transparent: true, opacity: 0.85 }));
+          const a = (k2 + 0.5) * 2 * Math.PI / 12; b.position.set((rp + 0.02) * Math.cos(a), (rp + 0.02) * Math.sin(a), 0); b.rotation.z = a; gr.add(b); gr.userData.poches.push([b, a]); }
+        if (q) gr.rotation.z = Math.PI / 12; return gr; });
+      const canal = (x, c) => { const b = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.6, 0.9), new THREE.MeshStandardMaterial({ color: c, transparent: true, opacity: 0.8 })); b.position.set(x, 0, 0); g.add(b); };
+      canal(-1.45, COUL.T); canal(1.45, COUL.P);
+      A.asp = tuyau(g, [[-4.2, 0, 0], [-2.15, 0, 0]], 0.3); A.ref = tuyau(g, [[2.15, 0, 0], [4.0, 0, 0]], 0.22);
+      A.asp.teinter(COUL.T); A.ref.teinter(COUL.P);
+      V.etiquette("Aspiration", [-3.3, 0.55, 0], "discret", g); V.etiquette("Refoulement", [3.2, 0.5, 0], "discret", g);
+      V.etiquette("Pignon menant", [0, 2.75, 0.6], "discret", g); V.etiquette("Pignon mené", [0, -2.75, 0.6], "discret", g);
+    } else if (t === "palettes") {
+      const Rs = 1.7, Rr = 1.3;
+      A.Rs = Rs; A.Rr = Rr;
+      const cav = new THREE.Path(); cav.absarc(0, 0, Rs, 0, Math.PI * 2, true);
+      g.add(plaqueAvecCavite(4.8, 4.8, cav, 1.0, carter));
+      const fond = new THREE.Mesh(new THREE.BoxGeometry(4.8, 4.8, 0.15), MAT.peint(0x8796A8)); fond.position.z = -0.58; g.add(fond);
+      const couvercle = new THREE.Mesh(new THREE.BoxGeometry(4.8, 4.8, 0.08), verre); couvercle.position.z = 0.55; g.add(couvercle);
+      A.rotor = new THREE.Group(); g.add(A.rotor);
+      const rot = new THREE.Mesh(new THREE.CylinderGeometry(Rr, Rr, 0.9, 48), MAT.acier()); rot.rotation.x = Math.PI / 2; A.rotor.add(rot);
+      const arbre = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 2.4, 24), MAT.chrome()); arbre.rotation.x = Math.PI / 2; arbre.position.z = 0.6; A.rotor.add(arbre);
+      A.palettes = [0, 1, 2, 3, 4].map(() => { const pal = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.9), MAT.peint(0x2F3B4C)); g.add(pal); return pal; });
+      A.chambres = [0, 1, 2, 3, 4].map(() => { const c = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ color: COUL.neutre, transparent: true, opacity: 0.8, side: THREE.DoubleSide })); c.position.z = 0.0; g.add(c); return c; });
+      A.asp = tuyau(g, [[-4.2, -1.3, 0], [-2.4, -1.3, 0]], 0.28); A.ref = tuyau(g, [[2.4, 1.3, 0], [4.0, 1.3, 0]], 0.2);
+      A.asp.teinter(COUL.T); A.ref.teinter(COUL.P);
+      V.etiquette("Stator", [0, 2.15, 0.6], "discret", g); V.etiquette("Rotor", [0, 0, 0.75], "discret", A.rotor);
+      V.etiquette("Aspiration", [-3.3, -0.85, 0], "discret", g); V.etiquette("Refoulement", [3.2, 1.75, 0], "discret", g);
+    } else {
+      const Rb = 0.72, plans = PLAN_COUPE();
+      A.Rb = Rb;
+      const bar = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 1.7, 48, 1, true), MAT.coupe(0x8796A8, plans)); bar.rotation.z = Math.PI / 2; bar.position.x = 0.55;
+      A.barillet = new THREE.Group(); g.add(A.barillet); A.barillet.add(bar);
+      const fondB = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 0.12, 48), MAT.coupe(0x8796A8, plans)); fondB.rotation.z = Math.PI / 2; fondB.position.x = 1.34; A.barillet.add(fondB);
+      A.pistons = []; for (let k = 0; k < 9; k++) {
+        const gr = new THREE.Group(); g.add(gr);
+        const p = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 1.1, 20), MAT.chrome()); p.rotation.z = Math.PI / 2; p.position.x = 0.55; gr.add(p);
+        const pat = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12), MAT.acier()); gr.add(pat);
+        const h = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1, 16), new THREE.MeshStandardMaterial({ color: COUL.neutre, transparent: true, opacity: 0.9 })); h.rotation.z = Math.PI / 2; g.add(h);
+        A.pistons.push({ gr, h });
+      }
+      A.plateau = new THREE.Group(); A.plateau.position.x = -0.95; g.add(A.plateau);
+      const disque = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, 0.14, 48), MAT.peint(0x8E2B2B)); disque.rotation.z = Math.PI / 2; A.plateau.add(disque);
+      const arbre = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 5.2, 24), MAT.chrome()); arbre.rotation.z = Math.PI / 2; arbre.position.x = 0.0; A.barillet.add(arbre);
+      const glace = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 0.12, 48), MAT.peint(0x55606E)); glace.rotation.z = Math.PI / 2; glace.position.x = 1.62; g.add(glace);
+      A.reins = [0, 1].map(k => { const geo = new THREE.RingGeometry(0.55, 0.9, 32, 1, k * Math.PI - Math.PI / 2 + 0.25, Math.PI - 0.5); geo.rotateY(-Math.PI / 2);
+        const r = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: COUL.neutre, side: THREE.DoubleSide })); r.position.x = 1.555; g.add(r); return r; });
+      A.asp = tuyau(g, [[1.75, 0, -0.7], [3.4, 0, -0.7], [3.4, -1.6, -0.7]], 0.22); A.ref = tuyau(g, [[1.75, 0, 0.7], [3.6, 0, 0.7], [3.6, 1.6, 0.7]], 0.18);
+      V.etiquette("Plateau incliné", [-0.95, 1.55, 0], "discret", g); V.etiquette("Barillet", [0.55, -1.45, 0.5], "discret", g); V.etiquette("Glace de distribution", [1.62, 1.45, 0], "discret", g);
+      A.etAsp = V.etiquette("Aspiration", [3.4, -1.85, -0.7], "discret", g); A.etRef = V.etiquette("Refoulement", [3.6, 1.85, 0.7], "discret", g);
+    }
+    const ge = GEO[t]; $("#j3-geo-r").style.display = ge ? "" : "none";
+    if (ge) { const r = $("#j3-g"); r.min = ge.min; r.max = ge.max; r.step = ge.pas; r.value = E.g[t]; $("#j3-gl").textContent = ge.nom; }
+    $("#j3-p").max = PO[t].pmax;
+    if (E.p > PO[t].pmax) E.p = PO[t].pmax;
+    $("#j3-p").value = E.p;
+    E.sig = "";
+  }
+
+  // ---------- animation ----------
+  function pas(dt) {
+    if (!A) return;
+    const t = E.type, b = bilan(), w = E.N / 1500 * 0.9;                       // ralenti : 0,9 rad/s a 1 500 tr/min
+    E.ang += w * dt;
+    const debit = b.Qr / 20;
+    if (t === "engrenages") {
+      A.pignons[0].rotation.z = -E.ang; A.pignons[1].rotation.z = E.ang + Math.PI / 12;
+      A.pignons.forEach((gr, q) => gr.userData.poches.forEach(([bx, a]) => {
+        const aw = a + gr.rotation.z, x = Math.cos(aw), y = Math.sin(aw) * (q ? -1 : 1);
+        bx.visible = y > -0.45; bx.material.color.setHex(x < 0.15 ? COUL.T : COUL.P);
+      }));
+    } else if (t === "palettes") {
+      const e = E.g.palettes / 4 * (A.Rs - A.Rr - 0.02), cx = -e;
+      A.rotor.position.x = cx; A.rotor.rotation.z = E.ang;
+      const tips = [];
+      A.palettes.forEach((pal, k) => {
+        const a = E.ang + k * 2 * Math.PI / 5, u = [Math.cos(a), Math.sin(a)], uc = u[0] * cx, d = -uc + Math.sqrt(A.Rs * A.Rs - cx * cx + uc * uc);
+        pal.position.set(cx + (d - 0.375) * u[0], (d - 0.375) * u[1], 0); pal.rotation.z = a; tips.push([a, d]);
+      });
+      const aire = pts => pts.reduce((s, p, i) => { const q = pts[(i + 1) % pts.length]; return s + p[0] * q[1] - q[0] * p[1]; }, 0) / 2;
+      const secteur = (a0, a1, cxx) => { const pts = []; for (let i = 0; i <= 12; i++) { const a = a0 + (a1 - a0) * i / 12, u = [Math.cos(a), Math.sin(a)], uc = u[0] * cxx, d = -uc + Math.sqrt(A.Rs * A.Rs - cxx * cxx + uc * uc); pts.push([cxx + d * u[0], d * u[1]]); }
+        for (let i = 12; i >= 0; i--) { const a = a0 + (a1 - a0) * i / 12; pts.push([cxx + A.Rr * Math.cos(a), A.Rr * Math.sin(a)]); } return pts; };
+      A.chambres.forEach((c, k) => {
+        const a0 = E.ang + k * 2 * Math.PI / 5 + 0.03, a1 = a0 + 2 * Math.PI / 5 - 0.06, pts = secteur(a0, a1, cx);
+        const s0 = aire(pts), s1 = aire(secteur(a0 + 0.05, a1 + 0.05, cx)), dS = s1 - s0;
+        c.geometry.dispose(); c.geometry = new THREE.ShapeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], p[1]))));
+        c.material.color.setHex(Math.abs(dS) < 2e-4 || E.N === 0 ? COUL.neutre : dS > 0 ? COUL.T : COUL.P);
+      });
+    } else {
+      const al = E.g.pistons * Math.PI / 180, x0 = -0.95 + 0.07;
+      A.plateau.rotation.z = al; A.barillet.rotation.x = E.ang;
+      A.pistons.forEach(({ gr, h }, k) => {
+        const f = E.ang + k * 2 * Math.PI / 9, y = A.Rb * Math.cos(f), z = A.Rb * Math.sin(f);
+        const xt = x0 - y * Math.tan(al) + 0.2;                                     // tete du piston sur le plateau
+        gr.position.set(xt, y, z); gr.children[0].position.x = 0.55; gr.children[1].position.x = 0;
+        const fin = xt + 1.1, L = Math.max(0.02, 1.5 - fin);
+        h.position.set(fin + L / 2, y, z); h.scale.y = L;
+        const dx = Math.tan(al) * A.Rb * Math.sin(f);                               // signe de la vitesse du piston
+        h.material.color.setHex(Math.abs(al) < 0.01 || E.N === 0 ? COUL.neutre : dx > 0 ? COUL.P : COUL.T);
+      });
+      const sens = Math.sign(al);
+      A.reins[0].material.color.setHex(sens === 0 || E.N === 0 ? COUL.neutre : sens > 0 ? COUL.P : COUL.T);
+      A.reins[1].material.color.setHex(sens === 0 || E.N === 0 ? COUL.neutre : sens > 0 ? COUL.T : COUL.P);
+      A.ref.teinter(sens >= 0 ? COUL.P : COUL.T); A.asp.teinter(sens >= 0 ? COUL.T : COUL.P);
+      A.etRef.element.textContent = sens >= 0 ? "Refoulement" : "Aspiration"; A.etAsp.element.textContent = sens >= 0 ? "Aspiration" : "Refoulement";
+    }
+    A.asp.couler(debit * (E.type === "pistons" && E.g.pistons < 0 ? -1 : 1), dt); A.ref.couler(debit * (E.type === "pistons" && E.g.pistons < 0 ? -1 : 1), dt);
+    horloge += dt; if (horloge >= 0.12) { horloge = 0; info(); }
+  }
+  let horloge = 0;
+
+  // ---------- affichage et banc d'essai ----------
+  function info() {
+    const b = bilan(), t = E.type, ge = GEO[t];
+    $("#j3-aff").innerHTML = lcd("Cylindrée", vg(cyl(), 2), "cm³/tr", t === "engrenages" ? "z = 12, m = 2 mm, b = 20 mm" : t === "palettes" ? "2 b n e D sin(π/n)" : "2 n S R tan α") +
+      lcd("Débit théorique", vg(b.Qth, 2), "L/min", "Cyl · N / 1 000") + lcd("Débit réel", vg(b.Qr, 2), "L/min", "fuites " + vg(b.Qf, 2) + " L/min · ηv = " + vg(b.etaV * 100, 1) + " %") +
+      lcd("Puissance hydraulique", vg(b.Ph, 2), "kW", "p · Q / 600") + lcd("Couple d'entraînement", vg(b.C, 1), "N·m", "Cyl · p / (62,8 ηm)") + lcd("Puissance mécanique", vg(b.Pm, 2), "kW", "ηg = ηv · ηm = " + vg(b.etaG * 100, 1) + " %");
+    $("#j3-Nv").textContent = E.N + " tr/min"; $("#j3-pv").textContent = E.p + " bar";
+    if (ge) $("#j3-gv").textContent = vg(E.g[t], ge.pas < 0.1 ? 2 : 1) + " " + ge.u;
+    if (MM) { const X = missions[MM.E.m], sig = MM.E.m + "|" + (X.suivi ? X.suivi() : "") + "|" + (X.ok ? X.ok() : ""); if (sig !== E.sig) { E.sig = sig; MM.verifier(); } }
+  }
+  function tableau() {
+    const L = E.rel.filter(r => r.type === E.type);
+    $("#j3-table").innerHTML = L.length ? ligneTab(["n°", "N (tr/min)", "p (bar)", "Q réel (L/min)", "C (N·m)", "ηv", "ηg"], 1) + L.map((r, q) => ligneTab([q + 1, r.N, r.p, vg(r.Q, 2), vg(r.C, 1), vg(r.etaV * 100, 1) + " %", vg(r.etaG * 100, 1) + " %"])).join("")
+      : '<tr><td style="text-align:left">Aucun relevé pour cette pompe : réglez N et p, puis « Relever la mesure ».</td></tr>';
+    const cadre = $("#j3-courbe");
+    if (!L.length) { cadre.style.display = "none"; return; } cadre.style.display = "";
+    const pts = L.map(r => [r.p, r.Q]), qmax = Math.max(...pts.map(p => p[1])) * 1.15 || 1;
+    tracer(cadre, { x: [0, PO[E.type].pmax], y: [0, qmax], xt: ticks(0, PO[E.type].pmax, 5), yt: ticks(0, qmax, 4), xl: "p (bar)", yl: "Q réel (L/min)", points: pts.map(p => ({ x: p[0], y: p[1], c: css("--red") })), hauteur: 200 });
+  }
+  function relever() {
+    const b = bilan(), Q = Math.min(b.Qth, b.Qr * (1 + 0.003 * HYD.gauss())), C = b.C * (1 + 0.005 * HYD.gauss());
+    const Pm = C * 2 * Math.PI * E.N / 60 / 1000, etaV = b.Qth ? Q / b.Qth : 0, etaG = Pm ? E.p * Q / 600 / Pm : 0;
+    E.rel.push({ type: E.type, N: E.N, p: E.p, Q, C, etaV, etaG, g: E.g[E.type] }); tableau(); E.sig = ""; info();
+  }
+  function regler(o) {
+    if (o.g) { Object.assign(E.g, o.g); delete o.g; }
+    const chg = o.type && o.type !== E.type; Object.assign(E, o);
+    $("#j3-N").value = E.N; $("#j3-p").value = E.p;
+    segment($("#j3-type"), E.type, v => regler({ type: v }));
+    if (V && chg) habiller();
+    const ge = GEO[E.type]; if (ge) $("#j3-g").value = E.g[E.type];
+    tableau(); info();
+  }
+
+  const rel = (f) => E.rel.filter(f);
+  const PRESS = [0, 50, 100, 150, 200];
+  const missions = [
+    { titre: "Le chemin de l'huile", consigne: "Pompe <b>à engrenages extérieurs</b>. Regardez tourner les pignons, puis réglez N et p pour obtenir un <b>débit réel de 15 L/min à 100 bar</b> (à 0,2 L/min près).",
+      entree: () => regler({ type: "engrenages", N: 1450, p: 0 }),
+      pari: { q: "Par où l'huile passe-t-elle de l'aspiration au refoulement ?", o: ["Entre les deux pignons, par le centre", "Autour des pignons, entre les dents et le corps", "À travers des trous percés dans les pignons"], bon: () => 1 },
+      suivi: () => { const b = bilan(); return "N = " + E.N + " tr/min · p = " + E.p + " bar · débit réel " + vg(b.Qr, 2) + " L/min"; },
+      ok: () => E.type === "engrenages" && Math.abs(E.p - 100) <= 2 && Math.abs(bilan().Qr - 15) <= 0.2,
+      bravo: () => "L'huile est emprisonnée entre deux dents et le corps, et transportée par la périphérie ; au centre, l'engrènement des dents l'empêche de revenir. Il faut N ≈ " + Math.round((15 + PO.engrenages.fuite * 100) / HYD.cylEngrenages() * 1000) + " tr/min : le débit théorique (Cyl · N) doit compenser les fuites, qui valent " + vg(PO.engrenages.fuite * 100, 1) + " L/min à 100 bar." },
+    { titre: "Banc d'essai : le rendement volumétrique", consigne: "Pompe à engrenages à <b>N = 1 450 tr/min</b>. Relevez le débit réel à <b>p = 0, 50, 100, 150 et 200 bar</b> (à 3 bar près).",
+      entree: () => regler({ type: "engrenages", N: 1450, p: 0 }),
+      suivi: () => "Relevés : " + PRESS.map(p => (rel(r => r.type === "engrenages" && Math.abs(r.N - 1450) <= 10 && Math.abs(r.p - p) <= 3).length ? "✓ " : "○ ") + p).join(" · "),
+      ok: () => PRESS.every(p => rel(r => r.type === "engrenages" && Math.abs(r.N - 1450) <= 10 && Math.abs(r.p - p) <= 3).length),
+      avantQuiz: () => { const a = HYD.bilanPompe("engrenages", HYD.cylEngrenages(), 1450, 0), b = HYD.bilanPompe("engrenages", HYD.cylEngrenages(), 1450, 200); return "Le débit passe de " + vg(a.Qr, 2) + " à " + vg(b.Qr, 2) + " L/min : ηv tombe de 100 % à " + vg(b.etaV * 100, 0) + " %."; },
+      quiz: { q: "Pourquoi le débit réel baisse-t-il quand la pression monte ?", o: [["Les fuites internes (jeux fonctionnels) augmentent avec la pression", 1], ["La pompe tourne moins vite sous pression", 0], ["La cylindrée diminue avec la pression", 0]],
+        expl: "Qv,r = Qv,th − Qv,f : la cylindrée et la vitesse ne changent pas, mais l'huile repasse du refoulement vers l'aspiration par les jeux, d'autant plus que la différence de pression est grande. C'est ce qu'on mesure au TP 2." } },
+    { titre: "Palettes : régler la cylindrée", consigne: "Pompe <b>à palettes</b> de la presse de l'exercice 5 (D = 120 mm, b = 20 mm, 5 palettes), à <b>2 500 tr/min</b> et <b>141 bar</b>. Réglez l'excentricité pour obtenir un <b>débit réel de 100 L/min</b> (à 1 L/min près).",
+      entree: () => regler({ type: "palettes", N: 2500, p: 141, g: { palettes: 1.5 } }),
+      suivi: () => "e = " + vg(E.g.palettes, 2) + " mm · cylindrée " + vg(cyl(), 1) + " cm³/tr · débit réel " + vg(bilan().Qr, 1) + " L/min",
+      ok: () => E.type === "palettes" && Math.abs(E.N - 2500) <= 10 && Math.abs(E.p - 141) <= 2 && Math.abs(bilan().Qr - 100) <= 1,
+      quiz: { q: "Que se passe-t-il si l'excentricité vaut zéro ?", o: [["Le débit est nul : le volume entre deux palettes ne varie plus", 1], ["La pompe débite son maximum", 0], ["Les palettes se bloquent", 0]],
+        expl: "Le volume entre deux palettes augmente (aspiration) puis diminue (refoulement) grâce à l'excentricité : Cyl = 2 b n e D sin(π/n). Avec e = 3 mm, Cyl = 42,3 cm³/tr, comme dans l'exercice 5. Faire varier e, c'est faire varier le débit sans changer la vitesse." } },
+    { titre: "Pistons axiaux : l'angle du plateau", consigne: "Pompe <b>à pistons axiaux</b> de l'exercice 4 (9 pistons, S = 2 cm², R = 3 cm) à <b>1 500 tr/min</b>. Réglez l'angle du plateau pour un <b>débit théorique de 34,4 L/min</b> (à 0,3 L/min près).",
+      entree: () => regler({ type: "pistons", N: 1500, p: 0, g: { pistons: 4 } }),
+      pari: { q: "Plateau droit (α = 0°), la pompe débite…", o: ["rien : les pistons ne bougent plus dans le barillet", "son débit maximal", "la moitié de son débit"], bon: () => 0 },
+      suivi: () => "α = " + vg(E.g.pistons, 1) + "° · cylindrée " + vg(cyl(), 2) + " cm³/tr · débit théorique " + vg(bilan().Qth, 2) + " L/min",
+      ok: () => E.type === "pistons" && Math.abs(E.N - 1500) <= 10 && E.g.pistons > 0 && Math.abs(bilan().Qth - 34.4) <= 0.3,
+      quiz: { q: "Et si l'on incline le plateau de l'autre côté (α < 0) ?", o: [["Le débit s'inverse : aspiration et refoulement échangent leurs rôles", 1], ["La pompe s'arrête", 0], ["Le débit double", 0]],
+        expl: "La course des pistons vaut 2 R tan α : Cyl = 2 n S R tan α = 22,96 cm³/tr à 12°. Changer le signe de α inverse le flux sans inverser la rotation : c'est la pompe type des engins, qui adapte son débit à la demande." } },
+    { titre: "Bilan de puissance (exercice 4)", consigne: "Toujours la pompe à pistons, à <b>α = 12°</b>, <b>1 500 tr/min</b> et <b>150 bar</b> : relevez une mesure au banc (débit et couple).",
+      entree: () => regler({ type: "pistons", N: 1500, p: 150, g: { pistons: 12 } }),
+      suivi: () => "α = " + vg(E.g.pistons, 1) + "° · N = " + E.N + " tr/min · p = " + E.p + " bar",
+      ok: () => rel(r => r.type === "pistons" && Math.abs(r.g - 12) < 0.01 && Math.abs(r.N - 1500) <= 10 && Math.abs(r.p - 150) <= 2).length > 0,
+      avantQuiz: () => { const r = rel(r => r.type === "pistons" && Math.abs(r.g - 12) < 0.01).pop(); return r ? "Mesure : Q = " + vg(r.Q, 1) + " L/min, C = " + vg(r.C, 1) + " N·m, soit Ph = " + vg(150 * r.Q / 600, 2) + " kW et Pm = C ω = " + vg(r.C * 2 * Math.PI * r.N / 60 / 1000, 2) + " kW." : ""; },
+      quiz: { q: "Que vaut le rendement global de cette pompe ?", o: [["ηg = ηv × ηm ≈ 0,93 × 0,91 ≈ 85 %", 1], ["ηg = ηv + ηm ≈ 184 %", 0], ["ηg = ηv / ηm ≈ 102 %", 0]],
+        expl: "Sur 9,42 kW absorbés, 8,0 kW sortent en puissance hydraulique : ηg = Ph / Pm ≈ 85 %. Les 1,4 kW restants deviennent chaleur : 0,6 kW par les fuites internes, 0,8 kW par les frottements." } },
+  ];
+
+  return { ouvrir: () => {
+    if (!V) {
+      $("#j3-N").addEventListener("input", e => { E.N = +e.target.value; info(); });
+      $("#j3-p").addEventListener("input", e => { E.p = +e.target.value; info(); });
+      $("#j3-g").addEventListener("input", e => { E.g[E.type] = +e.target.value; info(); });
+      $("#j3-rel").addEventListener("click", relever);
+      $("#j3-eff").addEventListener("click", () => { E.rel = E.rel.filter(r => r.type !== E.type); tableau(); E.sig = ""; info(); });
+      addEventListener("resize", () => { if (!$("#jeu-3").hidden) tableau(); });
+      MM = moteurMissions({ zone: $("#j3-mission"), compteur: $("#j3-compte"), jeu: "jeu-3", missions, recalculer: () => {}, etoiles: n => n >= 5 ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0 });
+      try { construire(); } catch (e) { $("#j3-3d").innerHTML = '<div class="chargement">La 3D n\'a pas pu démarrer sur cet appareil (WebGL indisponible).</div>'; console.error(e); }
+      regler({}); MM.entrer(0);
+    } else { MM.afficher(); tableau(); }
+  }, etat: () => E, regler, relever };
+})();
+
+/* ---------- SIMULATION 4 : l'accumulateur ---------- */
+const jeu4 = (() => {
+  const QP = 30, QC = 30, QV = 24, PLIM = 200;                                   // debits (L/min) pompe, consommation, purge ; limiteur (bar)
+  const E = { type: "vessie", n: 1, p0: 50, Voil: 0, pompe: false, conso: false, purge: false, haut: null, dV: {}, ctrl: false, erreurs: 0, msg: "", sig: "" };
+  let V = null, MM, A = null;
+  const V0 = () => HYD.ACCUS[E.type].V0;
+  const Vgaz = () => V0() - E.Voil;
+  const pression = () => E.Voil > 1e-9 ? HYD.pressionGaz(V0(), E.p0, Vgaz(), E.n) : (E.pompe && !E.purge && !E.conso ? E.p0 : 0);
+
+  // ---------- physique ----------
+  function pas(dt) {
+    let p = pression(), q = 0;
+    if (E.pompe && p < PLIM) q += QP / 60;
+    if (E.conso && E.Voil > 0) q -= QC / 60;
+    if (E.purge && E.Voil > 0) q -= QV / 60;
+    const Vmax = V0() * (1 - Math.pow(E.p0 / PLIM, 1 / E.n));
+    E.Voil = borne(E.Voil + q * dt, 0, Math.max(0, Vmax));
+    p = pression();
+    if (E.Voil > 0 && q > 0 && (!E.haut || E.Voil > E.haut.V)) E.haut = { V: E.Voil, p, n: E.n };     // plus haut point du remplissage
+    if (q > 0 && E.haut && E.Voil < E.haut.V) E.haut = { V: E.Voil, p, n: E.n };
+    E.p = p;
+    dessiner(dt, q);
+  }
+
+  // ---------- scene ----------
+  function construire() {
+    V = vue3D($("#j4-3d"), { section: $("#jeu-4"), camera: [0.6, 0.3, 13.6], cible: [0.2, -0.4, 0], dmin: 3, dmax: 24 });
+    const sc = V.scene;
+    // centrale, conduites, vannes
+    const res = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.6, 1.4), MAT.verre(0x7FA6C9, 0.25)); res.position.set(0, -4.05, 0); sc.add(res);
+    const hres = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.4, 1.3), new THREE.MeshStandardMaterial({ color: COUL.T, transparent: true, opacity: 0.5 })); hres.position.set(0, -4.13, 0); sc.add(hres);
+    const moteur = cylX(0.32, 0.9, MAT.peint(0x2E5E8C)); moteur.position.set(-3.6, -3.35, 0); sc.add(moteur);
+    const pompe = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), MAT.peint(0x3D4B5C)); pompe.position.set(-2.9, -3.35, 0); sc.add(pompe);
+    V.etiquette("Pompe", [-2.9, -2.95, 0.3], "discret");
+    A = {};
+    A.TP = tuyau(sc, [[-2.9, -3.1, 0], [-2.9, -2.7, 0], [-0.05, -2.7, 0]], 0.07);
+    A.TA = tuyau(sc, [[0, -2.7, 0], [0, -2.25, 0]], 0.08);
+    A.TC = tuyau(sc, [[0.05, -2.7, 0], [3.4, -2.7, 0], [3.4, -2.2, 0]], 0.07);
+    A.TV = tuyau(sc, [[1.4, -2.7, 0], [1.4, -3.75, 0]], 0.06);
+    A.TL = tuyau(sc, [[-2.2, -2.7, 0], [-2.2, -3.75, 0]], 0.05);
+    const clapet = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.4, 16), MAT.peint(0x55606E)); clapet.rotation.z = Math.PI / 2; clapet.position.set(-1.6, -2.7, 0); sc.add(clapet);
+    V.etiquette("Clapet", [-1.6, -3.05, 0.2], "discret");
+    const lim = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.45, 20), MAT.peint(0x8E2B2B)); lim.position.set(-2.2, -3.2, 0); sc.add(lim);
+    V.etiquette("Limiteur " + PLIM + " bar", [-2.2, -3.55, 0.45], "discret");
+    const volant = (x, y) => { const g = new THREE.Group(), t = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.04, 8, 24), MAT.peint(0xC1121F)); g.add(t);
+      for (let k = 0; k < 3; k++) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.04, 0.04), MAT.peint(0xC1121F)); r.rotation.z = k * Math.PI / 3; g.add(r); }
+      const corps = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), MAT.sombre()); corps.position.z = -0.25; g.add(corps); g.position.set(x, y, 0.3); sc.add(g); return g; };
+    A.vConso = volant(2.4, -2.7); A.vPurge = volant(1.4, -3.3);
+    V.etiquette("Vers le circuit", [3.4, -1.95, 0], "discret"); V.etiquette("Vanne de purge", [1.95, -3.35, 0.4], "discret"); V.etiquette("Vanne", [2.4, -2.3, 0.4], "discret");
+    A.mano = manometre(250, 0.36); A.mano.g.position.set(-0.95, -2.15, 0.25); sc.add(A.mano.g);
+    tuyau(sc, [[-0.95, -2.7, 0], [-0.95, -2.5, 0], [-0.95, -2.5, 0.2]], 0.04).teinter(COUL.neutre);
+    V.etiquette("Manomètre", [-0.95, -1.62, 0.25], "discret");
+    A.manoG = manometre(250, 0.3); A.manoG.g.position.set(1.05, 2.75, 0.2); sc.add(A.manoG.g);
+    V.etiquette("Kit de gonflage (azote)", [1.05, 3.25, 0.2], "discret");
+    V.chaque(pas);
+    habiller();
+  }
+  function habiller() {
+    if (A.g) { V.scene.remove(A.g); A.g.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.element) o.element.remove(); }); }
+    const g = new THREE.Group(), plans = PLAN_COUPE(), t = E.type; A.g = g; V.scene.add(g);
+    A.niveau = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0); A.niveauG = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const huile = new THREE.MeshStandardMaterial({ color: COUL.P, transparent: true, opacity: 0.85, side: THREE.DoubleSide, clippingPlanes: [plans[0], A.niveau] });
+    const gaz = new THREE.MeshStandardMaterial({ color: COUL.azote, transparent: true, opacity: 0.6, side: THREE.DoubleSide, clippingPlanes: [plans[0]] });
+    A.huileMat = huile; A.gazMat = gaz;
+    const valve = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.45, 16), MAT.acier()); g.add(valve);
+    if (t === "vessie") {
+      const corps = new THREE.Mesh(new THREE.CapsuleGeometry(0.8, 2.4, 10, 40), MAT.coupe(0x2F4E6E, plans)); g.add(corps);
+      valve.position.y = 2.12;
+      A.h = new THREE.Mesh(new THREE.CapsuleGeometry(0.77, 2.4, 10, 40), huile); g.add(A.h);
+      A.vessie = new THREE.Mesh(new THREE.CapsuleGeometry(0.72, 2.3, 10, 40), gaz); g.add(A.vessie);
+      A.clapet = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.25, 24), MAT.acier()); A.clapet.rotation.x = Math.PI; g.add(A.clapet);
+      const raccord = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.3, 20), MAT.acier()); raccord.position.y = -2.1; g.add(raccord);
+      V.etiquette("Vessie (azote)", [-1.65, 0.6, 0], "discret", g); V.etiquette("Corps", [1.25, 1.2, 0], "discret", g);
+      V.etiquette("Valve de gonflage", [-1.4, 2.25, 0], "discret", g); A.etClapet = V.etiquette("Clapet anti-extrusion", [-2.0, -1.1, 0], "discret", g);
+      V.etiquette("Huile", [1.15, -1.2, 0], "discret", g);
+    } else if (t === "piston") {
+      const corps = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 4.0, 40, 1, true), MAT.coupe(0x2F4E6E, plans)); g.add(corps);
+      [-2.05, 2.05].forEach(y => { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 0.88, 0.14, 40), MAT.peint(0x24405C)); c.position.y = y; g.add(c); });
+      valve.position.y = 2.3;
+      A.h = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.78, 1, 40), MAT.huile(COUL.P, plans)); g.add(A.h); A.huileMat = A.h.material;
+      A.gz = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.78, 1, 40), gaz); g.add(A.gz);
+      A.piston = new THREE.Mesh(new THREE.CylinderGeometry(0.785, 0.785, 0.28, 40), MAT.acier()); g.add(A.piston);
+      A.joints = [-0.07, 0.07].map(d => { const j = new THREE.Mesh(new THREE.TorusGeometry(0.78, 0.025, 8, 40), MAT.joint()); j.rotation.x = Math.PI / 2; j.userData.d = d; g.add(j); return j; });
+      const raccord = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.3, 20), MAT.acier()); raccord.position.y = -2.25; g.add(raccord);
+      V.etiquette("Azote", [-1.4, 1.2, 0], "discret", g); V.etiquette("Piston libre", [1.45, 0, 0], "discret", g); V.etiquette("Huile", [1.35, -1.3, 0], "discret", g);
+    } else {
+      const R = 1.3;
+      const corps = new THREE.Mesh(new THREE.SphereGeometry(R + 0.04, 48, 32), MAT.coupe(0x2F4E6E, plans)); g.add(corps);
+      valve.position.y = R + 0.2;
+      gaz.clippingPlanes = [plans[0], A.niveauG];
+      A.gz = new THREE.Mesh(new THREE.SphereGeometry(R, 48, 32), gaz); g.add(A.gz);
+      A.h = new THREE.Mesh(new THREE.SphereGeometry(R, 48, 32), huile); g.add(A.h);
+      A.membrane = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.05, 48), MAT.joint()); g.add(A.membrane);
+      const raccord = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.9, 20), MAT.acier()); raccord.position.y = -R - 0.35; g.add(raccord);
+      V.etiquette("Azote", [-1.9, 0.9, 0], "discret", g); V.etiquette("Membrane", [1.9, 0, 0], "discret", g); V.etiquette("Huile", [1.75, -0.9, 0], "discret", g);
+    }
+    g.position.y = t === "membrane" ? -0.6 : 0;
+    const yv = valve.position.y + 0.2, yk = 2.75 - g.position.y;
+    tuyau(g, [[0, yv, 0], [0, yk, 0], [0.75, yk, 0]], 0.035).teinter(COUL.azote);
+    E.sig = "";
+  }
+  function dessiner(dt, q) {
+    if (!A || !A.g) return;
+    const f = Vgaz() / V0(), p = E.p, t = E.type, c = p > 1 ? COUL.P : COUL.neutre;
+    A.huileMat.color.setHex(c);
+    if (t === "vessie") {
+      const Hb = 2.3 + 2 * 0.72, haut = 1.95, hb = Hb * (0.12 + 0.88 * f), s = 0.6 + 0.4 * f;
+      A.vessie.scale.set(s, hb / Hb, s); A.vessie.position.y = haut - hb / 2;
+      A.niveau.constant = haut - hb + 0.15;
+      const ferme = f > 0.995;                                                          // vessie au fond : clapet ferme
+      A.clapet.position.y = ferme ? -1.82 : -1.98;
+    } else if (t === "piston") {
+      const bas = -1.98, H = 3.96, yp = bas + (1 - f) * (H - 0.28) + 0.14;
+      A.piston.position.y = yp; A.joints.forEach(j => j.position.y = yp + j.userData.d);
+      A.h.position.y = (bas + yp - 0.14) / 2; A.h.scale.y = Math.max(0.01, yp - 0.14 - bas);
+      A.gz.position.y = (yp + 0.14 + 1.98) / 2; A.gz.scale.y = Math.max(0.01, 1.98 - yp - 0.14);
+    } else {
+      const R = 1.3; let lo = 0, hi = 2 * R;                                           // hauteur h de la calotte de gaz : f = h2 (3R - h) / (4 R3)
+      for (let k = 0; k < 40; k++) { const h = (lo + hi) / 2; if (h * h * (3 * R - h) / (4 * R * R * R) < f) lo = h; else hi = h; }
+      const ym = R - (lo + hi) / 2, gy = A.g.position.y;
+      A.niveau.constant = ym + gy; A.niveauG.constant = -(ym + gy);
+      A.membrane.position.y = ym; const rm = Math.sqrt(Math.max(0.01, R * R - ym * ym)); A.membrane.scale.set(rm, 1, rm);
+    }
+    const vit = q * 60 / QP;
+    A.TP.teinter(E.pompe ? COUL.P : COUL.neutre); A.TP.couler(E.pompe && p < PLIM ? 1 : 0, dt);
+    A.TA.teinter(c); A.TA.couler(vit, dt);
+    A.TC.teinter(E.conso && E.Voil > 0 ? COUL.P : c); A.TC.couler(E.conso && E.Voil > 0 ? 1 : 0, dt);
+    A.TV.teinter(E.purge ? COUL.T : COUL.neutre); A.TV.couler(E.purge && E.Voil > 0 ? 1 : 0, dt);
+    A.TL.teinter(E.pompe && p >= PLIM - 0.5 ? COUL.P : COUL.neutre); A.TL.couler(E.pompe && p >= PLIM - 0.5 ? 1 : 0, dt);
+    A.vConso.rotation.z += (E.conso ? 2 : 0) * dt; A.vPurge.rotation.z += (E.purge ? 2 : 0) * dt;
+    A.mano.regler(p); A.manoG.regler(E.Voil > 0 ? p : E.p0);
+    horloge += dt; if (horloge >= 0.1) { horloge = 0; info(); }
+  }
+  let horloge = 0;
+
+  // ---------- affichage ----------
+  function info() {
+    const p = E.p || 0, haut = E.haut, dV = haut ? haut.V - E.Voil : 0;
+    $("#j4-aff").innerHTML = lcd("Pression d'huile", vg(p, 1), "bar", E.pompe && p >= PLIM - 0.5 ? "limiteur ouvert" : E.Voil > 0 ? "= pression du gaz" : "circuit sans huile") +
+      lcd("Précharge p₀", vg(E.p0, 0), "bar", "azote, V₀ = " + V0() + " L") + lcd("Huile stockée", vg(E.Voil, 2), "L", "V₀ − V gaz") + lcd("Volume de gaz", vg(Vgaz(), 2), "L", E.n === 1 ? "p V = cste" : "p V^1,4 = cste") +
+      lcd("Volume restitué", vg(Math.max(0, dV), 2), "L", haut ? "depuis " + vg(haut.p, 0) + " bar" : "après un remplissage");
+    $("#j4-pompe").textContent = E.pompe ? "■ Arrêter la pompe" : "▶ Démarrer la pompe";
+    $("#j4-conso").textContent = E.conso ? "■ Fermer la vanne du circuit" : "↗ Ouvrir la vanne du circuit";
+    $("#j4-purge").textContent = E.purge ? "■ Fermer la purge" : "⤓ Ouvrir la purge";
+    $("#j4-conso").className = E.conso ? "btn" : "btn sec"; $("#j4-purge").className = E.purge ? "btn" : "btn sec"; $("#j4-pompe").className = E.pompe ? "btn" : "btn sec";
+    courbe();
+    if (MM) { const X = missions[MM.E.m], sig = MM.E.m + "|" + (X.suivi ? X.suivi() : "") + "|" + (X.ok ? X.ok() : ""); if (sig !== E.sig) { E.sig = sig; MM.verifier(); } }
+  }
+  function courbe() {
+    const cadre = $("#j4-courbe"), v0 = V0(), serie = n => { const pts = []; for (let k = 0; k <= 60; k++) { const Vg = v0 * (0.3 + 0.7 * k / 60), pp = E.p0 * Math.pow(v0 / Vg, n); if (pp <= 230) pts.push([Vg, pp]); } return pts; };
+    tracer(cadre, { hauteur: 200, x: [0, v0], y: [0, 230], xl: "V gaz (L)", yl: "p (bar)", xt: ticks(0, v0, 5), yt: ticks(0, 230, 5),
+      horiz: [{ y: 100, c: css("--ink-2"), tir: [4, 4], l: 1 }, { y: 160, c: css("--ink-2"), tir: [4, 4], l: 1 }],
+      series: [{ pts: serie(1), c: css("--blue"), l: E.n === 1 ? 2.5 : 1.2, a: E.n === 1 ? 1 : 0.5 }, { pts: serie(1.4), c: css("--orange"), l: E.n === 1.4 ? 2.5 : 1.2, a: E.n === 1.4 ? 1 : 0.5 }],
+      points: [{ x: Vgaz(), y: Math.max(E.p || 0, E.Voil > 0 ? 0 : E.p0), c: css("--red"), r: 6 }],
+      textes: [{ t: "isotherme", x: v0 * 0.32, y: 214, c: css("--blue"), gras: true }, { t: "adiabatique", x: v0 * 0.62, y: 214, c: css("--orange"), gras: true }, { t: "p₂", x: v0 * 0.97, y: 166, align: "right" }, { t: "p₁", x: v0 * 0.97, y: 106, align: "right" }] });
+  }
+  const message = (ok, t) => { E.msg = t; retour($("#j4-msg"), ok, t); };
+  function gonfler(d) {
+    if (E.Voil > 0 || E.pompe) { E.erreurs++; message(false, "⚠️ Interdit : on ne règle la précharge que circuit à l'arrêt et huile vidangée (sinon on mesure la pression de l'huile, pas celle de l'azote)."); return; }
+    E.p0 = borne(E.p0 + d, 10, 180); message(true, "Azote : précharge " + E.p0 + " bar."); E.sig = ""; info();
+  }
+  function controler() {
+    if (E.Voil > 0) { E.erreurs++; message(false, "⚠️ Le manomètre de gonflage indique " + vg(E.p, 0) + " bar : c'est la pression de l'huile, pas la précharge. Arrêtez la pompe et videz l'huile d'abord."); return; }
+    if (E.pompe) { E.erreurs++; message(false, "⚠️ Arrêtez d'abord la pompe."); return; }
+    E.ctrl = true; message(true, "🔍 Précharge contrôlée : p₀ = " + E.p0 + " bar (circuit sans pression, huile vidangée)."); E.sig = ""; info();
+  }
+  function regler(o) {
+    if (o.n !== undefined && o.n !== E.n) { if (E.Voil > 0) { const p = E.p; E.n = o.n; E.Voil = V0() - HYD.volumeGaz(V0(), E.p0, p, E.n); } E.haut = null; }
+    const chg = o.type && o.type !== E.type; Object.assign(E, o);
+    if (chg) { E.Voil = 0; E.haut = null; }
+    segment($("#j4-type"), E.type, v => regler({ type: v })); segment($("#j4-n"), String(E.n), v => regler({ n: +v }));
+    if (V && chg) habiller(); E.sig = ""; info();
+  }
+
+  const fin = (n) => E.dV[n];
+  function noterRestitution() {                                                        // une restitution de p2 a p1, vanne refermee
+    if (E.haut && E.haut.n === E.n && E.haut.p >= 157 && Math.abs(E.p - 100) <= 3 && !E.conso && !E.pompe && E.type === "vessie" && Math.abs(E.p0 - 90) <= 1) E.dV[E.n] = E.haut.V - E.Voil;
+  }
+  const missions = [
+    { titre: "Gonfler la vessie", consigne: "Accumulateur <b>à vessie</b> de 20 L, circuit sans pression. Réglez la précharge d'azote à <b>p₀ = 90 bar</b>, soit 0,9 p₁ pour une pression mini de service p₁ = 100 bar.",
+      entree: () => regler({ type: "vessie", n: 1, pompe: false, conso: false, purge: false, p0: 50, Voil: 0, haut: null }),
+      suivi: () => "Précharge : " + E.p0 + " bar", ok: () => E.type === "vessie" && Math.abs(E.p0 - 90) <= 1,
+      quiz: { q: "Avec quel gaz gonfle-t-on un accumulateur hydropneumatique ?", o: [["De l'azote sec", 1], ["De l'air comprimé de l'atelier", 0], ["De l'oxygène", 0]],
+        expl: "Azote sec uniquement : jamais d'air ni d'oxygène, qui peuvent exploser au contact de l'huile sous pression. La précharge se règle à froid, sans huile : la vessie dépliée remplit alors tout le corps." } },
+    { titre: "Remplir jusqu'à p₂ = 160 bar", consigne: "Transformation <b>lente (isotherme)</b>. Démarrez la pompe, remplissez jusqu'à <b>160 bar</b> (à 3 bar près), puis arrêtez la pompe.",
+      entree: () => regler({ type: "vessie", n: 1, conso: false, purge: false }),
+      suivi: () => "Pression : " + vg(E.p, 0) + " bar · huile stockée " + vg(E.Voil, 2) + " L · pompe " + (E.pompe ? "en marche" : "arrêtée"),
+      ok: () => E.type === "vessie" && !E.pompe && Math.abs(E.p - 160) <= 3 && Math.abs(E.p0 - 90) <= 1,
+      avantQuiz: () => "p₀ V₀ = p₂ V₂ : V₂ = 90 × 20 / 160 = " + vg(HYD.volumeGaz(20, 90, 160, 1), 2) + " L de gaz, donc " + vg(20 - HYD.volumeGaz(20, 90, 160, 1), 2) + " L d'huile stockée.",
+      quiz: { q: "Où l'énergie est-elle stockée ?", o: [["Dans l'azote comprimé", 1], ["Dans l'huile, comprimée elle aussi", 0], ["Dans le caoutchouc de la vessie", 0]],
+        expl: "L'huile est pratiquement incompressible : c'est le gaz qui se comprime et stocke l'énergie, puis se détend pour repousser l'huile vers le circuit." } },
+    { titre: "Restituer jusqu'à p₁ = 100 bar", consigne: "Pompe arrêtée, accumulateur à 160 bar : ouvrez la vanne vers le circuit et refermez-la à <b>p₁ = 100 bar</b> (à 3 bar près). Lisez le volume restitué.",
+      entree: () => regler({ type: "vessie", n: 1, pompe: false, purge: false }),
+      suivi: () => { noterRestitution(); return "Pression : " + vg(E.p, 0) + " bar · volume restitué " + vg(E.haut ? Math.max(0, E.haut.V - E.Voil) : 0, 2) + " L" + (fin(1) ? " · ✓ isotherme : " + vg(fin(1), 2) + " L" : ""); },
+      ok: () => !!fin(1),
+      bravo: () => "ΔV = V₁ − V₂ = 90 × 20 / 100 − 90 × 20 / 160 = 18 − 11,25 = <b>6,75 L</b> (vous : " + vg(fin(1), 2) + " L). C'est l'exercice 3 avec un accumulateur de 20 L." },
+    { titre: "Décharge rapide (adiabatique)", consigne: "Passez en transformation <b>rapide (adiabatique)</b>, remontez à 160 bar, arrêtez la pompe, puis restituez jusqu'à 100 bar.",
+      pari: { q: "En décharge rapide, entre 160 et 100 bar, le volume restitué sera…", o: ["plus petit qu'en isotherme", "le même", "plus grand qu'en isotherme"], bon: () => 0 },
+      entree: () => regler({ type: "vessie", conso: false, purge: false }),
+      suivi: () => { noterRestitution(); return "Mode " + (E.n === 1 ? "isotherme" : "adiabatique") + " · pression " + vg(E.p, 0) + " bar · restitué " + vg(E.haut ? Math.max(0, E.haut.V - E.Voil) : 0, 2) + " L" + (fin(1.4) ? " · ✓ adiabatique : " + vg(fin(1.4), 2) + " L" : ""); },
+      ok: () => !!fin(1.4),
+      avantQuiz: () => "Adiabatique : " + vg(fin(1.4), 2) + " L au lieu de " + vg(fin(1) || HYD.volumeUtile(20, 90, 100, 160, 1), 2) + " L : le gaz se refroidit en se détendant vite, sa pression chute plus tôt.",
+      quiz: { q: "Pour dimensionner l'accumulateur d'une manœuvre de secours, quelle hypothèse prendre ?", o: [["Adiabatique : plus pénalisante, donc plus sûre", 1], ["Isotherme : c'est la formule du cours", 0], ["La moyenne des deux", 0]],
+        expl: "Une décharge de secours est rapide : l'isotherme sous-estimerait le volume nécessaire de 22 % (11,9 L contre 15,1 L dans l'exercice 3). Avec 20 L, on restitue encore 5,3 L en adiabatique, 32 % de marge sur le besoin de 4 L." } },
+    { titre: "Intervenir en sécurité", consigne: "L'accumulateur est en service, plein d'huile sous pression. Préparez-le pour un démontage : <b>arrêtez la pompe</b>, <b>videz l'huile</b> par la purge, puis <b>contrôlez la précharge</b>.",
+      entree: () => { regler({ type: "vessie", n: 1, p0: 90, conso: false, purge: false, pompe: true }); E.Voil = 20 - HYD.volumeGaz(20, 90, 150, 1); E.haut = null; E.ctrl = false; E.erreurs = 0; },
+      suivi: () => "Pompe " + (E.pompe ? "○ en marche" : "✓ arrêtée") + " · huile " + (E.Voil > 0 ? "○ " + vg(E.Voil, 2) + " L" : "✓ vidangée") + " · précharge " + (E.ctrl ? "✓ contrôlée" : "○ à contrôler") + (E.erreurs ? " · erreurs : " + E.erreurs : ""),
+      ok: () => E.ctrl && E.Voil === 0 && !E.pompe,
+      quiz: { q: "Avant de démonter un accumulateur, il faut…", o: [["Le décharger côté huile, puis vérifier la précharge ; jamais sous pression", 1], ["Le regonfler pour chasser l'huile", 0], ["Le chauffer pour faire baisser la pression du gaz", 0]],
+        expl: "L'azote reste sous pression même huile vidangée : on ne démonte jamais sous pression. Règles du cours : décharger l'huile, contrôler la précharge à froid, soupape de sécurité sur le circuit, bouteille fixée par colliers, contrôles périodiques." } },
+  ];
+
+  return { ouvrir: () => {
+    if (!V) {
+      $("#j4-pompe").addEventListener("click", () => { E.pompe = !E.pompe; if (E.pompe) E.haut = null; info(); });
+      $("#j4-conso").addEventListener("click", () => { E.conso = !E.conso; info(); });
+      $("#j4-purge").addEventListener("click", () => { E.purge = !E.purge; info(); });
+      [["#j4-g10m", -10], ["#j4-g1m", -1], ["#j4-g1p", 1], ["#j4-g10p", 10]].forEach(([s, d]) => $(s).addEventListener("click", () => gonfler(d)));
+      $("#j4-ctrl").addEventListener("click", controler);
+      addEventListener("resize", () => { if (!$("#jeu-4").hidden) courbe(); });
+      MM = moteurMissions({ zone: $("#j4-mission"), compteur: $("#j4-compte"), jeu: "jeu-4", missions, recalculer: () => {}, etoiles: n => n >= 5 ? 3 : n >= 4 ? 2 : n >= 2 ? 1 : 0 });
+      try { construire(); } catch (e) { $("#j4-3d").innerHTML = '<div class="chargement">La 3D n\'a pas pu démarrer sur cet appareil (WebGL indisponible).</div>'; console.error(e); }
+      regler({}); MM.entrer(0);
+    } else MM.afficher();
+  }, etat: () => E, regler, gonfler, controler };
+})();
+
+/* ---------- accueil et navigation ---------- */
+window.FICHES = [
+  { id: "jeu-1", emoji: "🔀", fond: "linear-gradient(135deg,#0056D2,#3D8BFF)", titre: "Les distributeurs", notion: "Déplacez le tiroir en coupe : 2/2, 3/2, 4/2 et les quatre centres du 4/3, avec le symbole ISO qui suit le tiroir.", puces: ["Partie 8", "7 distributeurs", "≈ 10 min"] },
+  { id: "jeu-2", emoji: "🦾", fond: "linear-gradient(135deg,#6A4C93,#9B7BD0)", titre: "Les vérins", notion: "Simple effet, double effet, double tige, télescopique, rotatif : pièces, effort F = p·S, vitesses et chronomètre.", puces: ["Partie 7", "5 types", "≈ 15 min"] },
+  { id: "jeu-3", emoji: "⚙️", fond: "linear-gradient(135deg,#C1121F,#E25563)", titre: "Les pompes", notion: "Engrenages, palettes, pistons axiaux en mouvement : cylindrée, débit réel, fuites, couple et rendements au banc.", puces: ["Partie 5", "banc d'essai", "≈ 10 min"] },
+  { id: "jeu-4", emoji: "🫧", fond: "linear-gradient(135deg,#2E7D32,#58B35E)", titre: "L'accumulateur", notion: "Gonflez la vessie, remplissez, restituez : Boyle-Mariotte, isotherme ou adiabatique, et les règles de sécurité.", puces: ["Partie 4", "p₀V₀ = pV", "≈ 10 min"] },
+];
+window.JEUX = {};
+[["jeu-1", typeof jeu1 !== "undefined" && jeu1], ["jeu-2", typeof jeu2 !== "undefined" && jeu2], ["jeu-3", typeof jeu3 !== "undefined" && jeu3], ["jeu-4", typeof jeu4 !== "undefined" && jeu4]]
+  .forEach(([k, j]) => { if (j) window.JEUX[k] = j; });
+window.HYD3D = window.JEUX;
+demarrerPage();
+</script>
+</body>
+</html>
