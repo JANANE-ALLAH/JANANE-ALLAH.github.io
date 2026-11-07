@@ -2219,7 +2219,7 @@ const jeu5 = (() => {
       avantQuiz: () => "Temps de brassage t_b = V/Q = 200/20 = 10 min. C(t) = C₀ e^(−ηQt/V), donc t = (V/ηQ) ln 100 = 10,05 × 4,61 = <b>46,3 min</b> (vous : " + vg(E.ex2.fin, 1) + " min), soit 4,6 brassages. Un seul brassage ne retire que 63 % (1 − e^(−0,995)). Code ISO 4406 du réservoir : 21/19/16 → " + HYD.codeISO4406(HYD.cumul(E.n)) + ".",
       quiz: { q: "Que se passe-t-il si le filtre se colmate (β diminue) ?", o: [["η diminue : le nettoyage dure plus longtemps ; on change l'élément", 1], ["Le nettoyage va plus vite : l'élément est plus serré", 0], ["Rien tant que le by-pass reste fermé", 0]],
         expl: "Exercice 2, question 6 : β diminue ⇒ η diminue ⇒ le temps de nettoyage augmente. En pratique, on vérifie par une analyse d'huile (code ISO 4406) avant de remettre en service." } },
-    { titre: "Où placer le filtre ?", consigne: "Sur le schéma du circuit sous la vue 3D, cliquez l'emplacement qui convient à chaque besoin.",
+    { titre: "Où placer le filtre ?", consigne: "Sur le schéma « Où placer le filtre ? », sous la courbe, cliquez l'emplacement qui convient à chaque besoin.",
       entree: () => { regler({ verrouQ: false }); E.place = { q: 0, trouve: [], erreurs: 0 }; circuit(); $("#j5-circuit-t").innerHTML = ""; },
       suivi: () => E.place.q < QUESTIONS.length ? "Besoin " + (E.place.q + 1) + " / 4 : " + QUESTIONS[E.place.q].q + (E.place.erreurs ? " · erreurs : " + E.place.erreurs : "") : "✓ Les quatre emplacements sont trouvés.",
       ok: () => E.place.q >= QUESTIONS.length,
