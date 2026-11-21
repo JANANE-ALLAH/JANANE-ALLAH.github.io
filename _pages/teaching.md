@@ -66,8 +66,8 @@ author_profile: true
 **Vous êtes jeune ingénieur ou technicien spécialisé en hydraulique et engins, et vous voulez apprendre sur une vraie machine ?** Cette formation pratique reprend le contenu du module Hydraulique enseigné à l'ENSAM Casablanca, mais sur le terrain : on lit la machine, on mesure, on démonte, on diagnostique.
 
 <figure>
-  <img src="/images/formation/terrain-inspection-sany.jpg" alt="Séance de terrain au pied d'une pelle SANY" style="width:100%; max-width:720px; border-radius:8px;">
-  <figcaption>Une séance de terrain du module Hydraulique, au pied d'une pelle SANY (visages floutés).</figcaption>
+  <img src="/images/formation/formation-terrain.jpg" alt="Formation sur le terrain : lire la machine, le circuit hydraulique, démonter et diagnostiquer" style="width:100%; border-radius:8px;">
+  <figcaption>Sur le terrain : lire la machine (pelle SANY), repérer le circuit hydraulique (pompe en place dans son compartiment), démonter et diagnostiquer (pompe à pistons axiaux). Visages floutés.</figcaption>
 </figure>
 
 - 🚜 **Sur machine réelle** : pelles et engins de chantier, comme aux TP du module.
