@@ -61,31 +61,34 @@ author_profile: true
 
 ---
 
-## 🧰 Formation sur le terrain — hydraulique des engins {#formation-terrain}
+## 🧰 Formation sur le terrain — hydraulique des engins (30 h) {#formation-terrain}
 
-**Vous êtes jeune ingénieur ou technicien spécialisé en hydraulique et engins, et vous voulez apprendre sur une vraie machine ?** Cette formation pratique reprend le contenu du module Hydraulique enseigné à l'ENSAM Casablanca, mais sur le terrain : on lit la machine, on mesure, on démonte, on diagnostique.
+**Une formation pratique de 30 heures, sur le terrain, pour les entreprises et les établissements** qui veulent former leurs ingénieurs et leurs techniciens spécialisés en hydraulique et engins. Elle reprend le contenu du module Hydraulique enseigné à l'ENSAM Casablanca, mais sur la machine : on lit la machine, on mesure, on démonte, on diagnostique.
 
 <figure>
   <img src="/images/formation/formation-terrain.jpg" alt="Formation sur le terrain : lire la machine, le circuit hydraulique, démonter et diagnostiquer" style="width:100%; border-radius:8px;">
   <figcaption>Sur le terrain : lire la machine (pelle SANY), repérer le circuit hydraulique (pompe en place dans son compartiment), démonter et diagnostiquer (pompe à pistons axiaux). Visages floutés.</figcaption>
 </figure>
 
+- 🏢 **Pour les entreprises et les établissements** : une formation de groupe pour vos ingénieurs et techniciens, ou pour vos élèves et stagiaires.
+- ⏱️ **30 heures au total**, sur le terrain.
 - 🚜 **Sur machine réelle** : pelles et engins de chantier, comme aux TP du module.
 - 🧭 **Par niveau** : ingénieur ou technicien spécialisé (tableau ci-dessous).
-- 📚 **Préparation libre** : les [cinq chapitres du cours](https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-pro-hydraulique.md), les [simulations 3D](/simulations/hydraulique/) et les sujets de mini-projets.
 - 🦺 **La sécurité d'abord** : consignation, décharge des accumulateurs, équipements de protection.
+- 📚 **Supports en accès libre** : les [cinq chapitres du cours](https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-pro-hydraulique.md), les [simulations 3D](/simulations/hydraulique/) et les sujets de mini-projets.
 
 | | 🎓 Niveau ingénieur | 🔧 Niveau technicien spécialisé |
 |---|---|---|
-| **Pour qui** | jeunes ingénieurs et élèves ingénieurs | jeunes techniciens spécialisés en hydraulique ou en engins |
+| **Participants** | jeunes ingénieurs et élèves ingénieurs | jeunes techniciens spécialisés en hydraulique ou en engins |
+| **Durée** | 30 heures au total | 30 heures au total |
 | **Objectif** | comprendre, dimensionner et diagnostiquer le circuit hydraulique d'un engin | contrôler, mesurer, entretenir et dépanner une machine en sécurité |
 | **Au programme** | • lire le schéma constructeur d'une machine réelle<br>• circuits ouverts et fermés, maintien de pression, commande de débit, régulation de puissance<br>• dimensionner pompe, moteur, vérin et accumulateur ; faire le bilan de puissance<br>• remonter d'un symptôme à sa cause : échauffement, cavitation, colmatage, usure | • repérer chaque composant sur la machine et sur le schéma<br>• mesurer pression, débit et température ; lire manomètres et indicateurs de colmatage<br>• ronde journalière (8 points), contrôle hebdomadaire (7 points), propreté ISO 4406<br>• consigner, décharger un accumulateur, contrôler une précharge d'azote |
 
-**Pour vous inscrire**, contactez-moi par e-mail, WhatsApp ou LinkedIn en précisant votre niveau (ingénieur ou technicien spécialisé), votre formation et votre expérience, les machines qui vous intéressent, vos disponibilités et votre ville. Le lieu, la durée, le nombre de places et les modalités sont fixés ensuite, selon les demandes.
+**Pour organiser la formation**, l'entreprise ou l'établissement me contacte par e-mail, WhatsApp ou LinkedIn en précisant le nombre de participants et leur niveau (ingénieurs ou techniciens spécialisés), les machines disponibles, la période souhaitée et la ville. Le programme des 30 heures est ensuite ajusté à vos machines et à vos besoins ; le lieu, le calendrier et les modalités sont fixés ensemble.
 
 <div class="contact-btns" style="display:flex; flex-wrap:wrap; gap:.6rem; margin:1rem 0;">
-  <a href="mailto:mohamedjanane147@gmail.com?subject=Formation%20hydraulique%20sur%20le%20terrain" class="cta-btn primary">✉ Demander une formation terrain</a>
-  <a href="https://wa.me/212604395004?text=Bonjour%2C%20je%20souhaite%20une%20formation%20hydraulique%20sur%20le%20terrain." class="cta-btn primary" style="background:#25D366;" target="_blank" rel="noopener">💬 WhatsApp</a>
+  <a href="mailto:mohamedjanane147@gmail.com?subject=Formation%20hydraulique%20sur%20le%20terrain%20(30%20h)" class="cta-btn primary">✉ Organiser une formation</a>
+  <a href="https://wa.me/212604395004?text=Bonjour%2C%20nous%20souhaitons%20organiser%20une%20formation%20hydraulique%20sur%20le%20terrain%20(30%20h)." class="cta-btn primary" style="background:#25D366;" target="_blank" rel="noopener">💬 WhatsApp</a>
   <a href="https://www.linkedin.com/in/mohamed-janane-allah/" class="cta-btn primary" style="background:#0A66C2;" target="_blank" rel="noopener">💼 LinkedIn</a>
 </div>
 

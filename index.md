@@ -252,7 +252,7 @@ J'interviens également comme **enseignant vacataire** à l'[ENSAM Casablanca](h
   <div class="news-row">
     <span class="news-dot blue"></span>
     <span class="news-tag">Nov. 2026</span>
-    <span class="news-text"><strong>🧰 Formation sur le terrain</strong> : formation pratique en hydraulique des engins, pour les jeunes ingénieurs et techniciens spécialisés — <a href="/teaching/#formation-terrain">voir l'offre</a>.</span>
+    <span class="news-text"><strong>🧰 Formation sur le terrain</strong> : formation pratique de 30 h en hydraulique des engins, pour les entreprises et les établissements (ingénieurs et techniciens spécialisés) — <a href="/teaching/#formation-terrain">voir l'offre</a>.</span>
   </div>
   <div class="news-row">
     <span class="news-dot green"></span>
