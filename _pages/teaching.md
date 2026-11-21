@@ -61,6 +61,32 @@ author_profile: true
 
 ---
 
+## 🧰 Formation sur le terrain — hydraulique des engins {#formation-terrain}
+
+**Vous êtes jeune ingénieur ou technicien spécialisé en hydraulique et engins, et vous voulez apprendre sur une vraie machine ?** Cette formation pratique reprend le contenu du module Hydraulique enseigné à l'ENSAM Casablanca, mais sur le terrain : on lit la machine, on mesure, on démonte, on diagnostique.
+
+<figure>
+  <img src="/images/formation/terrain-inspection-sany.jpg" alt="Séance de terrain au pied d'une pelle SANY" style="width:100%; max-width:720px; border-radius:8px;">
+  <figcaption>Une séance de terrain du module Hydraulique, au pied d'une pelle SANY (visages floutés).</figcaption>
+</figure>
+
+- 🚜 **Sur machine réelle** : pelles et engins de chantier, comme aux TP du module.
+- 🧭 **Par niveau** : ingénieur ou technicien spécialisé (tableau ci-dessous).
+- 📚 **Préparation libre** : les [cinq chapitres du cours](https://github.com/JANANE-ALLAH/JANANE-ALLAH/blob/main/cours/licence-pro-hydraulique.md), les [simulations 3D](/simulations/hydraulique/) et les sujets de mini-projets.
+- 🦺 **La sécurité d'abord** : consignation, décharge des accumulateurs, équipements de protection.
+
+| | 🎓 Niveau ingénieur | 🔧 Niveau technicien spécialisé |
+|---|---|---|
+| **Pour qui** | jeunes ingénieurs et élèves ingénieurs | jeunes techniciens spécialisés en hydraulique ou en engins |
+| **Objectif** | comprendre, dimensionner et diagnostiquer le circuit hydraulique d'un engin | contrôler, mesurer, entretenir et dépanner une machine en sécurité |
+| **Au programme** | • lire le schéma constructeur d'une machine réelle<br>• circuits ouverts et fermés, maintien de pression, commande de débit, régulation de puissance<br>• dimensionner pompe, moteur, vérin et accumulateur ; faire le bilan de puissance<br>• remonter d'un symptôme à sa cause : échauffement, cavitation, colmatage, usure | • repérer chaque composant sur la machine et sur le schéma<br>• mesurer pression, débit et température ; lire manomètres et indicateurs de colmatage<br>• ronde journalière (8 points), contrôle hebdomadaire (7 points), propreté ISO 4406<br>• consigner, décharger un accumulateur, contrôler une précharge d'azote |
+
+**Pour vous inscrire**, écrivez-moi en précisant votre niveau (ingénieur ou technicien spécialisé), votre formation et votre expérience, les machines qui vous intéressent, vos disponibilités et votre ville. Le lieu, la durée, le nombre de places et les modalités sont fixés ensuite, selon les demandes.
+
+<p><a href="mailto:mohamedjanane147@gmail.com?subject=Formation%20hydraulique%20sur%20le%20terrain" class="cta-btn primary">✉ Demander une formation terrain</a></p>
+
+---
+
 ## 🎯 Formation Continue
 
 **Organisme :** Formateur Certifié

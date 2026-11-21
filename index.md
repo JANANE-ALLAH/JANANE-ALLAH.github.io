@@ -250,6 +250,11 @@ J'interviens également comme **enseignant vacataire** à l'[ENSAM Casablanca](h
 
 <div class="news-feed">
   <div class="news-row">
+    <span class="news-dot blue"></span>
+    <span class="news-tag">Nov. 2026</span>
+    <span class="news-text"><strong>🧰 Formation sur le terrain</strong> : formation pratique en hydraulique des engins, pour les jeunes ingénieurs et techniciens spécialisés — <a href="/teaching/#formation-terrain">voir l'offre</a>.</span>
+  </div>
+  <div class="news-row">
     <span class="news-dot green"></span>
     <span class="news-tag">Nov. 2026</span>
     <span class="news-text"><strong>📄 Publication J9</strong> : Article dans <em>Results in Engineering</em> (Q1, Elsevier, accès libre) — absorption de l'énergie vibratoire d'implants biomécaniques poreux et à gradient fonctionnel.</span>
