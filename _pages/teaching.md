@@ -81,9 +81,13 @@ author_profile: true
 | **Objectif** | comprendre, dimensionner et diagnostiquer le circuit hydraulique d'un engin | contrôler, mesurer, entretenir et dépanner une machine en sécurité |
 | **Au programme** | • lire le schéma constructeur d'une machine réelle<br>• circuits ouverts et fermés, maintien de pression, commande de débit, régulation de puissance<br>• dimensionner pompe, moteur, vérin et accumulateur ; faire le bilan de puissance<br>• remonter d'un symptôme à sa cause : échauffement, cavitation, colmatage, usure | • repérer chaque composant sur la machine et sur le schéma<br>• mesurer pression, débit et température ; lire manomètres et indicateurs de colmatage<br>• ronde journalière (8 points), contrôle hebdomadaire (7 points), propreté ISO 4406<br>• consigner, décharger un accumulateur, contrôler une précharge d'azote |
 
-**Pour vous inscrire**, écrivez-moi en précisant votre niveau (ingénieur ou technicien spécialisé), votre formation et votre expérience, les machines qui vous intéressent, vos disponibilités et votre ville. Le lieu, la durée, le nombre de places et les modalités sont fixés ensuite, selon les demandes.
+**Pour vous inscrire**, contactez-moi par e-mail, WhatsApp ou LinkedIn en précisant votre niveau (ingénieur ou technicien spécialisé), votre formation et votre expérience, les machines qui vous intéressent, vos disponibilités et votre ville. Le lieu, la durée, le nombre de places et les modalités sont fixés ensuite, selon les demandes.
 
-<p><a href="mailto:mohamedjanane147@gmail.com?subject=Formation%20hydraulique%20sur%20le%20terrain" class="cta-btn primary">✉ Demander une formation terrain</a></p>
+<div class="contact-btns" style="display:flex; flex-wrap:wrap; gap:.6rem; margin:1rem 0;">
+  <a href="mailto:mohamedjanane147@gmail.com?subject=Formation%20hydraulique%20sur%20le%20terrain" class="cta-btn primary">✉ Demander une formation terrain</a>
+  <a href="https://wa.me/212604395004?text=Bonjour%2C%20je%20souhaite%20une%20formation%20hydraulique%20sur%20le%20terrain." class="cta-btn primary" style="background:#25D366;" target="_blank" rel="noopener">💬 WhatsApp</a>
+  <a href="https://www.linkedin.com/in/mohamed-janane-allah/" class="cta-btn primary" style="background:#0A66C2;" target="_blank" rel="noopener">💼 LinkedIn</a>
+</div>
 
 ---
 

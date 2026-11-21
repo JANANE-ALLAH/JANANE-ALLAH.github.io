@@ -15,8 +15,15 @@ author_profile: true
 |---|---|
 | 📧 **Email** | [mohamedjanane147@gmail.com](mailto:mohamedjanane147@gmail.com) |
 | 📞 **Téléphone** | [+212 6 04 39 50 04](tel:+212604395004) |
+| 💬 **WhatsApp** | [+212 6 04 39 50 04](https://wa.me/212604395004) |
 | 🏛️ **Institution** | FSTM · Université Hassan II · Mohammedia, Maroc |
 | 📍 **Adresse** | Résidence Rita, Driss Harti IMM 42, Casablanca, Maroc |
+
+<div class="contact-btns" style="display:flex; flex-wrap:wrap; gap:.6rem; margin:1rem 0;">
+  <a href="mailto:mohamedjanane147@gmail.com" class="cta-btn primary">✉ E-mail</a>
+  <a href="https://wa.me/212604395004" class="cta-btn primary" style="background:#25D366;" target="_blank" rel="noopener">💬 WhatsApp</a>
+  <a href="https://www.linkedin.com/in/mohamed-janane-allah/" class="cta-btn primary" style="background:#0A66C2;" target="_blank" rel="noopener">💼 LinkedIn</a>
+</div>
 
 ## Profils Académiques
 
